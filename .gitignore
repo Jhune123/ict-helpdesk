@@ -1,24 +1,27 @@
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+﻿# Laravel
+/vendor
 /node_modules
-/public/build
-/public/hot
 /public/storage
 /storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
+.env
+.env.backup
+.phpunit.result.cache
+
+# Laravel specific
+/public/hot
+/public/build
+/public/mix-manifest.json
+/storage/debugbar
+
+# IDE & OS files
+/.idea
+/.vscode
+.DS_Store
 Thumbs.db
+
+# Composer & npm logs
+composer.lock
+package-lock.json
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
