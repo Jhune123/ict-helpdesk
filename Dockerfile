@@ -1,30 +1,26 @@
-# Use official PHP image with necessary extensions
 FROM php:8.2-fpm
-
-# Set working directory
-WORKDIR /var/www/ict-helpdesk
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libjpeg-dev libfreetype6-dev zip unzip libonig-dev libxml2-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mbstring exif pcntl bcmath opcache pdo_mysql \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy existing application
+WORKDIR /var/www/html
+
+# Copy Laravel project files (including your .env)
 COPY . .
 
-# Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install Laravel dependencies (skip artisan during build)
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-scripts
 
-# Set permissions for Laravel storage and cache
-RUN chown -R www-data:www-data /var/www/ict-helpdesk \
-    && chmod -R 775 /var/www/ict-helpdesk/storage /var/www/ict-helpdesk/bootstrap/cache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose PHP-FPM port
-EXPOSE 9000
-
-CMD ["php-fpm"]
+# Run artisan after container starts (when env + PHP ready)
+CMD php artisan config:clear && php artisan optimize:clear && php-fpm
