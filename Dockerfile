@@ -1,3 +1,25 @@
+# =========================
+# 1. Build frontend (Vite)
+# =========================
+FROM node:18 AS frontend
+WORKDIR /app
+
+# Copy package.json and lock files first for caching
+COPY package*.json ./
+
+# Install node dependencies
+RUN npm install
+
+# Copy the rest of the source code
+COPY . .
+
+# Build production assets (Vite)
+RUN npm run build
+
+
+# =========================
+# 2. Build PHP Application
+# =========================
 FROM php:8.2-fpm
 
 # install system deps and small tools (netcat for waiting on db)
@@ -17,6 +39,9 @@ WORKDIR /var/www/html
 
 # copy app files (will be image's source)
 COPY . .
+
+# ✅ Copy the built Vite assets from the Node stage
+COPY --from=frontend /app/public/build ./public/build
 
 # install composer deps but skip scripts during build (avoid artisan running here)
 ENV COMPOSER_ALLOW_SUPERUSER=1
