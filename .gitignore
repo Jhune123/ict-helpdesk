@@ -9,7 +9,6 @@
 
 # Laravel specific
 /public/hot
-/public/build
 /public/mix-manifest.json
 /storage/debugbar
 

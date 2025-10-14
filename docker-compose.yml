@@ -8,9 +8,10 @@ services:
     container_name: ict-helpdesk-app
     restart: always
     working_dir: /var/www/html
-    # Mount only what must be writable or edited on host to avoid overwriting vendor/
+    # Mount only what needs to be writable or updated on host
     volumes:
       - /var/www/ict-helpdesk/public:/var/www/html/public
+      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build        # ✅ mount built vite assets
       - /var/www/ict-helpdesk/storage:/var/www/html/storage
       - /var/www/ict-helpdesk/bootstrap/cache:/var/www/html/bootstrap/cache
       - /var/www/ict-helpdesk/.env:/var/www/html/.env
@@ -34,6 +35,7 @@ services:
       - "443:443"
     volumes:
       - /var/www/ict-helpdesk/public:/var/www/html/public:ro
+      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build:ro      # ✅ mount same build dir to nginx
       - /var/www/ict-helpdesk/nginx/conf.d:/etc/nginx/conf.d:ro
       - /var/www/ict-helpdesk/certbot/conf:/etc/letsencrypt
       - /var/www/ict-helpdesk/certbot/www:/var/www/certbot
