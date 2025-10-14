@@ -1,40 +1,61 @@
-# Use official PHP 8.2 image with Apache
-FROM php:8.2-apache
+# =========================
+# 1. Build frontend (Vite)
+# =========================
+FROM node:18 AS frontend
+WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    curl
+# Copy package.json and lock files first for caching
+COPY package*.json ./
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install node dependencies
+RUN npm install
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy Laravel files
+# Copy the rest of the source code
 COPY . .
 
-# Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+# Build production assets (Vite)
+RUN npm run build
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
+# =========================
+# 2. Build PHP Application
+# =========================
+FROM php:8.2-fpm
+
+# install system deps and small tools (netcat for waiting on db)
+RUN apt-get update && apt-get install -y \
+    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libxml2-dev libzip-dev procps netcat-openbsd bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# configure gd
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install gd mbstring exif pcntl bcmath pdo_mysql zip
+
+# install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+# copy app files (will be image's source)
+COPY . .
+
+# ✅ Copy the built Vite assets from the Node stage
+COPY --from=frontend /app/public/build ./public/build
+
+# install composer deps but skip scripts during build (avoid artisan running here)
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist --no-interaction
+
+# set permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage
+ && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port 80
-EXPOSE 80
+# add entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Start Apache
-CMD ["apache2-foreground"]
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["php-fpm"]
