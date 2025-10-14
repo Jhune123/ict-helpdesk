@@ -14,8 +14,8 @@ return new class extends Migration
     $table->string('description');
     $table->string('requested_by');
     $table->string('location');
-    $table->time('start_time');   // Start
-    $table->time('end_time');     // End
+    $table->time('start_time')->nullable();   // Start
+    $table->time('end_time')->nullable();     // End
     $table->string('remarks')->nullable();
     $table->timestamps();
 });
