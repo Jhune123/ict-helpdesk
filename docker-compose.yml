@@ -8,6 +8,8 @@ services:
     working_dir: /var/www/html
     volumes:
       - /var/www/ict-helpdesk:/var/www/html
+    depends_on:
+      - db
     networks:
       - ict-net
 
@@ -28,12 +30,31 @@ services:
     networks:
       - ict-net
 
+  db:
+    image: mysql:8.0
+    container_name: ict-helpdesk-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ict_helpdesk
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    # ✅ Persist MySQL data on the host droplet
+    volumes:
+      - /var/lib/docker-mysql:/var/lib/mysql
+    networks:
+      - ict-net
+
   certbot:
     image: certbot/certbot
     container_name: ict-helpdesk-certbot
     volumes:
       - /var/www/ict-helpdesk/certbot/conf:/etc/letsencrypt
       - /var/www/ict-helpdesk/certbot/www:/var/www/certbot
+    networks:
+      - ict-net
 
 networks:
   ict-net:

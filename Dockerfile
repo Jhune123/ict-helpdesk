@@ -1,21 +1,30 @@
-FROM php:8.3-fpm
+# Use official PHP image with necessary extensions
+FROM php:8.2-fpm
 
-WORKDIR /var/www/html
+# Set working directory
+WORKDIR /var/www/ict-helpdesk
 
-# Install dependencies and extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev libxml2-dev libzip-dev libssl-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    git curl libpng-dev libjpeg-dev libfreetype6-dev zip unzip libonig-dev libxml2-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mbstring exif pcntl bcmath opcache pdo_mysql \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 
-# Copy Laravel app to container
+# Copy existing application
 COPY . .
 
-# Install dependencies without scripts (to avoid artisan failing)
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Install Laravel dependencies
+RUN composer install --no-dev --optimize-autoloader
 
+# Set permissions for Laravel storage and cache
+RUN chown -R www-data:www-data /var/www/ict-helpdesk \
+    && chmod -R 775 /var/www/ict-helpdesk/storage /var/www/ict-helpdesk/bootstrap/cache
+
+# Expose PHP-FPM port
 EXPOSE 9000
+
 CMD ["php-fpm"]
