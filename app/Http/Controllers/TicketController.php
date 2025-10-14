@@ -93,10 +93,10 @@ class TicketController extends Controller
     }
 
     public function show(Ticket $ticket)
-    {
-        $ticket->load(['category']);
-        return view('tickets.show', compact('ticket'));
-    }
+{
+    $ticket->load(['category', 'comments.user']);
+    return view('tickets.show', compact('ticket'));
+}
 
     public function edit(Ticket $ticket)
     {

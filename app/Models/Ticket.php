@@ -79,4 +79,14 @@ class Ticket extends Model
     {
         return $this->category?->name ?? 'N/A';
     }
+    public function comments()
+    {
+    return $this->hasMany(Comment::class);
+    }
+    public function attachments()
+{
+    return $this->hasMany(Attachment::class);
+}
+
+
 }

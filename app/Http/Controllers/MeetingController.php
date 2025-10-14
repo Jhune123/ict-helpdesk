@@ -10,14 +10,20 @@ class MeetingController extends Controller
 {
     public function index()
     {
-        // load meetings with IT personnels
+        // Clients can view all meetings but not edit or delete
         $meetings = Meeting::with('itPersonnels')->latest()->paginate(10);
+
         return view('meetings.index', compact('meetings'));
     }
 
     public function create()
     {
-        // Load only unique IT staff
+        // Allow only admin, IT staff, and clients to create
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Load only IT staff for selection
         $itPersonnels = User::where('role', 'it_staff')
             ->orderBy('name')
             ->distinct('id')
@@ -28,11 +34,16 @@ class MeetingController extends Controller
 
     public function store(Request $request)
     {
+        // Only admin, IT staff, or client can store
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'date'         => 'required|date',
             'start_time'   => 'required',
-            'end_time'     => 'required',
+            'end_time'     => 'required|after:start_time',
             'location'     => 'required|string|max:255',
             'facilitator'  => 'nullable|string|max:255',
             'participants' => 'nullable|string',
@@ -48,7 +59,7 @@ class MeetingController extends Controller
             $meeting->itPersonnels()->sync($selected);
         }
 
-        return redirect()->route('meetings.index')->with('success', 'Meeting created successfully!');
+        return redirect()->route('meetings.index')->with('success', 'Meeting created successfully ✅');
     }
 
     public function show(Meeting $meeting)
@@ -59,6 +70,11 @@ class MeetingController extends Controller
 
     public function edit(Meeting $meeting)
     {
+        // Only admin and IT staff can edit
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $itPersonnels = User::where('role', 'it_staff')
             ->orderBy('name')
             ->distinct('id')
@@ -70,11 +86,16 @@ class MeetingController extends Controller
 
     public function update(Request $request, Meeting $meeting)
     {
+        // Only admin and IT staff can update
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'date'         => 'required|date',
             'start_time'   => 'required',
-            'end_time'     => 'required',
+            'end_time'     => 'required|after:start_time',
             'location'     => 'required|string|max:255',
             'facilitator'  => 'nullable|string|max:255',
             'participants' => 'nullable|string',
@@ -88,12 +109,18 @@ class MeetingController extends Controller
 
         $meeting->itPersonnels()->sync($selected);
 
-        return redirect()->route('meetings.index')->with('success', 'Meeting updated successfully!');
+        return redirect()->route('meetings.index')->with('success', 'Meeting updated successfully ✅');
     }
 
     public function destroy(Meeting $meeting)
     {
+        // Only admin and IT staff can delete
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $meeting->delete();
-        return redirect()->route('meetings.index')->with('success', 'Meeting deleted successfully!');
+
+        return redirect()->route('meetings.index')->with('success', 'Meeting deleted successfully ❌');
     }
 }

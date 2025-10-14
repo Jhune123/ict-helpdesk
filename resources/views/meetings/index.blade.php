@@ -4,10 +4,21 @@
 <div class="container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-green-700">Meetings</h2>
-        <a href="{{ route('meetings.create') }}" 
-           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-           + Create Meeting
-        </a>
+
+        {{-- Only allow staff and admin to create meetings --}}
+        @role('admin|it_staff')
+            <a href="{{ route('meetings.create') }}" 
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+               + Create Meeting
+            </a>
+        @endrole
+
+        @role('client')
+            <a href="{{ route('meetings.create') }}" 
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+               + Create Meeting
+            </a>
+        @endrole
     </div>
 
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
@@ -50,20 +61,30 @@
                         </td>
 
                         {{-- Actions --}}
-                        <td class="px-4 py-2 border">
+                        <td class="px-4 py-2 border text-center">
                             <a href="{{ route('meetings.show', $meeting->id) }}" 
-                               class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">View</a>
-                            <a href="{{ route('meetings.edit', $meeting->id) }}" 
-                               class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
-                            <form action="{{ route('meetings.destroy', $meeting->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                    class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                    onclick="return confirm('Are you sure you want to delete this meeting?')">
-                                    Delete
-                                </button>
-                            </form>
+                               class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                                View
+                            </a>
+
+                            {{-- Only Admin/IT Staff can edit or delete --}}
+                            @role('admin|it_staff')
+                                <a href="{{ route('meetings.edit', $meeting->id) }}" 
+                                   class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                                   Edit
+                                </a>
+
+                                <form action="{{ route('meetings.destroy', $meeting->id) }}" 
+                                      method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                        class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                        onclick="return confirm('Are you sure you want to delete this meeting?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            @endrole
                         </td>
                     </tr>
                 @empty

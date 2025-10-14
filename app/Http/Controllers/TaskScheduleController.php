@@ -26,12 +26,22 @@ class TaskScheduleController extends Controller
 
     public function create()
     {
-        return view('tasks.create');
+        // Only clients, admins, or IT staff can create
+        if (auth()->user()->hasRole('client') || auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            return view('tasks.create');
+        }
+
+        abort(403, 'Unauthorized action.');
     }
 
     public function store(Request $request)
     {
-        // Transform HH:MM -> HH:MM:00
+        // Ensure only authorized users can store
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Add seconds to time format
         $request->merge([
             'start_time' => $request->start_time . ':00',
             'end_time'   => $request->end_time . ':00',
@@ -61,12 +71,21 @@ class TaskScheduleController extends Controller
 
     public function edit(Task $task)
     {
+        // Only admin and IT staff can edit
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('tasks.edit', compact('task'));
     }
 
     public function update(Request $request, Task $task)
     {
-        // Transform HH:MM -> HH:MM:00
+        // Only admin and IT staff can update
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->merge([
             'start_time' => $request->start_time . ':00',
             'end_time'   => $request->end_time . ':00',
@@ -91,6 +110,11 @@ class TaskScheduleController extends Controller
 
     public function destroy(Task $task)
     {
+        // Only admin and IT staff can delete
+        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $task->delete();
 
         return redirect()->route('tasks.index')

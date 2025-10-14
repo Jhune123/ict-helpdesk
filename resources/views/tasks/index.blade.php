@@ -3,26 +3,26 @@
 @section('content')
 <div class="p-6">
     <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-bold text-gray-700">Task Schedule</h2>
+        <h2 class="text-2xl font-bold text-gray-700">🗓 Task Schedule</h2>
+
+        @role('admin|it_staff')
         <a href="{{ route('tasks.create') }}" 
            class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
             + Add Task
         </a>
+        @endrole
     </div>
 
-<!-- 🔍 Search Bar -->
-<form method="GET" action="{{ route('tasks.index') }}" class="mb-4">
-    <div class="flex gap-2">
-        <input type="text" name="search" value="{{ request('search') }}"
-               placeholder="Search by description, requested by, or location..."
-               class="flex-1 px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
-        <button type="submit" 
-                class="px-4 py-2 bg-yellow-500 text-black text-sm font-medium rounded-lg shadow hover:bg-yellow-600">
-            🔍 Search
-        </button>
-    </div>
-</form>
-
+    <!-- 🔍 Search Bar -->
+    <form method="GET" action="{{ route('tasks.index') }}" class="mb-4">
+        <div class="flex gap-2">
+            <input type="text" name="search" value="{{ request('search') }}"
+                   placeholder="Search by description, requested by, or location..."
+                   class="flex-1 px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <button type="submit" 
+                    class="px-4 py-2 bg-yellow-500 text-black text-sm font-medium rounded-lg shadow hover:bg-yellow-600">
+                🔍 Search
+            </button>
         </div>
     </form>
 
@@ -48,8 +48,7 @@
                     <td class="p-3 border">{{ $task->requested_by }}</td>
                     <td class="p-3 border">{{ $task->location }}</td>
                     <td class="p-3 border">
-                        {{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }}
-                        -
+                        {{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }} -
                         {{ \Carbon\Carbon::parse($task->end_time)->format('h:i A') }}
                     </td>
                     <td class="p-3 border">{{ $task->assigned_to ?? 'N/A' }}</td>
@@ -59,17 +58,22 @@
                            class="inline-block px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700">
                             👁 View
                         </a>
+
+                        @role('admin|it_staff')
                         <a href="{{ route('tasks.edit', $task) }}" 
                            class="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
                             ✏️ Edit
                         </a>
+
                         <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
-                            @csrf @method('DELETE')
+                            @csrf 
+                            @method('DELETE')
                             <button onclick="return confirm('Delete this task?')" 
                                     class="inline-block px-3 py-1 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700">
                                 🗑 Delete
                             </button>
                         </form>
+                        @endrole
                     </td>
                 </tr>
                 @empty

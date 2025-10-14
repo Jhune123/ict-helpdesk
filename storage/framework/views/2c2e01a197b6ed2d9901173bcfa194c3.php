@@ -1,26 +1,26 @@
 <?php $__env->startSection('content'); ?>
 <div class="p-6">
     <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-bold text-gray-700">Task Schedule</h2>
+        <h2 class="text-2xl font-bold text-gray-700">🗓 Task Schedule</h2>
+
+        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
         <a href="<?php echo e(route('tasks.create')); ?>" 
            class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
             + Add Task
         </a>
+        <?php endif; ?>
     </div>
 
-<!-- 🔍 Search Bar -->
-<form method="GET" action="<?php echo e(route('tasks.index')); ?>" class="mb-4">
-    <div class="flex gap-2">
-        <input type="text" name="search" value="<?php echo e(request('search')); ?>"
-               placeholder="Search by description, requested by, or location..."
-               class="flex-1 px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
-        <button type="submit" 
-                class="px-4 py-2 bg-yellow-500 text-black text-sm font-medium rounded-lg shadow hover:bg-yellow-600">
-            🔍 Search
-        </button>
-    </div>
-</form>
-
+    <!-- 🔍 Search Bar -->
+    <form method="GET" action="<?php echo e(route('tasks.index')); ?>" class="mb-4">
+        <div class="flex gap-2">
+            <input type="text" name="search" value="<?php echo e(request('search')); ?>"
+                   placeholder="Search by description, requested by, or location..."
+                   class="flex-1 px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <button type="submit" 
+                    class="px-4 py-2 bg-yellow-500 text-black text-sm font-medium rounded-lg shadow hover:bg-yellow-600">
+                🔍 Search
+            </button>
         </div>
     </form>
 
@@ -46,9 +46,7 @@
                     <td class="p-3 border"><?php echo e($task->requested_by); ?></td>
                     <td class="p-3 border"><?php echo e($task->location); ?></td>
                     <td class="p-3 border">
-                        <?php echo e(\Carbon\Carbon::parse($task->start_time)->format('h:i A')); ?>
-
-                        -
+                        <?php echo e(\Carbon\Carbon::parse($task->start_time)->format('h:i A')); ?> -
                         <?php echo e(\Carbon\Carbon::parse($task->end_time)->format('h:i A')); ?>
 
                     </td>
@@ -59,17 +57,22 @@
                            class="inline-block px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700">
                             👁 View
                         </a>
+
+                        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
                         <a href="<?php echo e(route('tasks.edit', $task)); ?>" 
                            class="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
                             ✏️ Edit
                         </a>
+
                         <form action="<?php echo e(route('tasks.destroy', $task)); ?>" method="POST" class="inline">
-                            <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                            <?php echo csrf_field(); ?> 
+                            <?php echo method_field('DELETE'); ?>
                             <button onclick="return confirm('Delete this task?')" 
                                     class="inline-block px-3 py-1 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700">
                                 🗑 Delete
                             </button>
                         </form>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>

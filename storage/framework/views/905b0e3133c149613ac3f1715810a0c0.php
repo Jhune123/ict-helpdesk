@@ -2,10 +2,21 @@
 <div class="container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-green-700">Meetings</h2>
-        <a href="<?php echo e(route('meetings.create')); ?>" 
-           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-           + Create Meeting
-        </a>
+
+        
+        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
+            <a href="<?php echo e(route('meetings.create')); ?>" 
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+               + Create Meeting
+            </a>
+        <?php endif; ?>
+
+        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'client')): ?>
+            <a href="<?php echo e(route('meetings.create')); ?>" 
+               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+               + Create Meeting
+            </a>
+        <?php endif; ?>
     </div>
 
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
@@ -48,20 +59,30 @@
                         </td>
 
                         
-                        <td class="px-4 py-2 border">
+                        <td class="px-4 py-2 border text-center">
                             <a href="<?php echo e(route('meetings.show', $meeting->id)); ?>" 
-                               class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">View</a>
-                            <a href="<?php echo e(route('meetings.edit', $meeting->id)); ?>" 
-                               class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
-                            <form action="<?php echo e(route('meetings.destroy', $meeting->id)); ?>" method="POST" class="inline">
-                                <?php echo csrf_field(); ?>
-                                <?php echo method_field('DELETE'); ?>
-                                <button type="submit" 
-                                    class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                    onclick="return confirm('Are you sure you want to delete this meeting?')">
-                                    Delete
-                                </button>
-                            </form>
+                               class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                                View
+                            </a>
+
+                            
+                            <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
+                                <a href="<?php echo e(route('meetings.edit', $meeting->id)); ?>" 
+                                   class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                                   Edit
+                                </a>
+
+                                <form action="<?php echo e(route('meetings.destroy', $meeting->id)); ?>" 
+                                      method="POST" class="inline">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="submit" 
+                                        class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                        onclick="return confirm('Are you sure you want to delete this meeting?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
