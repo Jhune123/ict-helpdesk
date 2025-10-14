@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
 {
     Schema::table('tasks', function (Blueprint $table) {
-        $table->time('start_time')->nullable()->after('location');
+        // $table->time('start_time')->nullable()->after('location');
         $table->time('end_time')->nullable()->after('start_time');
     });
 }
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
 {
     Schema::table('tasks', function (Blueprint $table) {
-        $table->dropColumn(['start_time', 'end_time']);
+        // $table->dropColumn(['start_time', 'end_time']);
     });
 }
 };
