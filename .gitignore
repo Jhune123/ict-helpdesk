@@ -24,3 +24,6 @@ package-lock.json
 npm-debug.log
 yarn-error.log
 pnpm-debug.log
+
+# mysql data --- IGNORE ---
+/mysql_data
