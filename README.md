@@ -28,7 +28,7 @@ It provides a centralized platform for handling service requests, assigning IT p
 
 ---
 
-## 👨‍💻 Developers
+## 👨‍💻 Developer
 
 - **Jhune Aga**
 
