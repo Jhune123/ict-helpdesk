@@ -28,3 +28,5 @@ pnpm-debug.log
 
 # mysql data --- IGNORE ---
 /mysql_data
+
+.deploy.sh

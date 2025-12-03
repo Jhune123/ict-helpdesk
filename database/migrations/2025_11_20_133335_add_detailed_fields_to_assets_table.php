@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assets', function (Blueprint $table) {
-            $table->string('entity_name')->nullable();
             $table->string('fund_cluster')->nullable();
             $table->string('par_no')->nullable();
             $table->integer('quantity')->nullable();
