@@ -19,7 +19,6 @@ return new class extends Migration
             }
 
             // Add NEW final columns
-            $table->string('entity_name')->nullable();
             $table->string('fund_cluster')->nullable();
             $table->string('par_no')->nullable();
             $table->integer('quantity')->nullable();
