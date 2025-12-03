@@ -9,14 +9,8 @@ class Category extends Model
 {
     use HasFactory;
 
-    // Allow mass assignment for name
     protected $fillable = [
         'name',
+        'description',
     ];
-
-    // Optional: relationship to tickets
-    public function tickets()
-    {
-        return $this->hasMany(\App\Models\Ticket::class);
-    }
 }

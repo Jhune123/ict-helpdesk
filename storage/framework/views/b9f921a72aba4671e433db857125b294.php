@@ -10,6 +10,7 @@
 <?php $component->withAttributes([]); ?>
     <div class="min-h-screen flex items-center justify-center bg-cover bg-center" 
          style="background-image: url('<?php echo e(asset('image/school-logo.jpg')); ?>');">
+
         <div class="bg-white/90 p-10 rounded-2xl shadow-2xl w-full max-w-md text-center">
 
             <!-- ICTO Logo -->
@@ -22,7 +23,6 @@
                 KSU ICTO-HELPDESK Management System
             </h1>
 
-            <!-- Tagline -->
             <p class="text-sm text-gray-600 mb-6">
                 Empowering ICT Services for KSU
             </p>
@@ -95,7 +95,7 @@
 <?php endif; ?>
                 </div>
 
-                <!-- Password -->
+                <!-- Password (with eye toggle) -->
                 <div class="mt-4">
                     <?php if (isset($component)) { $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginale3da9d84bb64e4bc2eeebaafabfb2581 = $attributes; } ?>
@@ -117,16 +117,18 @@
 <?php $component = $__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581; ?>
 <?php unset($__componentOriginale3da9d84bb64e4bc2eeebaafabfb2581); ?>
 <?php endif; ?>
-                    <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
+
+                    <div class="relative">
+                        <?php if (isset($component)) { $__componentOriginal18c21970322f9e5c938bc954620c12bb = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal18c21970322f9e5c938bc954620c12bb = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'password','class' => 'block mt-1 w-full','type' => 'password','name' => 'password','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.text-input','data' => ['id' => 'password','class' => 'block mt-1 w-full pr-10','type' => 'password','name' => 'password','required' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('text-input'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['id' => 'password','class' => 'block mt-1 w-full','type' => 'password','name' => 'password','required' => true]); ?>
+<?php $component->withAttributes(['id' => 'password','class' => 'block mt-1 w-full pr-10','type' => 'password','name' => 'password','required' => true]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal18c21970322f9e5c938bc954620c12bb)): ?>
@@ -137,6 +139,15 @@
 <?php $component = $__componentOriginal18c21970322f9e5c938bc954620c12bb; ?>
 <?php unset($__componentOriginal18c21970322f9e5c938bc954620c12bb); ?>
 <?php endif; ?>
+
+                        <!-- 👁 Toggle Button -->
+                        <button type="button"
+                                onclick="togglePassword()"
+                                class="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-gray-800">
+                            <span id="eyeIcon">👁</span>
+                        </button>
+                    </div>
+
                     <?php if (isset($component)) { $__componentOriginalf94ed9c5393ef72725d159fe01139746 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalf94ed9c5393ef72725d159fe01139746 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.input-error','data' => ['messages' => $errors->get('password'),'class' => 'mt-2']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -205,6 +216,22 @@
             </form>
         </div>
     </div>
+
+    <!-- 👁 PASSWORD TOGGLE SCRIPT -->
+    <script>
+        function togglePassword() {
+            let input = document.getElementById('password');
+            let icon = document.getElementById('eyeIcon');
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.textContent = "👁‍🗨"; // open eye
+            } else {
+                input.type = "password";
+                icon.textContent = "👁"; // closed eye
+            }
+        }
+    </script>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal69dc84650370d1d4dc1b42d016d7226b)): ?>

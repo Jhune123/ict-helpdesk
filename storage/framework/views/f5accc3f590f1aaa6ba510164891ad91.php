@@ -1,108 +1,190 @@
+// Copy code
+
+
 <?php $__env->startSection('content'); ?>
-<div class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
-    <div class="bg-white shadow-lg rounded-2xl p-6">
-        <h2 class="text-2xl font-bold mb-4">📋 All Tickets</h2>
+<div class="p-6">
 
-        <div class="flex gap-4 mb-4">
-            <a href="<?php echo e(route('tickets.create')); ?>" 
-               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                ➕ Create Ticket
-            </a>
+    
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-700 flex items-center gap-2">
+            🎫 Ticket Management
+        </h1>
+
+        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
+        <a href="<?php echo e(route('tickets.create')); ?>" 
+           class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold shadow flex items-center gap-2 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Ticket
+        </a>
+        <?php endif; ?>
+    </div>
+
+    
+    <?php if(session('success')): ?>
+        <div class="mb-4 p-4 text-green-700 bg-green-100 rounded-lg shadow font-medium">
+            <?php echo e(session('success')); ?>
+
         </div>
+    <?php endif; ?>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full border border-gray-200 rounded-lg">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="px-4 py-2 border">#</th>
-                        <th class="px-4 py-2 border">Title</th>
-                        <th class="px-4 py-2 border">Category</th>
-                        <th class="px-4 py-2 border">Department</th>
-                        <th class="px-4 py-2 border">Client</th>
-                        <th class="px-4 py-2 border">IT Personnel</th>
-                        <th class="px-4 py-2 border">Status</th>
-                        <th class="px-4 py-2 border">Date Created</th>
-                        <th class="px-4 py-2 border">Date Finished</th>
-                        <th class="px-4 py-2 border">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $__empty_1 = true; $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <tr class="text-gray-700 hover:bg-gray-50">
-                            <td class="px-4 py-2 border"><?php echo e($ticket->id); ?></td>
-                            <td class="px-4 py-2 border"><?php echo e($ticket->title); ?></td>
-                            <td class="px-4 py-2 border"><?php echo e($ticket->categoryName ?? 'N/A'); ?></td>
-                            <td class="px-4 py-2 border"><?php echo e($ticket->department ?? 'N/A'); ?></td>
-                            <td class="px-4 py-2 border"><?php echo e($ticket->client_name ?? 'N/A'); ?></td>
-                            <td class="px-4 py-2 border"><?php echo e($ticket->assigneeName ?? 'N/A'); ?></td>
-                            <td class="px-4 py-2 border">
-                                <span class="px-2 py-1 rounded-lg text-sm 
-                                    <?php if($ticket->status === 'Open'): ?> bg-green-100 text-green-700
-                                    <?php elseif($ticket->status === 'In Progress'): ?> bg-yellow-100 text-yellow-700
-                                    <?php elseif($ticket->status === 'Closed'): ?> bg-red-100 text-red-700
-                                    <?php endif; ?>">
-                                    <?php echo e($ticket->status); ?>
+    
+    <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap items-center gap-4 justify-between">
 
-                                </span>
-                            </td>
-                            <td class="px-4 py-2 border">
-                                <?php echo e($ticket->created_at ? $ticket->created_at->timezone('Asia/Manila')->format('F d, Y h:i A') : 'N/A'); ?>
+        
+        <form method="GET" class="flex items-end gap-3">
+            <div>
+                <label class="text-sm font-semibold text-gray-600">Month</label>
+                <select name="month" class="border rounded p-2 w-40">
+                    <option value="">All</option>
+                    <?php for($m = 1; $m <= 12; $m++): ?>
+                        <option value="<?php echo e($m); ?>" <?php echo e(request('month') == $m ? 'selected' : ''); ?>>
+                            <?php echo e(date('F', mktime(0, 0, 0, $m, 1))); ?>
 
-                            </td>
-                            <td class="px-4 py-2 border">
-                                <?php echo e($ticket->date_finished ? \Carbon\Carbon::parse($ticket->date_finished)->timezone('Asia/Manila')->format('F d, Y h:i A') : 'N/A'); ?>
+                        </option>
+                    <?php endfor; ?>
+                </select>
+            </div>
 
-                            </td>
+            <div>
+                <label class="text-sm font-semibold text-gray-600">Year</label>
+                <select name="year" class="border rounded p-2 w-32">
+                    <option value="">All</option>
+                    <?php for($y = date('Y'); $y >= 2020; $y--): ?>
+                        <option value="<?php echo e($y); ?>" <?php echo e(request('year') == $y ? 'selected' : ''); ?>>
+                            <?php echo e($y); ?>
 
-                            <!-- Actions -->
-                            <td class="px-4 py-2 border flex gap-2 items-center">
-                                <!-- View button (always visible) -->
-                                <a href="<?php echo e(route('tickets.show', $ticket->id)); ?>" 
-                                   class="px-3 py-1 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">
-                                    👁️ View
+                        </option>
+                    <?php endfor; ?>
+                </select>
+            </div>
+
+            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow font-semibold">
+                Filter
+            </button>
+        </form>
+
+        
+        <div class="flex gap-2">
+            <?php
+                $exportBtns = [
+                    'csv'   => 'CSV',
+                    'xlsx'  => 'Excel',
+                    'pdf'   => 'PDF',
+                ];
+            ?>
+
+            <?php $__currentLoopData = $exportBtns; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <a href="<?php echo e(route('tickets.export', ['type' => $type])); ?>"
+                   class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium"
+                   target="_blank">
+                   <?php echo e($label); ?>
+
+                </a>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+            <button onclick="window.print()" 
+                class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium">
+                Print
+            </button>
+        </div>
+    </div>
+
+    
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table id="ticketsTable" class="min-w-full border border-gray-200 text-sm">
+            <thead class="bg-blue-700 text-white">
+                <tr>
+                    <th class="px-3 py-3 text-left">Ticket #</th>
+                    <th class="px-3 py-3 text-left">Title</th>
+                    <th class="px-3 py-3 text-left">Description</th>
+                    <th class="px-3 py-3 text-left">Category</th>
+                    <th class="px-3 py-3 text-left">Department</th>
+                    <th class="px-3 py-3 text-left">IT Personnel</th>
+                    <th class="px-3 py-3 text-left">Client Name</th>
+                    <th class="px-3 py-3 text-left">Priority</th>
+                    <th class="px-3 py-3 text-left">Contact No.</th>
+                    <th class="px-3 py-3 text-left">Remarks</th>
+                    <th class="px-3 py-3 text-left">Status</th>
+                    <th class="px-3 py-3 text-left">Date Submitted</th>
+                    <th class="px-3 py-3 text-left">Date Finished</th>
+                    <th class="px-3 py-3 text-center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody class="text-gray-700 divide-y divide-gray-200">
+                <?php $__empty_1 = true; $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-3 py-2 font-semibold text-gray-800">#<?php echo e($ticket->ticket_number); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->title); ?></td>
+                        <td class="px-3 py-2"><?php echo e(Str::limit($ticket->description, 50)); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->category->name ?? 'N/A'); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->department ?? 'N/A'); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->assignee?->name ?? 'Unassigned'); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->client_name); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->priority ?? 'Normal'); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->contact_number); ?></td>
+                        <td class="px-3 py-2"><?php echo e($ticket->remarks ?? 'No remarks'); ?></td>
+                        <td class="px-3 py-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                <?php if($ticket->status === 'Open'): ?> bg-green-100 text-green-700
+                                <?php elseif($ticket->status === 'In Progress'): ?> bg-yellow-100 text-yellow-700
+                                <?php elseif($ticket->status === 'Closed'): ?> bg-gray-200 text-gray-700
+                                <?php else: ?> bg-blue-100 text-blue-700 <?php endif; ?>">
+                                <?php echo e($ticket->status); ?>
+
+                            </span>
+                        </td>
+                        <td class="px-3 py-2"><?php echo e($ticket->date_submitted?->format('M d, Y h:i A')); ?></td>
+                        <td class="px-3 py-2">
+                            <?php if($ticket->status === 'Closed'): ?>
+                                <?php echo e($ticket->date_finished?->format('M d, Y h:i A')); ?>
+
+                            <?php else: ?>
+                                <span class="text-gray-400 italic">Pending</span>
+                            <?php endif; ?>
+                        </td>
+
+                        
+                        <td class="px-3 py-2 text-center space-x-1">
+                            <a href="<?php echo e(route('tickets.show', $ticket->id)); ?>" 
+                               class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 inline-flex items-center gap-1 text-xs">
+                                👁 View
+                            </a>
+
+                            
+                            <a href="<?php echo e(route('tickets.joborder.pdf', $ticket->id)); ?>"
+                               target="_blank"
+                               class="bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 inline-flex items-center gap-1 text-xs">
+                                🧾 Job Order
+                            </a>
+
+                            <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
+                                <a href="<?php echo e(route('tickets.edit', $ticket->id)); ?>" 
+                                   class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 inline-flex items-center gap-1 text-xs">
+                                    ✏ Edit
                                 </a>
 
-                                <?php
-                                    $role = strtolower(auth()->user()?->role ?? 'user');
-                                ?>
-
-                                <?php if(in_array($role, ['admin', 'it_staff'])): ?>
-                                    <!-- Edit button -->
-                                    <a href="<?php echo e(route('tickets.edit', $ticket->id)); ?>" 
-                                       class="px-3 py-1 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
-                                        ✏️ Edit
-                                    </a>
-
-                                    <!-- Delete button -->
-                                    <form action="<?php echo e(route('tickets.destroy', $ticket->id)); ?>" 
-                                          method="POST" 
-                                          onsubmit="return confirm('Are you sure you want to delete this ticket?')" 
-                                          class="inline-block">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <button type="submit" 
-                                                class="px-3 py-1 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">
-                                            🗑️ Delete
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <tr>
-                            <td colspan="10" class="px-4 py-4 text-center text-gray-500">
-                                No tickets found.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-4">
-            <?php echo e($tickets->links()); ?>
-
-        </div>
+                                <form action="<?php echo e(route('tickets.destroy', $ticket->id)); ?>" method="POST" class="inline">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="submit"
+                                        onclick="return confirm('Delete this ticket?')"
+                                        class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 inline-flex items-center gap-1 text-xs">
+                                        🗑 Delete
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <tr>
+                        <td colspan="14" class="px-4 py-6 text-center text-gray-500">No tickets found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 <?php $__env->stopSection(); ?>

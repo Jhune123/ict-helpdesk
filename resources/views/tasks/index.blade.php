@@ -1,92 +1,169 @@
 @extends('layouts.app')
 
+@section('styles')
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+
+<style>
+    table.dataTable thead {
+        background-color: #1E40AF; /* Blue header */
+        color: #fff;
+    }
+    table.dataTable tbody tr:hover {
+        background-color: #E0F2FE; /* Light blue hover */
+    }
+    .upcoming-task {
+        background-color: #DCFCE7 !important; /* Light green */
+    }
+    .overdue-task {
+        background-color: #FEE2E2 !important; /* Light red */
+    }
+    table.dataTable td .btn {
+        white-space: nowrap;
+        margin-right: 2px;
+    }
+    .table-responsive {
+        overflow-x: auto;
+    }
+    /* Force DataTables column sizing */
+    table.dataTable {
+        table-layout: fixed;
+        width: 100% !important;
+    }
+    table.dataTable td, table.dataTable th {
+        word-wrap: break-word;
+        vertical-align: middle;
+    }
+    /* Print adjustments */
+    @media print {
+        table.dataTable {
+            width: 100% !important;
+        }
+        .dataTables_wrapper .dt-buttons {
+            display: none; /* hide buttons on print */
+        }
+        table.dataTable th, table.dataTable td {
+            font-size: 10pt; /* smaller font to fit more columns */
+        }
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="p-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-gray-700">🗓 Task Schedule</h2>
 
-        @role('admin|it_staff')
-        <a href="{{ route('tasks.create') }}" 
-           class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
-            + Add Task
-        </a>
-        @endrole
+        <div class="flex gap-2">
+            @role('admin|it_staff')
+            <a href="{{ route('tasks.create') }}" 
+               class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
+                + Add Task
+            </a>
+            @endrole
+
+            <!-- Export PDF Button -->
+            <a href="{{ route('tasks.export.pdf') }}" target="_blank"
+               class="inline-block px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700 transition">
+                Export PDF
+            </a>
+        </div>
     </div>
 
-    <!-- 🔍 Search Bar -->
-    <form method="GET" action="{{ route('tasks.index') }}" class="mb-4">
-        <div class="flex gap-2">
-            <input type="text" name="search" value="{{ request('search') }}"
-                   placeholder="Search by description, requested by, or location..."
-                   class="flex-1 px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
-            <button type="submit" 
-                    class="px-4 py-2 bg-yellow-500 text-black text-sm font-medium rounded-lg shadow hover:bg-yellow-600">
-                🔍 Search
-            </button>
-        </div>
-    </form>
-
-    <div class="overflow-x-auto bg-white shadow rounded-lg">
-        <table class="w-full border border-gray-200 text-sm">
-            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+    <div class="table-responsive bg-white shadow rounded-lg">
+        <table id="tasksTable" class="display nowrap stripe hover" style="width:100%">
+            <thead>
                 <tr>
-                    <th class="p-3 border">Date</th>
-                    <th class="p-3 border">Description</th>
-                    <th class="p-3 border">Requested By</th>
-                    <th class="p-3 border">Location</th>
-                    <th class="p-3 border">Time Range</th>
-                    <th class="p-3 border">IT Personnel</th>
-                    <th class="p-3 border">Remarks</th>
-                    <th class="p-3 border text-center">Actions</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Requested By</th>
+                    <th>Location</th>
+                    <th>Time Range</th>
+                    <th>IT Personnel</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($tasks as $task)
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 border">{{ \Carbon\Carbon::parse($task->date)->format('M d, Y') }}</td>
-                    <td class="p-3 border">{{ $task->description }}</td>
-                    <td class="p-3 border">{{ $task->requested_by }}</td>
-                    <td class="p-3 border">{{ $task->location }}</td>
-                    <td class="p-3 border">
-                        {{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }} -
-                        {{ \Carbon\Carbon::parse($task->end_time)->format('h:i A') }}
-                    </td>
-                    <td class="p-3 border">{{ $task->assigned_to ?? 'N/A' }}</td>
-                    <td class="p-3 border">{{ $task->remarks }}</td>
-                    <td class="p-3 border text-center space-x-2">
-                        <a href="{{ route('tasks.show', $task) }}" 
-                           class="inline-block px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700">
-                            👁 View
-                        </a>
-
+                @foreach($tasks as $task)
+                @php
+                    $today = \Carbon\Carbon::today();
+                    $taskDate = \Carbon\Carbon::parse($task->date);
+                    $isUpcoming = $taskDate->between($today, $today->copy()->addDays(7));
+                    $isOverdue = $taskDate->lt($today);
+                @endphp
+                <tr class="{{ $isUpcoming ? 'upcoming-task' : ($isOverdue ? 'overdue-task' : '') }}">
+                    <td>{{ $taskDate->format('M d, Y') }}</td>
+                    <td>{{ $task->description }}</td>
+                    <td>{{ $task->requested_by }}</td>
+                    <td>{{ $task->location }}</td>
+                    <td>{{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($task->end_time)->format('h:i A') }}</td>
+                    <td>{{ $task->assigned_to ?? 'N/A' }}</td>
+                    <td>{{ $task->remarks }}</td>
+                    <td>
+                        <a href="{{ route('tasks.show', $task) }}" class="btn-view">View</a>
                         @role('admin|it_staff')
-                        <a href="{{ route('tasks.edit', $task) }}" 
-                           class="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">
-                            ✏️ Edit
-                        </a>
-
-                        <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
-                            @csrf 
+                        <a href="{{ route('tasks.edit', $task) }}" class="btn-edit">Edit</a>
+                        <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="d-inline">
+                            @csrf
                             @method('DELETE')
-                            <button onclick="return confirm('Delete this task?')" 
-                                    class="inline-block px-3 py-1 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700">
-                                🗑 Delete
-                            </button>
+                            <button onclick="return confirm('Delete this task?')" class="btn-delete">Delete</button>
                         </form>
                         @endrole
                     </td>
                 </tr>
-                @empty
-                <tr>
-                    <td colspan="8" class="p-6 text-center text-gray-500">No tasks found.</td>
-                </tr>
-                @endforelse
+                @endforeach
             </tbody>
         </table>
     </div>
-
-    <div class="mt-4">
-        {{ $tasks->appends(['search' => request('search')])->links() }}
-    </div>
 </div>
+@endsection
+
+@section('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#tasksTable').DataTable({
+        responsive: true,
+        scrollX: true,
+        paging: true,
+        searching: true,
+        ordering: true,
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel',
+            {
+                extend: 'pdf',
+                orientation: 'landscape',
+                pageSize: 'A4',
+                title: 'Task Schedule'
+            },
+            {
+                extend: 'print',
+                title: 'Task Schedule',
+                customize: function (win) {
+                    $(win.document.body).css('font-size', '10pt');
+                    $(win.document.body).find('table').addClass('compact').css('font-size', '10pt');
+                    $(win.document.body).find('table').css('width', '100%');
+                }
+            }
+        ],
+        order: [[0, 'asc']],
+        autoWidth: false
+    });
+});
+</script>
 @endsection

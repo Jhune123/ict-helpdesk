@@ -1,75 +1,58 @@
 <?php $__env->startSection('content'); ?>
-<div class="p-6">
-    <div class="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-700 mb-6">Task Details</h2>
+<div class="max-w-3xl mx-auto bg-white shadow rounded p-6">
+    <h2 class="text-xl font-bold mb-4">Task Details</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <p class="text-gray-600 font-semibold">📅 Date:</p>
-                <p class="text-gray-800"><?php echo e(\Carbon\Carbon::parse($task->date)->format('F d, Y')); ?></p>
-            </div>
-
-            <div>
-                <p class="text-gray-600 font-semibold">👷‍♂️ IT Personnel:</p>
-                <p class="text-gray-800">
-                    <?php echo e($task->assigned_to ? $task->assigned_to : 'Not Assigned'); ?>
-
-                </p>
-            </div>
-
-            <div>
-                <p class="text-gray-600 font-semibold">🕒 Start Time:</p>
-                <p class="text-gray-800">
-                    <?php echo e($task->start_time ? \Carbon\Carbon::parse($task->start_time)->format('h:i A') : '—'); ?>
-
-                </p>
-            </div>
-
-            <div>
-                <p class="text-gray-600 font-semibold">⏰ End Time:</p>
-                <p class="text-gray-800">
-                    <?php echo e($task->end_time ? \Carbon\Carbon::parse($task->end_time)->format('h:i A') : '—'); ?>
-
-                </p>
-            </div>
-
-            <div class="md:col-span-2">
-                <p class="text-gray-600 font-semibold">📝 Description:</p>
-                <p class="text-gray-800"><?php echo e($task->description); ?></p>
-            </div>
-
-            <div>
-                <p class="text-gray-600 font-semibold">📍 Location:</p>
-                <p class="text-gray-800"><?php echo e($task->location); ?></p>
-            </div>
-
-            <div>
-                <p class="text-gray-600 font-semibold">🙋 Requested By:</p>
-                <p class="text-gray-800"><?php echo e($task->requested_by); ?></p>
-            </div>
-
-            <div class="md:col-span-2">
-                <p class="text-gray-600 font-semibold">💬 Remarks:</p>
-                <p class="text-gray-800">
-                    <?php echo e($task->remarks ? $task->remarks : 'No remarks provided'); ?>
-
-                </p>
-            </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <p class="text-gray-600 font-medium">Date</p>
+            <p class="text-lg"><?php echo e(\Carbon\Carbon::parse($task->date)->format('F d, Y')); ?></p>
         </div>
 
-        <div class="mt-6 flex justify-between">
-            <a href="<?php echo e(route('tasks.index')); ?>" 
-               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg">
-                ← Back
-            </a>
+        <div>
+            <p class="text-gray-600 font-medium">Time</p>
+            <p class="text-lg">
+                <?php echo e(\Carbon\Carbon::parse($task->start_time)->format('h:i A')); ?> 
+                - 
+                <?php echo e(\Carbon\Carbon::parse($task->end_time)->format('h:i A')); ?>
 
-            <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
-            <a href="<?php echo e(route('tasks.edit', $task->id)); ?>" 
-               class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-                ✏️ Edit
-            </a>
-            <?php endif; ?>
+            </p>
         </div>
+
+        <div class="col-span-2">
+            <p class="text-gray-600 font-medium">Description</p>
+            <p class="text-lg"><?php echo e($task->description); ?></p>
+        </div>
+
+        <div>
+            <p class="text-gray-600 font-medium">Requested By</p>
+            <p class="text-lg"><?php echo e($task->requested_by); ?></p>
+        </div>
+
+        <div>
+            <p class="text-gray-600 font-medium">Location</p>
+            <p class="text-lg"><?php echo e($task->location); ?></p>
+        </div>
+
+        <div class="col-span-2">
+            <p class="text-gray-600 font-medium">Remarks</p>
+            <p class="text-lg"><?php echo e($task->remarks ?? '—'); ?></p>
+        </div>
+    </div>
+
+    <div class="flex justify-end mt-6 space-x-2">
+        <a href="<?php echo e(route('tasks.index')); ?>" class="px-4 py-2 bg-gray-300 rounded">Back</a>
+
+        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
+            <a href="<?php echo e(route('tasks.edit', $task)); ?>" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</a>
+            <form action="<?php echo e(route('tasks.destroy', $task)); ?>" method="POST" class="inline">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('DELETE'); ?>
+                <button onclick="return confirm('Are you sure you want to delete this task?')" 
+                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    Delete
+                </button>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
 <?php $__env->stopSection(); ?>

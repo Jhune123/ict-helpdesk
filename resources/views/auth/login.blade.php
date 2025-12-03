@@ -1,6 +1,7 @@
 <x-guest-layout>
     <div class="min-h-screen flex items-center justify-center bg-cover bg-center" 
          style="background-image: url('{{ asset('image/school-logo.jpg') }}');">
+
         <div class="bg-white/90 p-10 rounded-2xl shadow-2xl w-full max-w-md text-center">
 
             <!-- ICTO Logo -->
@@ -13,7 +14,6 @@
                 KSU ICTO-HELPDESK Management System
             </h1>
 
-            <!-- Tagline -->
             <p class="text-sm text-gray-600 mb-6">
                 Empowering ICT Services for KSU
             </p>
@@ -30,11 +30,22 @@
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
 
-                <!-- Password -->
+                <!-- Password (with eye toggle) -->
                 <div class="mt-4">
                     <x-input-label for="password" :value="__('Password')" />
-                    <x-text-input id="password" class="block mt-1 w-full"
-                        type="password" name="password" required />
+
+                    <div class="relative">
+                        <x-text-input id="password" class="block mt-1 w-full pr-10"
+                            type="password" name="password" required />
+
+                        <!-- 👁 Toggle Button -->
+                        <button type="button"
+                                onclick="togglePassword()"
+                                class="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-gray-800">
+                            <span id="eyeIcon">👁</span>
+                        </button>
+                    </div>
+
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
 
@@ -64,4 +75,20 @@
             </form>
         </div>
     </div>
+
+    <!-- 👁 PASSWORD TOGGLE SCRIPT -->
+    <script>
+        function togglePassword() {
+            let input = document.getElementById('password');
+            let icon = document.getElementById('eyeIcon');
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.textContent = "👁‍🗨"; // open eye
+            } else {
+                input.type = "password";
+                icon.textContent = "👁"; // closed eye
+            }
+        }
+    </script>
 </x-guest-layout>

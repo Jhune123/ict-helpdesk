@@ -48,11 +48,26 @@
 
                             <!-- Actions -->
                             <td class="px-4 py-2 border flex gap-2 items-center">
+
                                 <!-- View button (always visible) -->
                                 <a href="{{ route('tickets.show', $ticket->id) }}" 
                                    class="px-3 py-1 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">
                                     👁️ View
                                 </a>
+
+                                <!-- Submit Feedback Button for Completed Tickets -->
+                                @if($ticket->status === 'Closed')
+                                    @if(!$ticket->feedback)
+                                        <a href="{{ route('feedbacks.create', $ticket->id) }}" 
+                                           class="px-3 py-1 bg-pink-500 text-white font-semibold rounded-lg hover:bg-pink-600">
+                                            ✍️ Submit Feedback
+                                        </a>
+                                    @else
+                                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">
+                                            Feedback Submitted ✅
+                                        </span>
+                                    @endif
+                                @endif
 
                                 @php
                                     $role = strtolower(auth()->user()?->role ?? 'user');

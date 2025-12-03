@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf; // PDF support
 
 class TaskScheduleController extends Controller
 {
@@ -14,9 +15,9 @@ class TaskScheduleController extends Controller
         $tasks = Task::query()
             ->when($search, function ($query, $search) {
                 $query->where('description', 'like', "%{$search}%")
-                    ->orWhere('requested_by', 'like', "%{$search}%")
-                    ->orWhere('location', 'like', "%{$search}%")
-                    ->orWhere('remarks', 'like', "%{$search}%");
+                      ->orWhere('requested_by', 'like', "%{$search}%")
+                      ->orWhere('location', 'like', "%{$search}%")
+                      ->orWhere('remarks', 'like', "%{$search}%");
             })
             ->orderBy('date', 'asc')
             ->paginate(10);
@@ -26,7 +27,6 @@ class TaskScheduleController extends Controller
 
     public function create()
     {
-        // Only clients, admins, or IT staff can create
         if (auth()->user()->hasRole('client') || auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
             return view('tasks.create');
         }
@@ -36,15 +36,20 @@ class TaskScheduleController extends Controller
 
     public function store(Request $request)
     {
-        // Ensure only authorized users can store
         if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Add seconds to time format
+        // Ensure time has seconds
+        $startTime = $request->start_time;
+        $endTime = $request->end_time;
+
+        if (strlen($startTime) === 5) $startTime .= ':00';
+        if (strlen($endTime) === 5) $endTime .= ':00';
+
         $request->merge([
-            'start_time' => $request->start_time . ':00',
-            'end_time'   => $request->end_time . ':00',
+            'start_time' => $startTime,
+            'end_time' => $endTime,
         ]);
 
         $request->validate([
@@ -55,7 +60,7 @@ class TaskScheduleController extends Controller
             'start_time' => 'required|date_format:H:i:s',
             'end_time'   => 'required|date_format:H:i:s|after:start_time',
             'assigned_to' => 'nullable|string|max:255',
-            'remarks' => 'nullable|string|max:255',
+            'remarks' => 'nullable|string|max:500',
         ]);
 
         Task::create($request->all());
@@ -71,7 +76,6 @@ class TaskScheduleController extends Controller
 
     public function edit(Task $task)
     {
-        // Only admin and IT staff can edit
         if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
             abort(403, 'Unauthorized action.');
         }
@@ -81,14 +85,20 @@ class TaskScheduleController extends Controller
 
     public function update(Request $request, Task $task)
     {
-        // Only admin and IT staff can update
         if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
             abort(403, 'Unauthorized action.');
         }
 
+        // Ensure time has seconds
+        $startTime = $request->start_time;
+        $endTime = $request->end_time;
+
+        if (strlen($startTime) === 5) $startTime .= ':00';
+        if (strlen($endTime) === 5) $endTime .= ':00';
+
         $request->merge([
-            'start_time' => $request->start_time . ':00',
-            'end_time'   => $request->end_time . ':00',
+            'start_time' => $startTime,
+            'end_time' => $endTime,
         ]);
 
         $request->validate([
@@ -110,7 +120,6 @@ class TaskScheduleController extends Controller
 
     public function destroy(Task $task)
     {
-        // Only admin and IT staff can delete
         if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
             abort(403, 'Unauthorized action.');
         }
@@ -120,4 +129,18 @@ class TaskScheduleController extends Controller
         return redirect()->route('tasks.index')
             ->with('success', 'Task Schedule deleted successfully ❌');
     }
+
+    /**
+     * Export all tasks to PDF (A4 Landscape)
+     */
+public function exportPdf()
+{
+    $tasks = Task::orderBy('date', 'asc')->get();
+
+    $pdf = Pdf::loadView('tasks.pdf', compact('tasks'))
+              ->setPaper('A4', 'landscape');
+
+    $fileName = 'task_schedule_' . now()->format('Ymd_His') . '.pdf';
+    return $pdf->download($fileName);
+}
 }
