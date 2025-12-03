@@ -29,7 +29,7 @@ return new class extends Migration
     {
         Schema::table('assets', function (Blueprint $table) {
             $table->dropColumn([
-                'entity_name', 'fund_cluster', 'par_no', 'quantity', 'unit', 'description',
+                'fund_cluster', 'par_no', 'quantity', 'unit', 'description',
                 'property_no', 'date_acquired', 'amount', 'purpose', 'approved_for_issuance',
                 'received_from', 'received_by', 'date_counted'
             ]);
