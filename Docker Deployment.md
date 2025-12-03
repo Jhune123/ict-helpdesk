@@ -4,6 +4,7 @@ Updating docker instance
     docker compose up -d
 
 Fetch update
+    chmod +x deploy.sh
     ./deploy.sh
 
    sudo mkdir -p mysql_data
