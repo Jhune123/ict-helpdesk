@@ -35,8 +35,8 @@ docker compose exec -T app php artisan view:cache
 
 # Set permissions
 echo "🔐 Setting permissions..."
-docker compose exec -T app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/images
-docker compose exec -T app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/images
+docker compose exec -T app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/image
+docker compose exec -T app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/image
 
 echo "✅ Deployment completed successfully!"
 echo "🌐 Your app should now be running with the latest code and assets."
