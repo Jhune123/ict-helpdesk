@@ -60,7 +60,6 @@ services:
       - --default-authentication-plugin=mysql_native_password
       - --innodb-strict-mode=0
       - --innodb-file-per-table=1
-      - --innodb-file-format=Barracuda
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
