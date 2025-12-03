@@ -10,10 +10,12 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
+            $table->string('ticket_number')->nullable()->unique();
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('status')->default('Pending');
             $table->string('priority')->default('Normal');
+
 
             // ✅ Correct: foreign key to categories
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
