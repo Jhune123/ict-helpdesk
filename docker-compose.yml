@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   app:
     build:
@@ -9,7 +11,7 @@ services:
     # Mount only what needs to be writable or updated on host
     volumes:
       - /var/www/ict-helpdesk/public:/var/www/html/public
-      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build
+      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build        # ✅ mount built vite assets
       - /var/www/ict-helpdesk/storage:/var/www/html/storage
       - /var/www/ict-helpdesk/bootstrap/cache:/var/www/html/bootstrap/cache
       - /var/www/ict-helpdesk/.env:/var/www/html/.env
@@ -33,7 +35,7 @@ services:
       - "443:443"
     volumes:
       - /var/www/ict-helpdesk/public:/var/www/html/public:ro
-      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build:ro
+      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build:ro      # ✅ mount same build dir to nginx
       - /var/www/ict-helpdesk/nginx/conf.d:/etc/nginx/conf.d:ro
       - /var/www/ict-helpdesk/certbot/conf:/etc/letsencrypt
       - /var/www/ict-helpdesk/certbot/www:/var/www/certbot
@@ -54,12 +56,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - /var/www/ict-helpdesk/mysql_data:/var/lib/mysql
-    command:
-      - --default-authentication-plugin=mysql_native_password
-      - --innodb-strict-mode=0
-      - --innodb-file-per-table=1
-      - --innodb-file-format=Barracuda
+      - ./mysql_data:/var/lib/mysql        # ✅ Use project-local folder for DB persistence
+    command: --default-authentication-plugin=mysql_native_password  # ✅ Fixes some Laravel connection issues
     networks:
       - ict-net
 
