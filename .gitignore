@@ -8,10 +8,8 @@
 .phpunit.result.cache
 
 # Laravel specific
-/public/hot
 /public/mix-manifest.json
 /storage/debugbar
-/public/build
 
 # IDE & OS files
 /.idea
@@ -28,5 +26,3 @@ pnpm-debug.log
 
 # mysql data --- IGNORE ---
 /mysql_data
-
-.deploy.sh

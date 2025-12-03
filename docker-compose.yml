@@ -8,7 +8,6 @@ services:
     working_dir: /var/www/html
     volumes:
       - /var/www/ict-helpdesk/public:/var/www/html/public
-      - /var/www/ict-helpdesk/public/build:/var/www/html/public/build
       - /var/www/ict-helpdesk/storage:/var/www/html/storage
       - /var/www/ict-helpdesk/bootstrap/cache:/var/www/html/bootstrap/cache
       - /var/www/ict-helpdesk/.env:/var/www/html/.env
