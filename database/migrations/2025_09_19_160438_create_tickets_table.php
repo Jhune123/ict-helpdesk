@@ -10,22 +10,26 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->string('ticket_number')->nullable()->unique();
+            $table->string('ticket_number')->unique();
             $table->string('title');
             $table->text('description')->nullable();
+            $table->text('remarks')->nullable();
             $table->string('status')->default('Pending');
             $table->string('priority')->default('Normal');
 
-
-            // ✅ Correct: foreign key to categories
+            // Foreign keys
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
+            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
 
+            // Client information
             $table->string('client_name')->nullable();
-            $table->string('department')->nullable();
-            $table->date('date_submitted')->nullable();
-            $table->date('date_finished')->nullable();
             $table->string('contact_number')->nullable();
 
+            // Dates
+            $table->date('date_submitted')->nullable();
+            $table->date('date_finished')->nullable();
+
+            // User assignments
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
 
