@@ -11,34 +11,48 @@ return new class extends Migration
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
 
-            $table->string('entity_name');
-            $table->string('fund_cluster');
-            $table->string('par_no');
-
-            // Auto-filled / optional fields
-            $table->string('name')->nullable();
+            // Core identification fields
             $table->string('asset_code')->nullable();
+            $table->string('entity_name')->nullable();
+            $table->string('fund_cluster')->nullable();
+            $table->string('par_no')->nullable();
 
-            // Main fields
-            $table->integer('quantity')->default(1);
-            $table->string('unit');
-            $table->text('description');
+            // Asset details
+            $table->string('name')->nullable();
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
+            $table->string('serial_number')->nullable();
+            $table->string('category')->nullable();
+            $table->string('location')->nullable();
 
+            // Inventory and quantity
+            $table->integer('quantity')->default(1)->nullable();
+            $table->string('unit')->nullable();
+            $table->text('description')->nullable();
             $table->string('property_no')->nullable();
+
+            // Financial and acquisition details
             $table->date('date_acquired')->nullable();
+            $table->date('purchase_date')->nullable();
             $table->decimal('amount', 15, 2)->nullable();
-            $table->string('purpose')->nullable();
+            $table->decimal('cost', 12, 2)->nullable();
+            $table->string('supplier')->nullable();
+
+            // Status and assignment
+            $table->string('status')->default('Available');
+            $table->string('assigned_to')->nullable();
+
+            // Purpose and approval
+            $table->text('purpose')->nullable();
             $table->string('approved_for_issuance')->nullable();
+
+            // Receipt information
             $table->string('received_from')->nullable();
             $table->string('received_by')->nullable();
             $table->date('date_counted')->nullable();
 
-            // Removed department + category
-            // $table->string('department')->nullable();
-            // $table->string('category')->nullable();
-
-            $table->string('status')->default('Available');
-            $table->string('assigned_to')->nullable();
+            // Additional notes
+            $table->text('notes')->nullable();
 
             $table->timestamps();
         });
