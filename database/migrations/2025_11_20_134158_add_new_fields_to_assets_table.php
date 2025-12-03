@@ -9,9 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assets', function (Blueprint $table) {
-            if (!Schema::hasColumn('assets', 'entity_name')) {
-                $table->string('entity_name')->after('id');
-            }
             if (!Schema::hasColumn('assets', 'fund_cluster')) {
                 $table->string('fund_cluster')->after('entity_name');
             }
@@ -58,7 +55,7 @@ return new class extends Migration
     {
         Schema::table('assets', function (Blueprint $table) {
             $columns = [
-                'entity_name', 'fund_cluster', 'par_no', 'quantity', 'unit', 'description',
+                'fund_cluster', 'par_no', 'quantity', 'unit', 'description',
                 'property_no', 'date_acquired', 'amount', 'purpose',
                 'approved_for_issuance', 'received_from', 'received_by', 'date_counted'
             ];
