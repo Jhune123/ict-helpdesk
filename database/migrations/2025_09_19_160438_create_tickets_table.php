@@ -16,6 +16,7 @@ return new class extends Migration
             $table->text('remarks')->nullable();
             $table->string('status')->default('Pending');
             $table->string('priority')->default('Normal');
+            $table->string('department')->nullable();
 
             // Foreign keys
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
