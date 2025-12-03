@@ -16,22 +16,6 @@ if [ ! -d "public/build" ]; then
   echo "Make sure you built assets locally with 'npm run build' before pushing."
 fi
 
-# Stop containers
-echo "🛑 Stopping containers..."
-docker compose down
-
-# Rebuild images with latest code
-echo "🔨 Rebuilding Docker images..."
-docker compose build --no-cache
-
-# Start containers
-echo "▶️  Starting containers..."
-docker compose up -d
-
-# Wait for containers to be ready
-echo "⏳ Waiting for containers to be ready..."
-sleep 10
-
 # Run migrations (optional - remove if you don't want auto-migrations)
 echo "🗄️  Running database migrations..."
 docker compose exec -T app php artisan migrate --force
