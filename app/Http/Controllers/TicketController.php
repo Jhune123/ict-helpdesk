@@ -39,8 +39,6 @@ class TicketController extends Controller
     {
         $categories = Category::all();
         $departments = Department::all();
-
-        // Fetch all IT staff for dropdown
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
             ->orderBy('name', 'asc')
@@ -50,13 +48,12 @@ class TicketController extends Controller
     }
 
     /**
-     * Edit ticket form
+     * Show edit ticket form
      */
     public function edit(Ticket $ticket)
     {
         $categories = Category::all();
         $departments = Department::all();
-
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
             ->orderBy('name', 'asc')
@@ -71,60 +68,62 @@ class TicketController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'priority' => 'nullable|string|max:50',
-            'category_id' => 'nullable|integer',
-            'category_manual' => 'nullable|string|max:255',
-            'client_name' => 'required|string|max:255',
-            'department' => 'nullable|string|max:255',
+            'title'             => 'required|string|max:255',
+            'description'       => 'required|string',
+            'priority'          => 'nullable|string|max:50',
+            'category_id'       => 'nullable|integer',
+            'category_manual'   => 'nullable|string|max:255',
+            'client_name'       => 'required|string|max:255',
+            'department'        => 'nullable|string|max:255',
             'department_manual' => 'nullable|string|max:255',
-            'contact_number' => 'nullable|string|max:20',
-            'assigned_to' => 'nullable|integer',
-            'remarks' => 'nullable|string|max:500',
+            'contact_number'    => 'nullable|string|max:20',
+            'assigned_to'       => 'nullable|integer',
+            'remarks'           => 'nullable|string|max:500',
         ]);
 
-        // Auto-generate ticket number
+        // Auto Ticket Number
         $lastTicket = Ticket::orderBy('id', 'desc')->first();
         $newNumber = $lastTicket && $lastTicket->ticket_number
             ? str_pad((int) substr($lastTicket->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
             : '001';
         $ticketNumber = "KSU-ICTO-TIC-" . $newNumber;
 
-        // Manual category
+        // Manual Category
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
             $categoryId = $category->id;
         }
 
-        // Manual department
+        // Manual Department
         $departmentName = $validated['department'] ?? null;
         if (!empty($validated['department_manual'])) {
             $departmentName = $validated['department_manual'];
         }
 
-        // Create ticket
+        // Create Ticket
         $ticket = Ticket::create([
-            'ticket_number' => $ticketNumber,
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'priority' => $validated['priority'] ?? 'Normal',
-            'category_id' => $categoryId,
-            'department' => $departmentName,
-            'assigned_to' => $validated['assigned_to'] ?? null,
-            'status' => 'Open',
-            'remarks' => $validated['remarks'] ?? null,
-            'client_name' => $validated['client_name'],
+            'ticket_number'  => $ticketNumber,
+            'title'          => $validated['title'],
+            'description'    => $validated['description'],
+            'priority'       => $validated['priority'] ?? 'Normal',
+            'category_id'    => $categoryId,
+            'department'     => $departmentName,
+            'assigned_to'    => $validated['assigned_to'] ?? null,
+            'status'         => 'Open',
+            'remarks'        => $validated['remarks'] ?? null,
+            'client_name'    => $validated['client_name'],
             'contact_number' => $validated['contact_number'] ?? null,
             'date_submitted' => Carbon::now('Asia/Manila'),
-            'created_by' => Auth::id(),
+            'created_by'     => Auth::id(),
         ]);
 
-        // Notify IT personnel
+        // Notify Assignee
         if (!empty($validated['assigned_to'])) {
             $it = User::find($validated['assigned_to']);
-            if ($it) $it->notify(new TicketAssignedNotification($ticket));
+            if ($it) {
+                $it->notify(new TicketAssignedNotification($ticket));
+            }
         }
 
         return redirect()->route('tickets.index')
@@ -146,55 +145,57 @@ class TicketController extends Controller
     public function update(Request $request, Ticket $ticket)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'priority' => 'nullable|string|max:50',
-            'category_id' => 'nullable|integer',
-            'category_manual' => 'nullable|string|max:255',
-            'department' => 'nullable|string|max:255',
+            'title'             => 'required|string|max:255',
+            'description'       => 'required|string',
+            'priority'          => 'nullable|string|max:50',
+            'category_id'       => 'nullable|integer',
+            'category_manual'   => 'nullable|string|max:255',
+            'department'        => 'nullable|string|max:255',
             'department_manual' => 'nullable|string|max:255',
-            'assigned_to' => 'nullable|integer',
-            'contact_number' => 'nullable|string|max:20',
-            'remarks' => 'nullable|string|max:500',
-            'status' => 'required|string',
+            'contact_number'    => 'nullable|string|max:20',
+            'assigned_to'       => 'nullable|integer',
+            'remarks'           => 'nullable|string|max:500',
+            'status'            => 'required|string',
         ]);
 
-        // Manual category
+        // Manual Category
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
             $categoryId = $category->id;
         }
 
-        // Manual department
+        // Manual Department
         $departmentName = $validated['department'] ?? null;
         if (!empty($validated['department_manual'])) {
             $departmentName = $validated['department_manual'];
         }
 
-        // Update ticket
+        // Final Data
         $data = [
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'priority' => $validated['priority'] ?? 'Normal',
-            'category_id' => $categoryId,
-            'department' => $departmentName,
-            'assigned_to' => $validated['assigned_to'] ?? null,
+            'title'          => $validated['title'],
+            'description'    => $validated['description'],
+            'priority'       => $validated['priority'] ?? 'Normal',
+            'category_id'    => $categoryId,
+            'department'     => $departmentName,
+            'assigned_to'    => $validated['assigned_to'] ?? null,
             'contact_number' => $validated['contact_number'] ?? null,
-            'remarks' => $validated['remarks'] ?? null,
+            'remarks'        => $validated['remarks'] ?? null,
+            'status'         => $validated['status'],
         ];
 
-        if (!empty($validated['status'])) {
-            $data['status'] = $validated['status'];
-            $data['date_finished'] = $validated['status'] === 'Closed' ? Carbon::now('Asia/Manila') : null;
-        }
+        // Auto-date finished when closed
+        $data['date_finished'] =
+            $validated['status'] === 'Closed' ? Carbon::now('Asia/Manila') : null;
 
         $ticket->update($data);
 
-        // Notify IT personnel
+        // Notify Assignee
         if (!empty($validated['assigned_to'])) {
             $it = User::find($validated['assigned_to']);
-            if ($it) $it->notify(new TicketAssignedNotification($ticket));
+            if ($it) {
+                $it->notify(new TicketAssignedNotification($ticket));
+            }
         }
 
         return redirect()->route('tickets.index')
@@ -207,12 +208,13 @@ class TicketController extends Controller
     public function destroy(Ticket $ticket)
     {
         $ticket->delete();
+
         return redirect()->route('tickets.index')
             ->with('success', 'Ticket deleted successfully ❌');
     }
 
     /**
-     * My Tickets (client/employee)
+     * My Tickets
      */
     public function mine()
     {
@@ -239,13 +241,13 @@ class TicketController extends Controller
     }
 
     /**
-     * EXPORT (CSV, EXCEL, PDF)
+     * EXPORT (CSV, XLSX, PDF)
      */
     public function export($type)
     {
         $fileName = 'tickets_' . now()->format('Ymd_His');
 
-        if ($type === 'csv' || $type === 'xlsx') {
+        if (in_array($type, ['csv', 'xlsx'])) {
             return Excel::download(new TicketsExport, $fileName . '.' . $type);
         }
 
@@ -255,17 +257,19 @@ class TicketController extends Controller
             return $pdf->download($fileName . '.pdf');
         }
 
-        return redirect()->back()->with('error', 'Export type not supported');
+        return redirect()->back()->with('error', 'Export type not supported.');
     }
 
     /**
-     * JOB ORDER PDF GENERATOR
+     * JOB ORDER PDF
      */
     public function jobOrderPdf(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
-        $pdf = Pdf::loadView('tickets.job_order', compact('ticket'))->setPaper('A4', 'portrait');
-        $fileName = 'JobOrder-' . $ticket->ticket_number . '.pdf';
-        return $pdf->download($fileName);
+
+        $pdf = Pdf::loadView('tickets.job_order', compact('ticket'))
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->download('JobOrder-' . $ticket->ticket_number . '.pdf');
     }
 }
