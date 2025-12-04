@@ -40,12 +40,29 @@ class TicketController extends Controller
         $categories = Category::all();
         $departments = Department::all();
 
+        // Fetch all IT staff for dropdown
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
             ->orderBy('name', 'asc')
             ->get();
 
         return view('tickets.create', compact('categories', 'departments', 'it_personnel'));
+    }
+
+    /**
+     * Edit ticket form
+     */
+    public function edit(Ticket $ticket)
+    {
+        $categories = Category::all();
+        $departments = Department::all();
+
+        $it_personnel = User::role('it_staff')
+            ->select('id', 'name')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return view('tickets.edit', compact('ticket', 'categories', 'departments', 'it_personnel'));
     }
 
     /**
@@ -57,43 +74,31 @@ class TicketController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'priority' => 'nullable|string|max:50',
-
             'category_id' => 'nullable|integer',
             'category_manual' => 'nullable|string|max:255',
-
             'client_name' => 'required|string|max:255',
-
             'department' => 'nullable|string|max:255',
             'department_manual' => 'nullable|string|max:255',
-
             'contact_number' => 'nullable|string|max:20',
             'assigned_to' => 'nullable|integer',
             'remarks' => 'nullable|string|max:500',
         ]);
 
-        /**
-         * AUTO GENERATE TICKET NUMBER
-         * Format: KSU-ICTO-TIC-001
-         */
+        // Auto-generate ticket number
         $lastTicket = Ticket::orderBy('id', 'desc')->first();
-
-        if ($lastTicket && $lastTicket->ticket_number) {
-            $lastNumber = (int) substr($lastTicket->ticket_number, -3);
-            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = "001";
-        }
-
+        $newNumber = $lastTicket && $lastTicket->ticket_number
+            ? str_pad((int) substr($lastTicket->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
+            : '001';
         $ticketNumber = "KSU-ICTO-TIC-" . $newNumber;
 
-        // Handle manual category
+        // Manual category
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
             $categoryId = $category->id;
         }
 
-        // Handle manual department
+        // Manual department
         $departmentName = $validated['department'] ?? null;
         if (!empty($validated['department_manual'])) {
             $departmentName = $validated['department_manual'];
@@ -119,9 +124,7 @@ class TicketController extends Controller
         // Notify IT personnel
         if (!empty($validated['assigned_to'])) {
             $it = User::find($validated['assigned_to']);
-            if ($it) {
-                $it->notify(new TicketAssignedNotification($ticket));
-            }
+            if ($it) $it->notify(new TicketAssignedNotification($ticket));
         }
 
         return redirect()->route('tickets.index')
@@ -138,22 +141,6 @@ class TicketController extends Controller
     }
 
     /**
-     * Edit ticket form
-     */
-    public function edit(Ticket $ticket)
-    {
-        $categories = Category::all();
-        $departments = Department::all();
-
-        $it_personnel = User::role('it_staff')
-            ->select('id', 'name')
-            ->orderBy('name', 'asc')
-            ->get();
-
-        return view('tickets.edit', compact('ticket', 'categories', 'departments', 'it_personnel'));
-    }
-
-    /**
      * Update ticket
      */
     public function update(Request $request, Ticket $ticket)
@@ -162,17 +149,13 @@ class TicketController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'priority' => 'nullable|string|max:50',
-
             'category_id' => 'nullable|integer',
             'category_manual' => 'nullable|string|max:255',
-
             'department' => 'nullable|string|max:255',
             'department_manual' => 'nullable|string|max:255',
-
             'assigned_to' => 'nullable|integer',
             'contact_number' => 'nullable|string|max:20',
             'remarks' => 'nullable|string|max:500',
-
             'status' => 'required|string',
         ]);
 
@@ -189,7 +172,7 @@ class TicketController extends Controller
             $departmentName = $validated['department_manual'];
         }
 
-        // Update data
+        // Update ticket
         $data = [
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -201,11 +184,9 @@ class TicketController extends Controller
             'remarks' => $validated['remarks'] ?? null,
         ];
 
-        // Status + auto date finished
         if (!empty($validated['status'])) {
             $data['status'] = $validated['status'];
-            $data['date_finished'] =
-                $validated['status'] === 'Closed' ? Carbon::now('Asia/Manila') : null;
+            $data['date_finished'] = $validated['status'] === 'Closed' ? Carbon::now('Asia/Manila') : null;
         }
 
         $ticket->update($data);
@@ -213,9 +194,7 @@ class TicketController extends Controller
         // Notify IT personnel
         if (!empty($validated['assigned_to'])) {
             $it = User::find($validated['assigned_to']);
-            if ($it) {
-                $it->notify(new TicketAssignedNotification($ticket));
-            }
+            if ($it) $it->notify(new TicketAssignedNotification($ticket));
         }
 
         return redirect()->route('tickets.index')
@@ -285,12 +264,8 @@ class TicketController extends Controller
     public function jobOrderPdf(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
-
-        $pdf = Pdf::loadView('tickets.job_order', compact('ticket'))
-            ->setPaper('A4', 'portrait');
-
+        $pdf = Pdf::loadView('tickets.job_order', compact('ticket'))->setPaper('A4', 'portrait');
         $fileName = 'JobOrder-' . $ticket->ticket_number . '.pdf';
-
         return $pdf->download($fileName);
     }
 }

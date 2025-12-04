@@ -62,11 +62,13 @@
             <label class="block text-gray-700 font-semibold">Assign To (IT Personnel)</label>
             <select name="assigned_to" class="w-full border rounded-lg p-2">
                 <option value="">-- Select IT Personnel --</option>
-                @foreach($it_personnel as $user)
+                @forelse($it_personnel as $user)
                     <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
                         {{ $user->name }}
                     </option>
-                @endforeach
+                @empty
+                    <option value="">No IT Personnel available</option>
+                @endforelse
             </select>
         </div>
 

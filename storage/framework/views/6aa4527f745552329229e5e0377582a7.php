@@ -76,12 +76,14 @@ unset($__errorArgs, $__bag); ?>
             <label class="block text-gray-700 font-semibold">Assign To (IT Personnel)</label>
             <select name="assigned_to" class="w-full border rounded-lg p-2">
                 <option value="">-- Select IT Personnel --</option>
-                <?php $__currentLoopData = $it_personnel; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__empty_1 = true; $__currentLoopData = $it_personnel; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <option value="<?php echo e($user->id); ?>" <?php echo e(old('assigned_to') == $user->id ? 'selected' : ''); ?>>
                         <?php echo e($user->name); ?>
 
                     </option>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <option value="">No IT Personnel available</option>
+                <?php endif; ?>
             </select>
         </div>
 

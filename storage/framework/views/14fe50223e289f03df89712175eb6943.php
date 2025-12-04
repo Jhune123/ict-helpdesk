@@ -2,7 +2,7 @@
 <div class="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
     <h2 class="text-xl font-bold mb-4">✏️ Edit Ticket</h2>
 
-    <form action="<?php echo e(route('tickets.update', $ticket->id)); ?>" method="POST">
+    <form action="<?php echo e(route('tickets.update', $ticket)); ?>" method="POST">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
 
@@ -25,7 +25,7 @@ unset($__errorArgs, $__bag); ?>
         <!-- Description -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Description</label>
-            <textarea name="description" class="w-full border rounded-lg p-2"><?php echo e(old('description', $ticket->description)); ?></textarea>
+            <textarea name="description" class="w-full border rounded-lg p-2" required><?php echo e(old('description', $ticket->description)); ?></textarea>
             <?php $__errorArgs = ['description'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -74,18 +74,20 @@ unset($__errorArgs, $__bag); ?>
                    class="w-full border rounded-lg p-2 mt-2">
         </div>
 
-        <!-- Assigned To -->
+        <!-- Assign To (IT Personnel) -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Assign To (IT Personnel)</label>
             <select name="assigned_to" class="w-full border rounded-lg p-2">
                 <option value="">-- Select IT Personnel --</option>
-                <?php $__currentLoopData = $it_personnel; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__empty_1 = true; $__currentLoopData = $it_personnel; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <option value="<?php echo e($user->id); ?>" 
                         <?php echo e(old('assigned_to', $ticket->assigned_to) == $user->id ? 'selected' : ''); ?>>
                         <?php echo e($user->name); ?>
 
                     </option>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <option value="">No IT Personnel available</option>
+                <?php endif; ?>
             </select>
         </div>
 
@@ -93,40 +95,20 @@ unset($__errorArgs, $__bag); ?>
         <div class="mb-4">
             <label class="block font-semibold text-gray-700">Priority</label>
             <select name="priority" class="w-full border-gray-300 rounded-lg shadow-sm">
-                <option value="Low" <?php echo e($ticket->priority == 'Low' ? 'selected' : ''); ?>>Low</option>
-                <option value="Normal" <?php echo e($ticket->priority == 'Normal' ? 'selected' : ''); ?>>Normal</option>
-                <option value="High" <?php echo e($ticket->priority == 'High' ? 'selected' : ''); ?>>High</option>
+                <option value="Low" <?php echo e(old('priority', $ticket->priority) == 'Low' ? 'selected' : ''); ?>>Low</option>
+                <option value="Normal" <?php echo e(old('priority', $ticket->priority) == 'Normal' ? 'selected' : ''); ?>>Normal</option>
+                <option value="High" <?php echo e(old('priority', $ticket->priority) == 'High' ? 'selected' : ''); ?>>High</option>
             </select>
         </div>
 
         <!-- Status -->
         <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Status</label>
-            <select name="status" class="w-full border rounded-lg p-2">
+            <label class="block font-semibold text-gray-700">Status</label>
+            <select name="status" class="w-full border-gray-300 rounded-lg shadow-sm" required>
                 <option value="Open" <?php echo e(old('status', $ticket->status) == 'Open' ? 'selected' : ''); ?>>Open</option>
                 <option value="In Progress" <?php echo e(old('status', $ticket->status) == 'In Progress' ? 'selected' : ''); ?>>In Progress</option>
                 <option value="Closed" <?php echo e(old('status', $ticket->status) == 'Closed' ? 'selected' : ''); ?>>Closed</option>
             </select>
-        </div>
-
-        <!-- Date Created -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Date Created</label>
-            <input type="text" class="w-full border rounded-lg p-2 bg-gray-100" 
-                   value="<?php echo e($ticket->created_at->format('Y-m-d H:i')); ?>" readonly>
-        </div>
-
-        <!-- Date Finished -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Date Finished</label>
-            <input type="text" class="w-full border rounded-lg p-2 bg-gray-100"
-                   value="<?php echo e($ticket->date_finished ? $ticket->date_finished->format('Y-m-d H:i') : 'Not yet finished'); ?>" readonly>
-        </div>
-
-        <!-- Remarks -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Remarks</label>
-            <textarea name="remarks" class="w-full border rounded-lg p-2"><?php echo e(old('remarks', $ticket->remarks)); ?></textarea>
         </div>
 
         <!-- Client Info -->
@@ -134,7 +116,7 @@ unset($__errorArgs, $__bag); ?>
             <label class="block text-gray-700 font-semibold">Client Name</label>
             <input type="text" name="client_name" 
                    value="<?php echo e(old('client_name', $ticket->client_name)); ?>"
-                   class="w-full border rounded-lg p-2">
+                   class="w-full border rounded-lg p-2" required>
         </div>
 
         <div class="mb-4">
@@ -144,6 +126,12 @@ unset($__errorArgs, $__bag); ?>
                    class="w-full border rounded-lg p-2">
         </div>
 
+        <!-- Remarks -->
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold">Remarks</label>
+            <textarea name="remarks" class="w-full border rounded-lg p-2"><?php echo e(old('remarks', $ticket->remarks)); ?></textarea>
+        </div>
+
         <!-- Submit -->
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Update Ticket
@@ -151,4 +139,5 @@ unset($__errorArgs, $__bag); ?>
     </form>
 </div>
 <?php $__env->stopSection(); ?>
+
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\ict_helpdesk\resources\views/tickets/edit.blade.php ENDPATH**/ ?>
