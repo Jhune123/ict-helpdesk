@@ -1,4 +1,3 @@
-// Copy code
 @extends('layouts.app')
 
 @section('content')
@@ -147,7 +146,7 @@
                                 👁 View
                             </a>
 
-                            {{-- NEW: PRINT JOB ORDER --}}
+                            {{-- PRINT JOB ORDER --}}
                             <a href="{{ route('tickets.joborder.pdf', $ticket->id) }}"
                                target="_blank"
                                class="bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 inline-flex items-center gap-1 text-xs">
