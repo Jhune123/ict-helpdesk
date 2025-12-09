@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('styles')
+<?php $__env->startSection('styles'); ?>
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
@@ -47,20 +45,20 @@
         }
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-green-700">📅 Meetings</h2>
 
         <div class="flex gap-2">
-            @role('admin|it_staff|client')
-                <a href="{{ route('meetings.create') }}" 
+            <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff|client')): ?>
+                <a href="<?php echo e(route('meetings.create')); ?>" 
                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                    + Create Meeting
                 </a>
-            @endrole
+            <?php endif; ?>
         </div>
     </div>
 
@@ -82,58 +80,58 @@
             </thead>
 
             <tbody>
-                @foreach ($meetings as $meeting)
-                @php
+                <?php $__currentLoopData = $meetings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $meeting): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php
                     $today = \Carbon\Carbon::today();
                     $meetingDate = \Carbon\Carbon::parse($meeting->date);
                     $isUpcoming = $meetingDate->gte($today);
                     $isPast = $meetingDate->lt($today);
-                @endphp
-                <tr class="{{ $isUpcoming ? 'upcoming-meeting' : ($isPast ? 'past-meeting' : '') }}">
-                    <td>{{ $meeting->title }}</td>
-                    <td>{{ $meetingDate->format('M d, Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($meeting->start_time)->format('h:i A') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($meeting->end_time)->format('h:i A') }}</td>
-                    <td>{{ $meeting->location }}</td>
-                    <td>{{ $meeting->facilitator ?? 'N/A' }}</td>
-                    <td>{{ $meeting->participants }}</td>
-                    <td>{{ $meeting->remarks ?? '—' }}</td> <!-- ✅ ADDED -->
+                ?>
+                <tr class="<?php echo e($isUpcoming ? 'upcoming-meeting' : ($isPast ? 'past-meeting' : '')); ?>">
+                    <td><?php echo e($meeting->title); ?></td>
+                    <td><?php echo e($meetingDate->format('M d, Y')); ?></td>
+                    <td><?php echo e(\Carbon\Carbon::parse($meeting->start_time)->format('h:i A')); ?></td>
+                    <td><?php echo e(\Carbon\Carbon::parse($meeting->end_time)->format('h:i A')); ?></td>
+                    <td><?php echo e($meeting->location); ?></td>
+                    <td><?php echo e($meeting->facilitator ?? 'N/A'); ?></td>
+                    <td><?php echo e($meeting->participants); ?></td>
+                    <td><?php echo e($meeting->remarks ?? '—'); ?></td> <!-- ✅ ADDED -->
                     <td>
-                        @if($meeting->itPersonnel->isNotEmpty())
+                        <?php if($meeting->itPersonnel->isNotEmpty()): ?>
                             <ul class="list-disc list-inside">
-                                @foreach($meeting->itPersonnel as $person)
-                                    <li>{{ $person->name }}</li>
-                                @endforeach
+                                <?php $__currentLoopData = $meeting->itPersonnel; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $person): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li><?php echo e($person->name); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
-                        @else
+                        <?php else: ?>
                             <span class="text-gray-500">None</span>
-                        @endif
+                        <?php endif; ?>
                     </td>
                     <td>
-                        <a href="{{ route('meetings.show', $meeting->id) }}" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">View</a>
+                        <a href="<?php echo e(route('meetings.show', $meeting->id)); ?>" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">View</a>
 
-                        @role('admin|it_staff')
-                        <a href="{{ route('meetings.edit', $meeting->id) }}" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                        <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin|it_staff')): ?>
+                        <a href="<?php echo e(route('meetings.edit', $meeting->id)); ?>" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
 
-                        <form action="{{ route('meetings.destroy', $meeting->id) }}" method="POST" class="inline">
-                            @csrf
-                            @method('DELETE')
+                        <form action="<?php echo e(route('meetings.destroy', $meeting->id)); ?>" method="POST" class="inline">
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('DELETE'); ?>
                             <button type="submit" onclick="return confirm('Are you sure you want to delete this meeting?')" 
                                 class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
                                 Delete
                             </button>
                         </form>
-                        @endrole
+                        <?php endif; ?>
                     </td>
                 </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
         </table>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
@@ -178,4 +176,6 @@ $(document).ready(function() {
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\ict_helpdesk\resources\views/meetings/index.blade.php ENDPATH**/ ?>

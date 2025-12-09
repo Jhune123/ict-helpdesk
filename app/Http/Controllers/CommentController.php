@@ -24,13 +24,13 @@ class CommentController extends Controller
         // ✅ Create the comment
         $comment = Comment::create([
             'ticket_id' => $ticket->id,
-            'user_id' => Auth::id(),
-            'message' => $validated['message'],
+            'user_id'   => Auth::id(),
+            'message'   => $validated['message'],
         ]);
 
         // ✅ Email notification setup
         try {
-            $creatorEmail = $ticket->user->email ?? null;
+            $creatorEmail  = $ticket->user->email ?? null;
             $assignedEmail = $ticket->assigned_to_user->email ?? null;
 
             $subject = 'New Comment on Ticket #' . $ticket->id;

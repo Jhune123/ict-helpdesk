@@ -4,7 +4,8 @@
 <div class="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
     <h2 class="text-xl font-bold mb-4">✏️ Edit Ticket</h2>
 
-    <form action="{{ route('tickets.update', $ticket) }}" method="POST">
+    <!-- ✅ Added enctype for file uploads -->
+    <form action="{{ route('tickets.update', $ticket) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -115,6 +116,19 @@
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Remarks</label>
             <textarea name="remarks" class="w-full border rounded-lg p-2">{{ old('remarks', $ticket->remarks) }}</textarea>
+        </div>
+
+        <!-- Attachment -->
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold">Attachment</label>
+            <input type="file" name="attachment" class="w-full border rounded-lg p-2">
+            @if($ticket->attachments->isNotEmpty())
+                <ul class="mt-2">
+                    @foreach($ticket->attachments as $file)
+                        <li><a href="{{ Storage::url($file->path) }}" target="_blank">{{ $file->filename }}</a></li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
 
         <!-- Submit -->
