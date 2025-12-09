@@ -4,7 +4,6 @@
 <div class="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
     <h2 class="text-xl font-bold mb-4">✏️ Edit Ticket</h2>
 
-    <!-- ✅ Added enctype for file uploads -->
     <form action="{{ route('tickets.update', $ticket) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')

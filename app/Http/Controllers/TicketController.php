@@ -16,9 +16,6 @@ use App\Notifications\TicketAssignedNotification;
 
 class TicketController extends Controller
 {
-    /**
-     * Display all tickets
-     */
     public function index()
     {
         $tickets = Ticket::with(['category', 'assignee'])
@@ -32,9 +29,6 @@ class TicketController extends Controller
         return view('tickets.index', compact('tickets'));
     }
 
-    /**
-     * Show create ticket form
-     */
     public function create()
     {
         $categories = Category::all();
@@ -48,9 +42,6 @@ class TicketController extends Controller
         return view('tickets.create', compact('categories', 'departments', 'it_personnel'));
     }
 
-    /**
-     * Show edit ticket form
-     */
     public function edit(Ticket $ticket)
     {
         $categories = Category::all();
@@ -64,9 +55,6 @@ class TicketController extends Controller
         return view('tickets.edit', compact('ticket', 'categories', 'departments', 'it_personnel'));
     }
 
-    /**
-     * Store a new ticket
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -83,7 +71,6 @@ class TicketController extends Controller
             'remarks' => 'nullable|string|max:500',
         ]);
 
-        // Auto-generate ticket number
         $lastTicket = Ticket::orderBy('id', 'desc')->first();
         $newNumber = $lastTicket && $lastTicket->ticket_number
             ? str_pad((int) substr($lastTicket->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
@@ -91,20 +78,17 @@ class TicketController extends Controller
 
         $ticketNumber = "KSU-ICTO-TIC-" . $newNumber;
 
-        // Handle manual category
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
             $categoryId = $category->id;
         }
 
-        // Handle manual department
         $departmentName = $validated['department'] ?? null;
         if (!empty($validated['department_manual'])) {
             $departmentName = $validated['department_manual'];
         }
 
-        // Create ticket
         $ticket = Ticket::create([
             'ticket_number' => $ticketNumber,
             'title' => $validated['title'],
@@ -121,7 +105,7 @@ class TicketController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        // Notify assigned IT personnel
+        // Notify assigned IT if exists
         if (!empty($validated['assigned_to'])) {
             $it = User::find($validated['assigned_to']);
             if ($it) {
@@ -133,18 +117,12 @@ class TicketController extends Controller
             ->with('success', "Ticket created successfully ✅ Ticket Number: $ticketNumber");
     }
 
-    /**
-     * Show ticket details
-     */
     public function show(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
         return view('tickets.show', compact('ticket'));
     }
 
-    /**
-     * Update ticket (Final & Working)
-     */
     public function update(Request $request, Ticket $ticket)
     {
         $validated = $request->validate([
@@ -159,23 +137,23 @@ class TicketController extends Controller
             'contact_number' => 'nullable|string|max:20',
             'remarks' => 'nullable|string|max:500',
             'status' => 'required|string',
-            'client_name' => 'required|string|max:255',  // ✅ Fix validation
+            'client_name' => 'required|string|max:255',
         ]);
 
-        // Manual category
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
             $categoryId = $category->id;
         }
 
-        // Manual department
         $departmentName = $validated['department'] ?? null;
         if (!empty($validated['department_manual'])) {
             $departmentName = $validated['department_manual'];
         }
 
-        // Prepare update data
+        // Determine if assigned IT changed
+        $assignedChanged = $ticket->assigned_to != ($validated['assigned_to'] ?? null);
+
         $data = [
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -185,24 +163,23 @@ class TicketController extends Controller
             'assigned_to' => $validated['assigned_to'] ?? null,
             'contact_number' => $validated['contact_number'] ?? null,
             'remarks' => $validated['remarks'] ?? null,
-            'client_name' => $validated['client_name'], // ✅ FIXED (added)
+            'client_name' => $validated['client_name'],
         ];
 
-        // Status updates
+        // Update status and finished date
         if (!empty($validated['status'])) {
-            $data['status'] = $validated['status'];
-
-            // If ticket is closed, mark finished date
-            $data['date_finished'] = $validated['status'] === 'Closed'
-                ? Carbon::now('Asia/Manila')
-                : null;
+            if ($ticket->status != $validated['status']) {
+                $data['status'] = $validated['status'];
+                $data['date_finished'] = $validated['status'] === 'Closed'
+                    ? Carbon::now('Asia/Manila')
+                    : null;
+            }
         }
 
-        // Save updates
         $ticket->update($data);
 
-        // Send notification if assigned IT was changed
-        if (!empty($validated['assigned_to'])) {
+        // Notify IT only if assignment changed
+        if ($assignedChanged && !empty($validated['assigned_to'])) {
             $it = User::find($validated['assigned_to']);
             if ($it) {
                 $it->notify(new TicketAssignedNotification($ticket));
@@ -213,9 +190,6 @@ class TicketController extends Controller
             ->with('success', 'Ticket updated successfully ✅');
     }
 
-    /**
-     * Delete ticket
-     */
     public function destroy(Ticket $ticket)
     {
         $ticket->delete();
@@ -224,9 +198,6 @@ class TicketController extends Controller
             ->with('success', 'Ticket deleted successfully ❌');
     }
 
-    /**
-     * My Tickets
-     */
     public function mine()
     {
         $tickets = Ticket::with(['category'])
@@ -237,9 +208,6 @@ class TicketController extends Controller
         return view('tickets.mine', compact('tickets'));
     }
 
-    /**
-     * Group tickets by department
-     */
     public function byDepartment()
     {
         $tickets = Ticket::with(['category'])
@@ -251,9 +219,6 @@ class TicketController extends Controller
         return view('tickets.departments', compact('tickets'));
     }
 
-    /**
-     * Export tickets
-     */
     public function export($type)
     {
         $fileName = 'tickets_' . now()->format('Ymd_His');
@@ -271,9 +236,6 @@ class TicketController extends Controller
         return redirect()->back()->with('error', 'Export type not supported');
     }
 
-    /**
-     * Job Order PDF
-     */
     public function jobOrderPdf(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
