@@ -167,5 +167,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         DB::table('assets')->insert($assets);
+
+        $this->call(RoleSeeder::class);
     }
 }
