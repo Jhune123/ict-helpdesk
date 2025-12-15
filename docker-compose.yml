@@ -79,8 +79,8 @@ services:
 
 networks:
     ict-net:
-    driver: bridge
+        driver: bridge
 
 volumes:
     mysql-data:  # Add this at the bottom
-    driver: local
+        driver: local
