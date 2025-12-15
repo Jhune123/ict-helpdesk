@@ -10,6 +10,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Database\Seeders\PermissionSeeder;
+use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
@@ -174,9 +176,33 @@ class DatabaseSeeder extends Seeder
 
         // Create each role if it doesn't already exist
         foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
 
-        $this->call(PermissionSeeder::class);
+                // Define all permissions your system needs
+        $permissions = [
+            // Tickets
+            'ticket.create', 'ticket.view', 'ticket.edit', 'ticket.delete',
+            // Task schedules
+            'task.create', 'task.view', 'task.edit', 'task.delete',
+            // Meeting schedules
+            'meeting.create', 'meeting.view', 'meeting.edit', 'meeting.delete',
+            // Any other system-wide permissions
+        ];
+
+        // Create permissions if not exists
+        foreach ($permissions as $perm) {
+            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
+        }
+
+        // Assign all permissions to admin role
+
+        foreach(Permission::all() as $permission) {
+            $adminRole = Role::where('name', 'admin')->first();
+            if ($adminRole && !$adminRole->hasPermissionTo($permission->name)) {
+                $adminRole->givePermissionTo($permission->name);
+            }
+        }
+
     }
 }

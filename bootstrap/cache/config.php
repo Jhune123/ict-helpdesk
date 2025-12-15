@@ -1,4 +1,26 @@
 <?php return array (
+  'hashing' => 
+  array (
+    'driver' => 'bcrypt',
+    'bcrypt' => 
+    array (
+      'rounds' => '12',
+      'verify' => true,
+      'limit' => NULL,
+    ),
+    'argon' => 
+    array (
+      'memory' => 65536,
+      'threads' => 1,
+      'time' => 4,
+      'verify' => true,
+    ),
+    'rehash_on_login' => true,
+  ),
+  'concurrency' => 
+  array (
+    'default' => 'process',
+  ),
   'broadcasting' => 
   array (
     'default' => 'log',
@@ -55,9 +77,13 @@
       ),
     ),
   ),
-  'concurrency' => 
+  'view' => 
   array (
-    'default' => 'process',
+    'paths' => 
+    array (
+      0 => '/Users/icto/Documents/Sites/ict-helpdesk/resources/views',
+    ),
+    'compiled' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/framework/views',
   ),
   'cors' => 
   array (
@@ -87,35 +113,9 @@
     'max_age' => 0,
     'supports_credentials' => false,
   ),
-  'hashing' => 
-  array (
-    'driver' => 'bcrypt',
-    'bcrypt' => 
-    array (
-      'rounds' => '12',
-      'verify' => true,
-      'limit' => NULL,
-    ),
-    'argon' => 
-    array (
-      'memory' => 65536,
-      'threads' => 1,
-      'time' => 4,
-      'verify' => true,
-    ),
-    'rehash_on_login' => true,
-  ),
-  'view' => 
-  array (
-    'paths' => 
-    array (
-      0 => 'C:\\laragon\\www\\ict_helpdesk\\resources\\views',
-    ),
-    'compiled' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\framework\\views',
-  ),
   'app' => 
   array (
-    'name' => 'KSU ICT HELPDESK',
+    'name' => 'Laravel',
     'env' => 'local',
     'debug' => true,
     'url' => 'http://localhost',
@@ -126,7 +126,7 @@
     'fallback_locale' => 'en',
     'faker_locale' => 'en_US',
     'cipher' => 'AES-256-CBC',
-    'key' => 'base64:jQO1cw/a9K8DZXHPamaZpCZSE+UGEAM6rQQnFEjVNkk=',
+    'key' => 'base64:/Q1SYT+SJVfm/9bbJUSLBzpxJTD9dDPIK3WEZ8qqVZ8=',
     'previous_keys' => 
     array (
     ),
@@ -248,7 +248,7 @@
   ),
   'cache' => 
   array (
-    'default' => 'array',
+    'default' => 'database',
     'stores' => 
     array (
       'array' => 
@@ -272,8 +272,8 @@
       'file' => 
       array (
         'driver' => 'file',
-        'path' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\framework/cache/data',
-        'lock_path' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\framework/cache/data',
+        'path' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/framework/cache/data',
+        'lock_path' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/framework/cache/data',
       ),
       'memcached' => 
       array (
@@ -326,7 +326,7 @@
         ),
       ),
     ),
-    'prefix' => 'ksu-ict-helpdesk-cache-',
+    'prefix' => 'laravel-cache-',
   ),
   'database' => 
   array (
@@ -337,7 +337,7 @@
       array (
         'driver' => 'sqlite',
         'url' => NULL,
-        'database' => 'ict_helpdesk',
+        'database' => 'ictts',
         'prefix' => '',
         'foreign_key_constraints' => true,
         'busy_timeout' => NULL,
@@ -350,7 +350,7 @@
         'url' => NULL,
         'host' => '127.0.0.1',
         'port' => '3306',
-        'database' => 'ict_helpdesk',
+        'database' => 'ictts',
         'username' => 'root',
         'password' => '',
         'unix_socket' => '',
@@ -370,7 +370,7 @@
         'url' => NULL,
         'host' => '127.0.0.1',
         'port' => '3306',
-        'database' => 'ict_helpdesk',
+        'database' => 'ictts',
         'username' => 'root',
         'password' => '',
         'unix_socket' => '',
@@ -390,7 +390,7 @@
         'url' => NULL,
         'host' => '127.0.0.1',
         'port' => '3306',
-        'database' => 'ict_helpdesk',
+        'database' => 'ictts',
         'username' => 'root',
         'password' => '',
         'charset' => 'utf8',
@@ -405,7 +405,7 @@
         'url' => NULL,
         'host' => '127.0.0.1',
         'port' => '3306',
-        'database' => 'ict_helpdesk',
+        'database' => 'ictts',
         'username' => 'root',
         'password' => '',
         'charset' => 'utf8',
@@ -424,7 +424,7 @@
       'options' => 
       array (
         'cluster' => 'redis',
-        'prefix' => 'ksu-ict-helpdesk-database-',
+        'prefix' => 'laravel-database-',
         'persistent' => false,
       ),
       'default' => 
@@ -454,10 +454,10 @@
     'convert_entities' => true,
     'options' => 
     array (
-      'font_dir' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\fonts',
-      'font_cache' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\fonts',
-      'temp_dir' => 'C:\\Users\\MULTIM~1\\AppData\\Local\\Temp',
-      'chroot' => 'C:\\laragon\\www\\ict_helpdesk',
+      'font_dir' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/fonts',
+      'font_cache' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/fonts',
+      'temp_dir' => '/var/folders/5_/mz61rlys4q101qgmtsynxyvr0000gn/T',
+      'chroot' => '/Users/icto/Documents/Sites/ict-helpdesk',
       'allowed_protocols' => 
       array (
         'data://' => 
@@ -510,7 +510,7 @@
       'local' => 
       array (
         'driver' => 'local',
-        'root' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\app/private',
+        'root' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/app/private',
         'serve' => true,
         'throw' => false,
         'report' => false,
@@ -518,7 +518,7 @@
       'public' => 
       array (
         'driver' => 'local',
-        'root' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\app/public',
+        'root' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/app/public',
         'url' => 'http://localhost/storage',
         'visibility' => 'public',
         'throw' => false,
@@ -540,7 +540,7 @@
     ),
     'links' => 
     array (
-      'C:\\laragon\\www\\ict_helpdesk\\public\\storage' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\app/public',
+      '/Users/icto/Documents/Sites/ict-helpdesk/public/storage' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/app/public',
     ),
   ),
   'logging' => 
@@ -565,14 +565,14 @@
       'single' => 
       array (
         'driver' => 'single',
-        'path' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\logs/laravel.log',
+        'path' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/logs/laravel.log',
         'level' => 'debug',
         'replace_placeholders' => true,
       ),
       'daily' => 
       array (
         'driver' => 'daily',
-        'path' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\logs/laravel.log',
+        'path' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/logs/laravel.log',
         'level' => 'debug',
         'days' => 14,
         'replace_placeholders' => true,
@@ -637,13 +637,13 @@
       ),
       'emergency' => 
       array (
-        'path' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\logs/laravel.log',
+        'path' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/logs/laravel.log',
       ),
     ),
   ),
   'mail' => 
   array (
-    'default' => 'smtp',
+    'default' => 'log',
     'mailers' => 
     array (
       'smtp' => 
@@ -651,10 +651,10 @@
         'transport' => 'smtp',
         'scheme' => NULL,
         'url' => NULL,
-        'host' => 'smtp.gmail.com',
-        'port' => '587',
-        'username' => 'doctor.rogeliojr@gmail.com',
-        'password' => 'mcvhatbjigwmstmc',
+        'host' => '127.0.0.1',
+        'port' => '2525',
+        'username' => NULL,
+        'password' => NULL,
         'timeout' => NULL,
         'local_domain' => 'localhost',
       ),
@@ -707,15 +707,15 @@
     ),
     'from' => 
     array (
-      'address' => 'doctor.rogeliojr@gmail.com',
-      'name' => 'KSU ICT HELPDESK',
+      'address' => 'hello@example.com',
+      'name' => 'Laravel',
     ),
     'markdown' => 
     array (
       'theme' => 'default',
       'paths' => 
       array (
-        0 => 'C:\\laragon\\www\\ict_helpdesk\\resources\\views/vendor/mail',
+        0 => '/Users/icto/Documents/Sites/ict-helpdesk/resources/views/vendor/mail',
       ),
     ),
   ),
@@ -865,7 +865,7 @@
     'lifetime' => 120,
     'expire_on_close' => false,
     'encrypt' => false,
-    'files' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\framework/sessions',
+    'files' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/framework/sessions',
     'connection' => NULL,
     'table' => 'sessions',
     'store' => NULL,
@@ -874,7 +874,7 @@
       0 => 2,
       1 => 100,
     ),
-    'cookie' => 'ksu-ict-helpdesk-session',
+    'cookie' => 'laravel-session',
     'path' => '/',
     'domain' => NULL,
     'secure' => NULL,
@@ -995,7 +995,7 @@
     ),
     'temporary_files' => 
     array (
-      'local_path' => 'C:\\laragon\\www\\ict_helpdesk\\storage\\framework/cache/laravel-excel',
+      'local_path' => '/Users/icto/Documents/Sites/ict-helpdesk/storage/framework/cache/laravel-excel',
       'local_permissions' => 
       array (
       ),
