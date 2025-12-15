@@ -198,16 +198,18 @@ class DatabaseSeeder extends Seeder
         // Assign all permissions to admin role
 
         foreach(Permission::all() as $permission) {
-            $adminRole = Role::where('name', 'admin')->first();
-            if ($adminRole && !$adminRole->hasPermissionTo($permission->name)) {
-                $adminRole->givePermissionTo($permission->name);
-            }
+            DB::table('role_has_permissions')->updateOrInsert(
+                ['permission_id' => $permission->id, 'role_id' => 1],
+            );
         }
 
         foreach(User::all() as $user) {
             DB::table('model_has_roles')->updateOrInsert(
-                ['model_id' => $user->id, 'model_type' => User::class],
-                ['role_id' => Role::where('name', $user->role)->first()->id]
+                [
+                    'model_id' => $user->id,
+                    'model_type' => 'App\Models\User',
+                    'role_id' => 1
+                ],
             );
         }
 
