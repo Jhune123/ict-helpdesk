@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Build production assets (Vite)
-RUN npm run build
+# RUN npm run build
 
 
 # =========================

@@ -47,14 +47,14 @@ services:
     container_name: ict-helpdesk-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ict_helpdesk
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: secret
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: ict_helpdesk
+        MYSQL_USER: laravel
+        MYSQL_PASSWORD: secret
     ports:
-      - "3306:3306"
+        - "3306:3306"
     volumes:
-      - /var/www/ict-helpdesk/mysql_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql  # Changed this
     command:
       - --default-authentication-plugin=mysql_native_password
       - --innodb-strict-mode=0
@@ -72,11 +72,15 @@ services:
     image: certbot/certbot
     container_name: ict-helpdesk-certbot
     volumes:
-      - /var/www/ict-helpdesk/certbot/conf:/etc/letsencrypt
-      - /var/www/ict-helpdesk/certbot/www:/var/www/certbot
+    - /var/www/ict-helpdesk/certbot/conf:/etc/letsencrypt
+    - /var/www/ict-helpdesk/certbot/www:/var/www/certbot
     networks:
-      - ict-net
+    - ict-net
 
 networks:
-  ict-net:
+    ict-net:
     driver: bridge
+
+volumes:
+    mysql-data:  # Add this at the bottom
+    driver: local
