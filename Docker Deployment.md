@@ -21,3 +21,13 @@ Docker post update
     docker compose exec app php artisan view:clear
 
     docker compose exec app php artisan migrate
+
+
+# Fix permissions if needed
+docker compose exec app chown -R www-data:www-data /var/www/html/storage
+docker compose exec app chmod -R 775 /var/www/html/storage
+
+# Clear Laravel cache
+docker compose exec app php artisan cache:clear
+docker compose exec app php artisan config:clear
+docker compose exec app php artisan view:clear

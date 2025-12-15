@@ -2,13 +2,14 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Department;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -168,7 +169,14 @@ class DatabaseSeeder extends Seeder
 
         DB::table('assets')->insert($assets);
 
-        $this->call(RoleSeeder::class);
+        // Define default roles
+        $roles = ['admin', 'it_staff', 'user'];
+
+        // Create each role if it doesn't already exist
+        foreach ($roles as $role) {
+            Role::firstOrCreate(['name' => $role]);
+        }
+
         $this->call(PermissionSeeder::class);
     }
 }
