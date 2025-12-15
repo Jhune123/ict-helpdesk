@@ -204,5 +204,12 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        foreach(User::all() as $user) {
+            DB::table('model_has_roles')->updateOrInsert(
+                ['model_id' => $user->id, 'model_type' => User::class],
+                ['role_id' => Role::where('name', $user->role)->first()->id]
+            );
+        }
+
     }
 }
