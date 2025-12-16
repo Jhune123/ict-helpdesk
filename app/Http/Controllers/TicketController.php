@@ -20,11 +20,7 @@ class TicketController extends Controller
     {
         $tickets = Ticket::with(['category', 'assignee'])
             ->orderBy('created_at', 'desc')
-            ->get([
-                'id', 'ticket_number', 'title', 'description', 'priority', 'status', 'remarks',
-                'client_name', 'department', 'contact_number', 'assigned_to',
-                'category_id', 'date_submitted', 'date_finished', 'created_at'
-            ]);
+            ->get();
 
         return view('tickets.index', compact('tickets'));
     }
@@ -36,10 +32,14 @@ class TicketController extends Controller
 
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
-            ->orderBy('name', 'asc')
+            ->orderBy('name')
             ->get();
 
-        return view('tickets.create', compact('categories', 'departments', 'it_personnel'));
+        return view('tickets.create', compact(
+            'categories',
+            'departments',
+            'it_personnel'
+        ));
     }
 
     public function edit(Ticket $ticket)
@@ -49,10 +49,15 @@ class TicketController extends Controller
 
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
-            ->orderBy('name', 'asc')
+            ->orderBy('name')
             ->get();
 
-        return view('tickets.edit', compact('ticket', 'categories', 'departments', 'it_personnel'));
+        return view('tickets.edit', compact(
+            'ticket',
+            'categories',
+            'departments',
+            'it_personnel'
+        ));
     }
 
     public function store(Request $request)
@@ -71,22 +76,28 @@ class TicketController extends Controller
             'remarks' => 'nullable|string|max:500',
         ]);
 
-        $lastTicket = Ticket::orderBy('id', 'desc')->first();
-        $newNumber = $lastTicket && $lastTicket->ticket_number
-            ? str_pad((int) substr($lastTicket->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
-            : '001';
+        /* 🎫 Generate Ticket Number */
+        $last = Ticket::latest()->first();
+        $next = $last ? str_pad((int)substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT) : '001';
+        $ticketNumber = 'KSU-ICTO-TIC-' . $next;
 
-        $ticketNumber = "KSU-ICTO-TIC-" . $newNumber;
-
+        /* 📂 Category */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
-            $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
-            $categoryId = $category->id;
+            $categoryId = Category::firstOrCreate([
+                'name' => $validated['category_manual']
+            ])->id;
         }
 
-        $departmentName = $validated['department'] ?? null;
-        if (!empty($validated['department_manual'])) {
-            $departmentName = $validated['department_manual'];
+        /* 🏢 Department */
+        $department = $validated['department_manual']
+            ?? $validated['department']
+            ?? null;
+
+        /* 🔒 Assignment Security */
+        $assignedTo = null;
+        if (Auth::user()->hasRole(['admin', 'it_staff'])) {
+            $assignedTo = $validated['assigned_to'] ?? null;
         }
 
         $ticket = Ticket::create([
@@ -95,8 +106,8 @@ class TicketController extends Controller
             'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'Normal',
             'category_id' => $categoryId,
-            'department' => $departmentName,
-            'assigned_to' => $validated['assigned_to'] ?? null,
+            'department' => $department,
+            'assigned_to' => $assignedTo,
             'status' => 'Open',
             'remarks' => $validated['remarks'] ?? null,
             'client_name' => $validated['client_name'],
@@ -105,16 +116,15 @@ class TicketController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        // Notify assigned IT if exists
-        if (!empty($validated['assigned_to'])) {
-            $it = User::find($validated['assigned_to']);
-            if ($it) {
+        /* 🔔 Notify IT if assigned */
+        if ($assignedTo) {
+            if ($it = User::find($assignedTo)) {
                 $it->notify(new TicketAssignedNotification($ticket));
             }
         }
 
         return redirect()->route('tickets.index')
-            ->with('success', "Ticket created successfully ✅ Ticket Number: $ticketNumber");
+            ->with('success', "Ticket created successfully ✅ Ticket No: {$ticketNumber}");
     }
 
     public function show(Ticket $ticket)
@@ -140,48 +150,51 @@ class TicketController extends Controller
             'client_name' => 'required|string|max:255',
         ]);
 
+        /* 📂 Category */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
-            $category = Category::firstOrCreate(['name' => $validated['category_manual']]);
-            $categoryId = $category->id;
+            $categoryId = Category::firstOrCreate([
+                'name' => $validated['category_manual']
+            ])->id;
         }
 
-        $departmentName = $validated['department'] ?? null;
-        if (!empty($validated['department_manual'])) {
-            $departmentName = $validated['department_manual'];
+        /* 🏢 Department */
+        $department = $validated['department_manual']
+            ?? $validated['department']
+            ?? null;
+
+        /* 🔒 Assignment Security */
+        $newAssigned = $ticket->assigned_to;
+        if (Auth::user()->hasRole(['admin', 'it_staff'])) {
+            $newAssigned = $validated['assigned_to'] ?? null;
         }
 
-        // Determine if assigned IT changed
-        $assignedChanged = $ticket->assigned_to != ($validated['assigned_to'] ?? null);
+        $assignmentChanged = $ticket->assigned_to != $newAssigned;
 
         $data = [
             'title' => $validated['title'],
             'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'Normal',
             'category_id' => $categoryId,
-            'department' => $departmentName,
-            'assigned_to' => $validated['assigned_to'] ?? null,
+            'department' => $department,
+            'assigned_to' => $newAssigned,
             'contact_number' => $validated['contact_number'] ?? null,
             'remarks' => $validated['remarks'] ?? null,
             'client_name' => $validated['client_name'],
         ];
 
-        // Update status and finished date
-        if (!empty($validated['status'])) {
-            if ($ticket->status != $validated['status']) {
-                $data['status'] = $validated['status'];
-                $data['date_finished'] = $validated['status'] === 'Closed'
-                    ? Carbon::now('Asia/Manila')
-                    : null;
-            }
+        if ($ticket->status !== $validated['status']) {
+            $data['status'] = $validated['status'];
+            $data['date_finished'] = $validated['status'] === 'Closed'
+                ? Carbon::now('Asia/Manila')
+                : null;
         }
 
         $ticket->update($data);
 
-        // Notify IT only if assignment changed
-        if ($assignedChanged && !empty($validated['assigned_to'])) {
-            $it = User::find($validated['assigned_to']);
-            if ($it) {
+        /* 🔔 Notify IT if reassigned */
+        if ($assignmentChanged && $newAssigned) {
+            if ($it = User::find($newAssigned)) {
                 $it->notify(new TicketAssignedNotification($ticket));
             }
         }
@@ -200,9 +213,9 @@ class TicketController extends Controller
 
     public function mine()
     {
-        $tickets = Ticket::with(['category'])
+        $tickets = Ticket::with('category')
             ->where('created_by', Auth::id())
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->paginate(10);
 
         return view('tickets.mine', compact('tickets'));
@@ -210,9 +223,9 @@ class TicketController extends Controller
 
     public function byDepartment()
     {
-        $tickets = Ticket::with(['category'])
+        $tickets = Ticket::with('category')
             ->orderBy('department')
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->get()
             ->groupBy('department');
 
@@ -221,28 +234,27 @@ class TicketController extends Controller
 
     public function export($type)
     {
-        $fileName = 'tickets_' . now()->format('Ymd_His');
+        $file = 'tickets_' . now()->format('Ymd_His');
 
-        if ($type === 'csv' || $type === 'xlsx') {
-            return Excel::download(new TicketsExport, $fileName . '.' . $type);
+        if (in_array($type, ['csv', 'xlsx'])) {
+            return Excel::download(new TicketsExport, "{$file}.{$type}");
         }
 
         if ($type === 'pdf') {
             $tickets = Ticket::with(['category', 'assignee'])->get();
-            $pdf = Pdf::loadView('tickets.pdf', compact('tickets'));
-            return $pdf->download($fileName . '.pdf');
+            return Pdf::loadView('tickets.pdf', compact('tickets'))
+                ->download("{$file}.pdf");
         }
 
-        return redirect()->back()->with('error', 'Export type not supported');
+        return back()->with('error', 'Export type not supported');
     }
 
     public function jobOrderPdf(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
 
-        $pdf = Pdf::loadView('tickets.job_order', compact('ticket'))
-            ->setPaper('A4', 'portrait');
-
-        return $pdf->download('JobOrder-' . $ticket->ticket_number . '.pdf');
+        return Pdf::loadView('tickets.job_order', compact('ticket'))
+            ->setPaper('A4')
+            ->download('JobOrder-' . $ticket->ticket_number . '.pdf');
     }
 }
