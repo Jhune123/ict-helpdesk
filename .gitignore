@@ -10,6 +10,7 @@
 # Laravel specific
 /public/mix-manifest.json
 /storage/debugbar
+/storage/log/*.log
 
 # IDE & OS files
 /.idea
