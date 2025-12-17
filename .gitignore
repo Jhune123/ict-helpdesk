@@ -3,6 +3,7 @@
 /node_modules
 /public/storage
 /storage/*.key
+/storage/framework/*
 .env
 .env.backup
 .phpunit.result.cache

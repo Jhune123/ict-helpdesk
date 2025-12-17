@@ -11,17 +11,23 @@
         <!-- Title -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Title</label>
-            <input type="text" name="title" 
+            <input type="text" name="title"
                    value="{{ old('title', $ticket->title) }}"
                    class="w-full border rounded-lg p-2" required>
-            @error('title') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
+            @error('title')
+                <p class="text-red-500 text-sm">{{ $message }}</p>
+            @enderror
         </div>
 
         <!-- Description -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Description</label>
-            <textarea name="description" class="w-full border rounded-lg p-2" required>{{ old('description', $ticket->description) }}</textarea>
-            @error('description') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
+            <textarea name="description"
+                      class="w-full border rounded-lg p-2"
+                      required>{{ old('description', $ticket->description) }}</textarea>
+            @error('description')
+                <p class="text-red-500 text-sm">{{ $message }}</p>
+            @enderror
         </div>
 
         <!-- Category -->
@@ -30,13 +36,14 @@
             <select name="category_id" class="w-full border rounded-lg p-2">
                 <option value="">-- Select Category --</option>
                 @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" 
+                    <option value="{{ $cat->id }}"
                         {{ old('category_id', $ticket->category_id) == $cat->id ? 'selected' : '' }}>
                         {{ $cat->name }}
                     </option>
                 @endforeach
             </select>
-            <input type="text" name="category_manual" 
+
+            <input type="text" name="category_manual"
                    placeholder="Or type new category"
                    value="{{ old('category_manual') }}"
                    class="w-full border rounded-lg p-2 mt-2">
@@ -48,25 +55,29 @@
             <select name="department" class="w-full border rounded-lg p-2">
                 <option value="">-- Select Department --</option>
                 @foreach($departments as $dept)
-                    <option value="{{ $dept->name }}" 
+                    <option value="{{ $dept->name }}"
                         {{ old('department', $ticket->department) == $dept->name ? 'selected' : '' }}>
                         {{ $dept->name }}
                     </option>
                 @endforeach
             </select>
-            <input type="text" name="department_manual" 
+
+            <input type="text" name="department_manual"
                    placeholder="Or type new department"
                    value="{{ old('department_manual') }}"
                    class="w-full border rounded-lg p-2 mt-2">
         </div>
 
-        <!-- Assign To (IT Personnel) -->
+        <!-- ✅ Assign To (IT Personnel) — ADMIN / IT STAFF ONLY -->
+        @role('admin|it_staff')
         <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Assign To (IT Personnel)</label>
+            <label class="block text-gray-700 font-semibold">
+                Assign To (IT Personnel)
+            </label>
             <select name="assigned_to" class="w-full border rounded-lg p-2">
                 <option value="">-- Select IT Personnel --</option>
                 @forelse($it_personnel as $user)
-                    <option value="{{ $user->id }}" 
+                    <option value="{{ $user->id }}"
                         {{ old('assigned_to', $ticket->assigned_to) == $user->id ? 'selected' : '' }}>
                         {{ $user->name }}
                     </option>
@@ -75,6 +86,8 @@
                 @endforelse
             </select>
         </div>
+        @endrole
+        <!-- ❌ Clients cannot see or edit assignment -->
 
         <!-- Priority -->
         <div class="mb-4">
@@ -99,14 +112,14 @@
         <!-- Client Info -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Client Name</label>
-            <input type="text" name="client_name" 
+            <input type="text" name="client_name"
                    value="{{ old('client_name', $ticket->client_name) }}"
                    class="w-full border rounded-lg p-2" required>
         </div>
 
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Contact Number</label>
-            <input type="text" name="contact_number" 
+            <input type="text" name="contact_number"
                    value="{{ old('contact_number', $ticket->contact_number) }}"
                    class="w-full border rounded-lg p-2">
         </div>
@@ -114,7 +127,8 @@
         <!-- Remarks -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Remarks</label>
-            <textarea name="remarks" class="w-full border rounded-lg p-2">{{ old('remarks', $ticket->remarks) }}</textarea>
+            <textarea name="remarks"
+                      class="w-full border rounded-lg p-2">{{ old('remarks', $ticket->remarks) }}</textarea>
         </div>
 
         <!-- Attachment -->
@@ -122,16 +136,22 @@
             <label class="block text-gray-700 font-semibold">Attachment</label>
             <input type="file" name="attachment" class="w-full border rounded-lg p-2">
             @if($ticket->attachments->isNotEmpty())
-                <ul class="mt-2">
+                <ul class="mt-2 list-disc list-inside text-sm">
                     @foreach($ticket->attachments as $file)
-                        <li><a href="{{ Storage::url($file->path) }}" target="_blank">{{ $file->filename }}</a></li>
+                        <li>
+                            <a href="{{ Storage::url($file->path) }}" target="_blank"
+                               class="text-blue-600 hover:underline">
+                                {{ $file->filename }}
+                            </a>
+                        </li>
                     @endforeach
                 </ul>
             @endif
         </div>
 
         <!-- Submit -->
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Update Ticket
         </button>
     </form>
