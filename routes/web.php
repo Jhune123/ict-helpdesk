@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Middleware\RoleMiddleware; // ✅ Correct namespace
+use Spatie\Permission\Middleware\RoleMiddleware;
 
 use App\Http\Controllers\TaskScheduleController;
 use App\Http\Controllers\ProfileController;
@@ -16,6 +16,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AttachmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,9 +93,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
     // Attachments
-    Route::post('/tickets/{ticket}/attachments', [App\Http\Controllers\AttachmentController::class, 'store'])->name('attachments.store');
-    Route::get('/attachments/{attachment}/download', [App\Http\Controllers\AttachmentController::class, 'download'])->name('attachments.download');
-    Route::delete('/attachments/{attachment}', [App\Http\Controllers\AttachmentController::class, 'destroy'])->name('attachments.destroy');
+    Route::post('/tickets/{ticket}/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
+    Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
+    Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -109,9 +110,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->name('feedbacks.destroy');
 
     // Activity Logs (Admin / IT Staff only)
-    Route::get('/activity-logs', [ActivityLogController::class, 'index'])
-        ->name('activity-logs.index')
-        ->middleware(RoleMiddleware::class . ':admin|it_staff');
+    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+
+        // Export Activity Logs (Excel / PDF)
+        Route::get('/activity-logs/export/{type}', [ActivityLogController::class, 'export'])
+            ->name('activity-logs.export');
+    });
+
 });
 
 require __DIR__ . '/auth.php';

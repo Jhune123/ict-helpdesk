@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Notifications\TicketAssignedNotification;
+use App\Helpers\ActivityLogger;
 
 class TicketController extends Controller
 {
@@ -76,7 +77,7 @@ class TicketController extends Controller
             'remarks' => 'nullable|string|max:500',
         ]);
 
-        /* 🎫 Generate Ticket Number */
+        /* 🎫 Ticket Number */
         $last = Ticket::latest()->first();
         $next = $last ? str_pad((int)substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT) : '001';
         $ticketNumber = 'KSU-ICTO-TIC-' . $next;
@@ -94,7 +95,7 @@ class TicketController extends Controller
             ?? $validated['department']
             ?? null;
 
-        /* 🔒 Assignment Security */
+        /* 🔒 Assignment */
         $assignedTo = null;
         if (Auth::user()->hasRole(['admin', 'it_staff'])) {
             $assignedTo = $validated['assigned_to'] ?? null;
@@ -116,11 +117,22 @@ class TicketController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        /* 🔔 Notify IT if assigned */
-        if ($assignedTo) {
-            if ($it = User::find($assignedTo)) {
-                $it->notify(new TicketAssignedNotification($ticket));
-            }
+        /* 🧾 ACTIVITY LOG */
+        ActivityLogger::log(
+            'created',
+            $ticket,
+            'Created Ticket: "' . $ticket->title . '"'
+        );
+
+        /* 🔔 Notify IT */
+        if ($assignedTo && ($it = User::find($assignedTo))) {
+            $it->notify(new TicketAssignedNotification($ticket));
+
+            ActivityLogger::log(
+                'assigned',
+                $ticket,
+                'Assigned Ticket to ' . $it->name
+            );
         }
 
         return redirect()->route('tickets.index')
@@ -150,6 +162,9 @@ class TicketController extends Controller
             'client_name' => 'required|string|max:255',
         ]);
 
+        $oldStatus = $ticket->status;
+        $oldAssignee = $ticket->assigned_to;
+
         /* 📂 Category */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
@@ -163,13 +178,9 @@ class TicketController extends Controller
             ?? $validated['department']
             ?? null;
 
-        /* 🔒 Assignment Security */
-        $newAssigned = $ticket->assigned_to;
-        if (Auth::user()->hasRole(['admin', 'it_staff'])) {
-            $newAssigned = $validated['assigned_to'] ?? null;
-        }
-
-        $assignmentChanged = $ticket->assigned_to != $newAssigned;
+        $newAssigned = Auth::user()->hasRole(['admin', 'it_staff'])
+            ? $validated['assigned_to']
+            : $ticket->assigned_to;
 
         $data = [
             'title' => $validated['title'],
@@ -181,21 +192,38 @@ class TicketController extends Controller
             'contact_number' => $validated['contact_number'] ?? null,
             'remarks' => $validated['remarks'] ?? null,
             'client_name' => $validated['client_name'],
-        ];
-
-        if ($ticket->status !== $validated['status']) {
-            $data['status'] = $validated['status'];
-            $data['date_finished'] = $validated['status'] === 'Closed'
+            'status' => $validated['status'],
+            'date_finished' => $validated['status'] === 'Closed'
                 ? Carbon::now('Asia/Manila')
-                : null;
-        }
+                : null,
+        ];
 
         $ticket->update($data);
 
-        /* 🔔 Notify IT if reassigned */
-        if ($assignmentChanged && $newAssigned) {
+        /* 🧾 ACTIVITY LOGS */
+        ActivityLogger::log(
+            'updated',
+            $ticket,
+            'Updated Ticket: "' . $ticket->title . '"'
+        );
+
+        if ($oldStatus !== $validated['status']) {
+            ActivityLogger::log(
+                'status_changed',
+                $ticket,
+                'Changed status from ' . $oldStatus . ' to ' . $validated['status']
+            );
+        }
+
+        if ($oldAssignee != $newAssigned && $newAssigned) {
             if ($it = User::find($newAssigned)) {
                 $it->notify(new TicketAssignedNotification($ticket));
+
+                ActivityLogger::log(
+                    'assigned',
+                    $ticket,
+                    'Reassigned Ticket to ' . $it->name
+                );
             }
         }
 
@@ -205,6 +233,12 @@ class TicketController extends Controller
 
     public function destroy(Ticket $ticket)
     {
+        ActivityLogger::log(
+            'deleted',
+            $ticket,
+            'Deleted Ticket: "' . $ticket->title . '"'
+        );
+
         $ticket->delete();
 
         return redirect()->route('tickets.index')
@@ -224,7 +258,6 @@ class TicketController extends Controller
     public function byDepartment()
     {
         $tickets = Ticket::with('category')
-            ->orderBy('department')
             ->latest()
             ->get()
             ->groupBy('department');

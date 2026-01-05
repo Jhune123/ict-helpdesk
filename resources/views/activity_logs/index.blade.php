@@ -1,4 +1,3 @@
-{{-- resources/views/activity_logs/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -14,6 +13,60 @@
             Visible to Admin & IT Staff only
         </span>
     </div>
+
+    <!-- 🔄 Export Buttons (carry all filters automatically) -->
+    <div class="flex gap-2 mb-4">
+        @php
+            // Preserve all current query parameters for export
+            $query = http_build_query(request()->all());
+        @endphp
+
+        <a href="{{ route('activity-logs.export', 'excel') }}?{{ $query }}"
+           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+            Export Excel
+        </a>
+
+        <a href="{{ route('activity-logs.export', 'pdf') }}?{{ $query }}"
+           class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm">
+            Export PDF
+        </a>
+    </div>
+
+    <!-- 🔍 Search & Filters -->
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+
+        <!-- Search Description / Subject -->
+        <input type="text"
+               name="search"
+               value="{{ request('search') }}"
+               placeholder="Search description or subject..."
+               class="border rounded px-3 py-2">
+
+        <!-- Filter by User -->
+        <select name="user_id" class="border rounded px-3 py-2">
+            <option value="">All Users</option>
+            @foreach($users as $user)
+                <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                    {{ $user->name }}
+                </option>
+            @endforeach
+        </select>
+
+        <!-- Filter by Action -->
+        <input type="text"
+               name="action"
+               value="{{ request('action') }}"
+               placeholder="Filter by action"
+               class="border rounded px-3 py-2">
+
+        <!-- Filter by Date Range -->
+        <input type="date" name="from" value="{{ request('from') }}" class="border rounded px-3 py-2">
+        <input type="date" name="to" value="{{ request('to') }}" class="border rounded px-3 py-2">
+
+        <button type="submit" class="bg-blue-600 text-white rounded px-4 py-2 col-span-1 md:col-span-5">
+            Apply Filters
+        </button>
+    </form>
 
     <!-- Activity Logs Table -->
     <div class="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100">
@@ -33,53 +86,49 @@
             <tbody class="divide-y">
                 @forelse ($logs as $log)
                     <tr class="hover:bg-gray-50 transition">
+
+                        <!-- ID -->
                         <td class="px-4 py-3 font-medium text-gray-800">
                             {{ $log->id }}
                         </td>
 
+                        <!-- User -->
                         <td class="px-4 py-3">
-                            {{ $log->user->name ?? 'System' }}
+                            {{ $log->user?->name ?? 'System' }}
                         </td>
 
+                        <!-- Action -->
                         <td class="px-4 py-3">
                             <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
-                                {{ $log->action }}
+                                {{ ucfirst($log->action) }}
                             </span>
                         </td>
 
+                        <!-- Subject (Ticket Title) -->
                         <td class="px-4 py-3">
-                            @php
-                                $subjectTitle = '—';
-                                $subjectLink = '#';
-
-                                if($log->subject_type === \App\Models\Ticket::class) {
-                                    $ticket = \App\Models\Ticket::find($log->subject_id);
-                                    if($ticket) {
-                                        $subjectTitle = $ticket->title;
-                                        $subjectLink = route('tickets.show', $ticket->id);
-                                    }
-                                }
-                            @endphp
-
-                            @if($subjectTitle !== '—')
-                                <a href="{{ $subjectLink }}" class="text-blue-600 hover:underline">
-                                    {{ $subjectTitle }}
+                            @if ($log->subject_type === \App\Models\Ticket::class && $log->subject)
+                                <a href="{{ route('tickets.show', $log->subject->id) }}"
+                                   class="text-blue-600 hover:underline font-medium">
+                                    {{ $log->subject->title }}
                                 </a>
                             @else
-                                {{ $subjectTitle }}
+                                —
                             @endif
                         </td>
 
+                        <!-- Subject ID -->
                         <td class="px-4 py-3">
-                            {{ $log->subject_id ? '#' . $log->subject_id : '—' }}
+                            {{ $log->subject_id ? '#'.$log->subject_id : '—' }}
                         </td>
 
+                        <!-- Description -->
                         <td class="px-4 py-3 text-gray-600">
                             {{ $log->description ?? '—' }}
                         </td>
 
+                        <!-- Date -->
                         <td class="px-4 py-3 text-gray-500">
-                            {{ $log->created_at->format('M d, Y h:i A') }}
+                            {{ $log->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}
                         </td>
                     </tr>
                 @empty
