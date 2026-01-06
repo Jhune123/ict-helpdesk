@@ -27,8 +27,8 @@ return new class extends Migration
             $table->string('contact_number')->nullable();
 
             // Dates
-            $table->date('date_submitted')->nullable();
-            $table->date('date_finished')->nullable();
+            $table->datetime('date_submitted')->nullable();
+            $table->datetime('date_finished')->nullable();
 
             // User assignments
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
