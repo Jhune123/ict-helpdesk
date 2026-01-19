@@ -6,9 +6,7 @@
 
             <!-- ICTO Logo -->
             <div class="flex justify-center mb-4">
-                <img src="{{ asset('image/icto-logo.png') }}"
-                     alt="ICTO Logo"
-                     class="h-24 w-auto">
+                <img src="{{ asset('image/icto-logo.png') }}" alt="ICTO Logo" class="h-24 w-auto">
             </div>
 
             <!-- Title -->
@@ -26,36 +24,32 @@
 
                 <!-- Email -->
                 <div class="text-left">
-                    <x-input-label for="email" value="Email" />
-                    <x-text-input
-                        id="email"
+                    <x-input-label for="email" :value="__('Email')" />
+                    <x-text-input id="email"
                         class="block mt-1 w-full"
                         type="email"
                         name="email"
                         :value="old('email')"
                         required
-                        autofocus
-                        autocomplete="username" />
+                        autofocus />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
 
                 <!-- Password -->
                 <div class="mt-4 text-left">
-                    <x-input-label for="password" value="Password" />
+                    <x-input-label for="password" :value="__('Password')" />
 
                     <div class="relative">
-                        <x-text-input
-                            id="password"
+                        <x-text-input id="password"
                             class="block mt-1 w-full pr-10"
                             type="password"
                             name="password"
-                            required
-                            autocomplete="current-password" />
+                            required />
 
-                        <!-- 👁 Toggle Password -->
+                        <!-- 👁 Toggle -->
                         <button type="button"
                                 onclick="togglePassword()"
-                                class="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-gray-800 focus:outline-none">
+                                class="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-gray-800">
                             <span id="eyeIcon">👁</span>
                         </button>
                     </div>
@@ -68,11 +62,9 @@
                     <label for="remember_me" class="inline-flex items-center">
                         <input id="remember_me"
                                type="checkbox"
-                               name="remember"
-                               class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                        <span class="ms-2 text-sm text-gray-600">
-                            Remember me
-                        </span>
+                               class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                               name="remember">
+                        <span class="ms-2 text-sm text-gray-600">Remember me</span>
                     </label>
                 </div>
 
@@ -88,8 +80,8 @@
 
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}"
-                               class="underline text-sm font-semibold text-indigo-600 hover:text-indigo-800">
-                                New user? Register a new account
+                               class="underline text-sm text-indigo-600 hover:text-indigo-800 font-semibold">
+                                New user? Register here
                             </a>
                         @endif
                     </div>
