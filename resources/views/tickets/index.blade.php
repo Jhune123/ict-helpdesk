@@ -27,68 +27,72 @@
         </div>
     @endif
 
-    {{-- FILTERS + EXPORT BUTTONS --}}
-    <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap items-center gap-4 justify-between">
+    {{-- SEARCH & FILTERS --}}
+    <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap items-center justify-between gap-4">
 
-        {{-- Month & Year Filters --}}
-        <form method="GET" class="flex items-end gap-3">
-            <div>
-                <label class="text-sm font-semibold text-gray-600">Month</label>
-                <select name="month" class="border rounded p-2 w-40">
-                    <option value="">All</option>
-                    @for ($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
-                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                        </option>
-                    @endfor
-                </select>
+        <form method="GET" class="flex flex-wrap items-end gap-4 w-full md:flex-nowrap">
+            {{-- SEARCH BOX --}}
+            <div class="w-[500px]">
+                <label class="text-sm font-semibold text-gray-600">Search Tickets</label>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Search by Ticket #, Title, Description, Department, Client..."
+                       class="border rounded p-2 w-full"
+                       onkeyup="this.form.submit()">
             </div>
 
-            <div>
-                <label class="text-sm font-semibold text-gray-600">Year</label>
-                <select name="year" class="border rounded p-2 w-32">
-                    <option value="">All</option>
-                    @for ($y = date('Y'); $y >= 2020; $y--)
-                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
-                            {{ $y }}
-                        </option>
-                    @endfor
-                </select>
+            {{-- MONTH, YEAR & FILTER BUTTON IN SAME ROW --}}
+            <div class="flex items-end gap-2">
+                <div>
+                    <label class="text-sm font-semibold text-gray-600">Month</label>
+                    <select name="month" class="border rounded p-2 w-28">
+                        <option value="">All</option>
+                        @for ($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                                {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-semibold text-gray-600">Year</label>
+                    <select name="year" class="border rounded p-2 w-28">
+                        <option value="">All</option>
+                        @for ($y = date('Y'); $y >= 2020; $y--)
+                            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+
+                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow font-semibold">
+                    Filter
+                </button>
             </div>
 
-            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow font-semibold">
-                Filter
-            </button>
+            {{-- EXPORT BUTTONS --}}
+            <div class="flex gap-2 flex-wrap ml-auto">
+                @php
+                    $exportBtns = ['csv' => 'CSV', 'xlsx' => 'Excel', 'pdf' => 'PDF'];
+                @endphp
+                @foreach($exportBtns as $type => $label)
+                    <a href="{{ route('tickets.export', ['type' => $type]) }}"
+                       class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium"
+                       target="_blank">{{ $label }}</a>
+                @endforeach
+
+                <button onclick="window.print()"
+                        class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium">
+                    Print
+                </button>
+            </div>
         </form>
-
-        {{-- EXPORT BUTTONS --}}
-        <div class="flex gap-2">
-            @php
-                $exportBtns = [
-                    'csv'   => 'CSV',
-                    'xlsx'  => 'Excel',
-                    'pdf'   => 'PDF',
-                ];
-            @endphp
-
-            @foreach($exportBtns as $type => $label)
-                <a href="{{ route('tickets.export', ['type' => $type]) }}"
-                   class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium"
-                   target="_blank">
-                   {{ $label }}
-                </a>
-            @endforeach
-
-            <button onclick="window.print()" 
-                class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium">
-                Print
-            </button>
-        </div>
     </div>
 
     {{-- TICKET TABLE --}}
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table id="ticketsTable" class="min-w-full border border-gray-200 text-sm">
+        <table class="min-w-full border border-gray-200 text-sm">
             <thead class="bg-blue-700 text-white">
                 <tr>
                     <th class="px-3 py-3 text-left">Ticket #</th>
@@ -145,20 +149,15 @@
                                class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 inline-flex items-center gap-1 text-xs">
                                 👁 View
                             </a>
-
-                            {{-- PRINT JOB ORDER --}}
-                            <a href="{{ route('tickets.joborder.pdf', $ticket->id) }}"
-                               target="_blank"
+                            <a href="{{ route('tickets.joborder.pdf', $ticket->id) }}" target="_blank"
                                class="bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 inline-flex items-center gap-1 text-xs">
                                 🧾 Job Order
                             </a>
-
                             @role('admin|it_staff')
                                 <a href="{{ route('tickets.edit', $ticket->id) }}" 
                                    class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 inline-flex items-center gap-1 text-xs">
                                     ✏ Edit
                                 </a>
-
                                 <form action="{{ route('tickets.destroy', $ticket->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
@@ -179,5 +178,11 @@
             </tbody>
         </table>
     </div>
+
+    {{-- PAGINATION LINKS --}}
+    <div class="mt-4">
+        {{ $tickets->links() }}
+    </div>
+
 </div>
 @endsection

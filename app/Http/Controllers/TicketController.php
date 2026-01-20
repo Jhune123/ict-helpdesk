@@ -17,25 +17,35 @@ use App\Helpers\ActivityLogger;
 
 class TicketController extends Controller
 {
-    public function index()
+    // 📝 Ticket Management Index with Pagination + Search
+    public function index(Request $request)
     {
-        $tickets = Ticket::with(['category', 'assignee'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Ticket::with(['category', 'assignee'])->orderBy('created_at', 'desc');
+
+        // 🔍 Server-side search across multiple fields
+        if ($search = $request->input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('ticket_number', 'like', "%{$search}%")
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('department', 'like', "%{$search}%")
+                  ->orWhere('client_name', 'like', "%{$search}%")
+                  ->orWhere('priority', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        $tickets = $query->paginate(20)->withQueryString(); // pagination 20, keep filters
 
         return view('tickets.index', compact('tickets'));
     }
 
+    // ➕ Create Ticket Form
     public function create()
     {
-        // ✅ ASCENDING ORDER (A–Z)
         $categories = Category::orderBy('name', 'asc')->get();
         $departments = Department::orderBy('name', 'asc')->get();
-
-        $it_personnel = User::role('it_staff')
-            ->select('id', 'name')
-            ->orderBy('name', 'asc')
-            ->get();
+        $it_personnel = User::role('it_staff')->select('id', 'name')->orderBy('name', 'asc')->get();
 
         return view('tickets.create', compact(
             'categories',
@@ -44,16 +54,12 @@ class TicketController extends Controller
         ));
     }
 
+    // ✏ Edit Ticket Form
     public function edit(Ticket $ticket)
     {
-        // ✅ ASCENDING ORDER (A–Z)
         $categories = Category::orderBy('name', 'asc')->get();
         $departments = Department::orderBy('name', 'asc')->get();
-
-        $it_personnel = User::role('it_staff')
-            ->select('id', 'name')
-            ->orderBy('name', 'asc')
-            ->get();
+        $it_personnel = User::role('it_staff')->select('id', 'name')->orderBy('name', 'asc')->get();
 
         return view('tickets.edit', compact(
             'ticket',
@@ -63,6 +69,7 @@ class TicketController extends Controller
         ));
     }
 
+    // 💾 Store New Ticket
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -79,36 +86,29 @@ class TicketController extends Controller
             'remarks' => 'nullable|string|max:500',
         ]);
 
-        /* 🎫 Ticket Number */
+        /* 🎫 Generate Ticket Number */
         $last = Ticket::latest()->first();
         $next = $last
             ? str_pad((int) substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
             : '001';
-
         $ticketNumber = 'KSU-ICTO-TIC-' . $next;
 
-        /* 📂 Category (auto-save manual) */
+        /* 📂 Handle Category */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
-            $categoryId = Category::firstOrCreate([
-                'name' => $validated['category_manual']
-            ])->id;
+            $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-        /* 🏢 Department (AUTO-SAVE manual input) */
-        $departmentName = $validated['department_manual']
-            ?? $validated['department']
-            ?? null;
-
+        /* 🏢 Handle Department */
+        $departmentName = $validated['department_manual'] ?? $validated['department'] ?? null;
         $department = $departmentName
             ? Department::firstOrCreate(['name' => $departmentName])->name
             : null;
 
-        /* 🔒 Assignment */
-        $assignedTo = null;
-        if (Auth::user()->hasRole(['admin', 'it_staff'])) {
-            $assignedTo = $validated['assigned_to'] ?? null;
-        }
+        /* 🔒 Handle Assignment */
+        $assignedTo = Auth::user()->hasRole(['admin', 'it_staff'])
+            ? $validated['assigned_to'] ?? null
+            : null;
 
         $ticket = Ticket::create([
             'ticket_number' => $ticketNumber,
@@ -126,34 +126,25 @@ class TicketController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        /* 🧾 Activity Log */
-        ActivityLogger::log(
-            'created',
-            $ticket,
-            'Created Ticket: "' . $ticket->title . '"'
-        );
+        ActivityLogger::log('created', $ticket, 'Created Ticket: "' . $ticket->title . '"');
 
-        /* 🔔 Notify IT */
         if ($assignedTo && ($it = User::find($assignedTo))) {
             $it->notify(new TicketAssignedNotification($ticket));
-
-            ActivityLogger::log(
-                'assigned',
-                $ticket,
-                'Assigned Ticket to ' . $it->name
-            );
+            ActivityLogger::log('assigned', $ticket, 'Assigned Ticket to ' . $it->name);
         }
 
         return redirect()->route('tickets.index')
             ->with('success', "Ticket created successfully ✅ Ticket No: {$ticketNumber}");
     }
 
+    // 👁 Show Ticket Details
     public function show(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
         return view('tickets.show', compact('ticket'));
     }
 
+    // 🔄 Update Ticket
     public function update(Request $request, Ticket $ticket)
     {
         $validated = $request->validate([
@@ -174,26 +165,15 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $oldAssignee = $ticket->assigned_to;
 
-        /* 📂 Category (auto-save manual) */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
-            $categoryId = Category::firstOrCreate([
-                'name' => $validated['category_manual']
-            ])->id;
+            $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-        /* 🏢 Department (AUTO-SAVE manual input) */
-        $departmentName = $validated['department_manual']
-            ?? $validated['department']
-            ?? null;
+        $departmentName = $validated['department_manual'] ?? $validated['department'] ?? null;
+        $department = $departmentName ? Department::firstOrCreate(['name' => $departmentName])->name : null;
 
-        $department = $departmentName
-            ? Department::firstOrCreate(['name' => $departmentName])->name
-            : null;
-
-        $newAssigned = Auth::user()->hasRole(['admin', 'it_staff'])
-            ? $validated['assigned_to']
-            : $ticket->assigned_to;
+        $newAssigned = Auth::user()->hasRole(['admin', 'it_staff']) ? $validated['assigned_to'] : $ticket->assigned_to;
 
         $ticket->update([
             'title' => $validated['title'],
@@ -206,66 +186,46 @@ class TicketController extends Controller
             'remarks' => $validated['remarks'] ?? null,
             'client_name' => $validated['client_name'],
             'status' => $validated['status'],
-            'date_finished' => $validated['status'] === 'Closed'
-                ? Carbon::now('Asia/Manila')
-                : null,
+            'date_finished' => $validated['status'] === 'Closed' ? Carbon::now('Asia/Manila') : null,
         ]);
 
-        /* 🧾 Activity Logs */
-        ActivityLogger::log(
-            'updated',
-            $ticket,
-            'Updated Ticket: "' . $ticket->title . '"'
-        );
+        ActivityLogger::log('updated', $ticket, 'Updated Ticket: "' . $ticket->title . '"');
 
         if ($oldStatus !== $validated['status']) {
-            ActivityLogger::log(
-                'status_changed',
-                $ticket,
-                'Changed status from ' . $oldStatus . ' to ' . $validated['status']
-            );
+            ActivityLogger::log('status_changed', $ticket, 'Changed status from ' . $oldStatus . ' to ' . $validated['status']);
         }
 
         if ($oldAssignee != $newAssigned && $newAssigned) {
             if ($it = User::find($newAssigned)) {
                 $it->notify(new TicketAssignedNotification($ticket));
-
-                ActivityLogger::log(
-                    'assigned',
-                    $ticket,
-                    'Reassigned Ticket to ' . $it->name
-                );
+                ActivityLogger::log('assigned', $ticket, 'Reassigned Ticket to ' . $it->name);
             }
         }
 
-        return redirect()->route('tickets.index')
-            ->with('success', 'Ticket updated successfully ✅');
+        return redirect()->route('tickets.index')->with('success', 'Ticket updated successfully ✅');
     }
 
+    // 🗑 Delete Ticket
     public function destroy(Ticket $ticket)
     {
-        ActivityLogger::log(
-            'deleted',
-            $ticket,
-            'Deleted Ticket: "' . $ticket->title . '"'
-        );
-
+        ActivityLogger::log('deleted', $ticket, 'Deleted Ticket: "' . $ticket->title . '"');
         $ticket->delete();
 
-        return redirect()->route('tickets.index')
-            ->with('success', 'Ticket deleted successfully ❌');
+        return redirect()->route('tickets.index')->with('success', 'Ticket deleted successfully ❌');
     }
 
+    // 🧑‍💻 Tickets Created by Logged-in User
     public function mine()
     {
         $tickets = Ticket::with('category')
             ->where('created_by', Auth::id())
             ->latest()
-            ->paginate(10);
+            ->paginate(20);
 
         return view('tickets.mine', compact('tickets'));
     }
 
+    // 🏢 Tickets Grouped by Department
     public function byDepartment()
     {
         $tickets = Ticket::with('category')
@@ -276,6 +236,7 @@ class TicketController extends Controller
         return view('tickets.departments', compact('tickets'));
     }
 
+    // 💾 Export Tickets
     public function export($type)
     {
         $file = 'tickets_' . now()->format('Ymd_His');
@@ -293,10 +254,10 @@ class TicketController extends Controller
         return back()->with('error', 'Export type not supported');
     }
 
+    // 🧾 Generate Job Order PDF
     public function jobOrderPdf(Ticket $ticket)
     {
         $ticket->load(['category', 'assignee']);
-
         return Pdf::loadView('tickets.job_order', compact('ticket'))
             ->setPaper('A4')
             ->download('JobOrder-' . $ticket->ticket_number . '.pdf');
