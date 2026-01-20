@@ -9,14 +9,23 @@ class Department extends Model
 {
     use HasFactory;
 
-    // Allow mass assignment for name
+    /**
+     * Allow mass assignment
+     */
     protected $fillable = [
         'name',
     ];
 
-    // Optional: If you want relationship to tickets
+    /**
+     * Relationship to tickets
+     * Ticket.department (string) → Department.name
+     */
     public function tickets()
     {
-        return $this->hasMany(\App\Models\Ticket::class, 'department');
+        return $this->hasMany(
+            \App\Models\Ticket::class,
+            'department', // foreign key in tickets table
+            'name'        // local key in departments table
+        );
     }
 }

@@ -28,12 +28,13 @@ class TicketController extends Controller
 
     public function create()
     {
-        $categories = Category::all();
-        $departments = Department::all();
+        // ✅ ASCENDING ORDER (A–Z)
+        $categories = Category::orderBy('name', 'asc')->get();
+        $departments = Department::orderBy('name', 'asc')->get();
 
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
         return view('tickets.create', compact(
@@ -45,12 +46,13 @@ class TicketController extends Controller
 
     public function edit(Ticket $ticket)
     {
-        $categories = Category::all();
-        $departments = Department::all();
+        // ✅ ASCENDING ORDER (A–Z)
+        $categories = Category::orderBy('name', 'asc')->get();
+        $departments = Department::orderBy('name', 'asc')->get();
 
         $it_personnel = User::role('it_staff')
             ->select('id', 'name')
-            ->orderBy('name')
+            ->orderBy('name', 'asc')
             ->get();
 
         return view('tickets.edit', compact(
@@ -79,10 +81,13 @@ class TicketController extends Controller
 
         /* 🎫 Ticket Number */
         $last = Ticket::latest()->first();
-        $next = $last ? str_pad((int)substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT) : '001';
+        $next = $last
+            ? str_pad((int) substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
+            : '001';
+
         $ticketNumber = 'KSU-ICTO-TIC-' . $next;
 
-        /* 📂 Category */
+        /* 📂 Category (auto-save manual) */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $categoryId = Category::firstOrCreate([
@@ -90,10 +95,14 @@ class TicketController extends Controller
             ])->id;
         }
 
-        /* 🏢 Department */
-        $department = $validated['department_manual']
+        /* 🏢 Department (AUTO-SAVE manual input) */
+        $departmentName = $validated['department_manual']
             ?? $validated['department']
             ?? null;
+
+        $department = $departmentName
+            ? Department::firstOrCreate(['name' => $departmentName])->name
+            : null;
 
         /* 🔒 Assignment */
         $assignedTo = null;
@@ -117,7 +126,7 @@ class TicketController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        /* 🧾 ACTIVITY LOG */
+        /* 🧾 Activity Log */
         ActivityLogger::log(
             'created',
             $ticket,
@@ -165,7 +174,7 @@ class TicketController extends Controller
         $oldStatus = $ticket->status;
         $oldAssignee = $ticket->assigned_to;
 
-        /* 📂 Category */
+        /* 📂 Category (auto-save manual) */
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $categoryId = Category::firstOrCreate([
@@ -173,16 +182,20 @@ class TicketController extends Controller
             ])->id;
         }
 
-        /* 🏢 Department */
-        $department = $validated['department_manual']
+        /* 🏢 Department (AUTO-SAVE manual input) */
+        $departmentName = $validated['department_manual']
             ?? $validated['department']
             ?? null;
+
+        $department = $departmentName
+            ? Department::firstOrCreate(['name' => $departmentName])->name
+            : null;
 
         $newAssigned = Auth::user()->hasRole(['admin', 'it_staff'])
             ? $validated['assigned_to']
             : $ticket->assigned_to;
 
-        $data = [
+        $ticket->update([
             'title' => $validated['title'],
             'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'Normal',
@@ -196,11 +209,9 @@ class TicketController extends Controller
             'date_finished' => $validated['status'] === 'Closed'
                 ? Carbon::now('Asia/Manila')
                 : null,
-        ];
+        ]);
 
-        $ticket->update($data);
-
-        /* 🧾 ACTIVITY LOGS */
+        /* 🧾 Activity Logs */
         ActivityLogger::log(
             'updated',
             $ticket,
