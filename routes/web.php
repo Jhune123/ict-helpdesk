@@ -19,36 +19,30 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\QueueController;
-use App\Http\Controllers\DisplayController;
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | PUBLIC ROUTES
-|--------------------------------------------------------------------------
-*/
+|----------------------------------------------------------*/
 
 /* ROOT → LOGIN */
 Route::get('/', function () {
-    return redirect()->route('login');
+return view('auth.login');
 });
 
-/* PUBLIC DISPLAY (QUEUE / MONITOR) */
-Route::get('/display', [DisplayController::class, 'index'])->name('display');
+/* 🔴 PUBLIC LIVE TV (NO LOGIN – FOR STUDENTS) */
+Route::get('/mis-queue/live-tv', [QueueController::class, 'liveTV'])
+    ->name('queues.live-tv');
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | DASHBOARD
-|--------------------------------------------------------------------------
-*/
+|----------------------------------------------------------*/
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | ANALYTICS
-|--------------------------------------------------------------------------
-*/
+|----------------------------------------------------------*/
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])
         ->name('dashboard.analytics');
@@ -60,11 +54,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('assets.analytics');
 });
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | AUTHENTICATED ROUTES
-|--------------------------------------------------------------------------
-*/
+|----------------------------------------------------------*/
 Route::middleware('auth')->group(function () {
 
     /* PROFILE */
@@ -72,13 +64,39 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /* QUEUES */
-    Route::get('/queues', [QueueController::class, 'index'])->name('queues.index');
-    Route::post('/queues', [QueueController::class, 'store'])->name('queues.store');
-    Route::post('/queues/call-next/{window}', [QueueController::class, 'callNext'])->name('queues.callNext');
-    Route::post('/queues/done/{queue}', [QueueController::class, 'done'])->name('queues.done');
+    /*------------------------------------------------------
+    | ICTO – MIS QUEUING SYSTEM ✅ FINAL
+    |------------------------------------------------------*/
+    Route::prefix('mis-queue')->group(function () {
 
-    /* TICKETS */
+        /* MAIN QUEUE DASHBOARD – FIX queues.index */
+        Route::get('/', [QueueController::class, 'index'])
+            ->name('queues.index');
+
+        /* OPERATOR PANEL (Jhune / Reymar) */
+        Route::get('/operator', [QueueController::class, 'operator'])
+            ->name('queues.operator');
+
+        /* ADD QUEUE NUMBER */
+        Route::post('/add', [QueueController::class, 'add'])
+            ->name('queues.add');
+
+        /* SERVE QUEUE – PATCH */
+        Route::patch('/serve/{queue}', [QueueController::class, 'serve'])
+            ->name('queues.serve');
+
+        /* COMPLETE SERVING – PATCH */
+        Route::patch('/complete/{queue}', [QueueController::class, 'complete'])
+            ->name('queues.complete');
+
+        /* LIVE TV DISPLAY (PUBLIC) */
+        Route::get('/live-tv', [QueueController::class, 'liveTV'])
+            ->name('queues.live-tv');
+    });
+
+    /*------------------------------------------------------
+    | TICKETS
+    |------------------------------------------------------*/
     Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
     Route::get('/tickets/departments', [TicketController::class, 'byDepartment'])->name('tickets.departments');
     Route::get('/tickets/export/{type}', [TicketController::class, 'export'])->name('tickets.export');
@@ -88,7 +106,7 @@ Route::middleware('auth')->group(function () {
     /* CATEGORIES */
     Route::resource('categories', CategoryController::class);
 
-    /* DEPARTMENTS (ADMIN / IT STAFF ONLY) */
+    /* DEPARTMENTS (ADMIN / IT STAFF) */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('departments', DepartmentController::class)
             ->except(['create', 'show', 'edit']);
@@ -104,7 +122,7 @@ Route::middleware('auth')->group(function () {
         ->name('meetings.calendar');
     Route::resource('meetings', MeetingController::class);
 
-    /* ASSETS (ADMIN / IT STAFF ONLY) */
+    /* ASSETS (ADMIN / IT STAFF) */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('assets', AssetController::class);
         Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])
@@ -147,7 +165,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])
         ->name('feedbacks.destroy');
 
-    /* ACTIVITY LOGS (ADMIN / IT STAFF ONLY) */
+    /* ACTIVITY LOGS (ADMIN / IT STAFF) */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])
             ->name('activity-logs.index');

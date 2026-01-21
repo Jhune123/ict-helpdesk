@@ -1,4 +1,3 @@
-<!-- resources/views/layouts/navigation.blade.php -->
 <nav x-data="{ open: false, notifyOpen: false }" class="bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -25,6 +24,7 @@
                         Meeting Schedules
                     </x-nav-link>
 
+
                     <!-- ✅ ICTO Assets & Equipment — ADMIN / IT STAFF ONLY -->
                     @role('admin|it_staff')
                         <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
@@ -34,6 +34,12 @@
                         <!-- ✅ Activity Logs Button — ADMIN / IT STAFF ONLY -->
                         <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
                             📜 Activity Logs
+                        </x-nav-link>
+                    @endrole
+                                        <!-- ✅ MIS Queuing System -->
+                    @role('admin|it_staff')
+                        <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
+                            🎫 MIS Queuing System
                         </x-nav-link>
                     @endrole
                 </div>
@@ -130,6 +136,16 @@
         </div>
     </div>
 </nav>
+
+<!-- ✅ Dashboard Launch Live TV Button -->
+@role('admin|it_staff')
+<div class="container mx-auto mt-6 text-center">
+    <a href="{{ route('queues.live-tv') }}" target="_blank"
+       class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-2xl shadow-lg transition duration-300">
+        🚀 Launch Live TV
+    </a>
+</div>
+@endrole
 
 <!-- AlpineJS -->
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
