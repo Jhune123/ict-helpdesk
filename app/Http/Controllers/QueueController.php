@@ -8,54 +8,49 @@ use App\Models\Queue;
 class QueueController extends Controller
 {
     /* =========================
-     * MAIN QUEUE INDEX
-     * ========================= */
-    public function index()
-    {
-        $queues = Queue::orderBy('queue_number')->get();
-
-        return view('queues.index', compact('queues'));
-    }
-
-    /* =========================
      * OPERATOR DASHBOARD
      * ========================= */
     public function operator()
     {
-        $waiting = Queue::where('status', 'waiting')
-                        ->orderBy('queue_number')
-                        ->get();
+        $queues = Queue::orderBy('id', 'asc')->get();
 
-        $servingJhune = Queue::where('status', 'serving')
-                             ->where('served_by', 'Jhune')
-                             ->first();
+        $waiting = $queues->where('status', 'waiting');
+        $servingJhune = $queues->where('status', 'serving')->where('served_by', 'Jhune')->first();
+        $servingReymar = $queues->where('status', 'serving')->where('served_by', 'Reymar')->first();
 
-        $servingReymar = Queue::where('status', 'serving')
-                              ->where('served_by', 'Reymar')
-                              ->first();
+        // Check if new queue can be added (max 5)
+        $canAddQueue = $queues->whereIn('status', ['waiting', 'serving'])->count() < 5;
 
         return view('queues.operator', compact(
+            'queues',
             'waiting',
             'servingJhune',
-            'servingReymar'
+            'servingReymar',
+            'canAddQueue'
         ));
     }
 
     /* =========================
-     * ADD QUEUE NUMBER (MANUAL)
+     * ADD QUEUE NUMBER
      * ========================= */
-    public function add(Request $request)
+    public function add()
     {
-        $request->validate([
-            'queue_number' => 'required|numeric|unique:queues,queue_number',
-        ]);
+        $queuesCount = Queue::whereIn('status', ['waiting', 'serving'])->count();
+        if ($queuesCount >= 5) {
+            return back()->with('error', 'Maximum 5 queues allowed.');
+        }
+
+        $lastQueue = Queue::orderBy('id', 'desc')->first();
+        $nextNumber = $lastQueue ? (int) substr($lastQueue->queue_number, 4) + 1 : 1;
+
+        $queueNumber = 'MIS-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
         Queue::create([
-            'queue_number' => $request->queue_number,
+            'queue_number' => $queueNumber,
             'status'       => 'waiting',
         ]);
 
-        return back()->with('success', 'Queue number added');
+        return back()->with('success', "Queue {$queueNumber} added");
     }
 
     /* =========================
@@ -64,59 +59,73 @@ class QueueController extends Controller
     public function serve(Request $request, Queue $queue)
     {
         $request->validate([
-            'served_by' => 'required|in:Jhune,Reymar',
+            'counter' => 'required|in:Jhune,Reymar',
         ]);
 
-        // Ensure only ONE serving per operator
-        Queue::where('served_by', $request->served_by)
+        // Complete currently serving queue for this counter
+        Queue::where('served_by', $request->counter)
              ->where('status', 'serving')
              ->update([
                  'status'    => 'served',
                  'served_by' => null
              ]);
 
+        // Assign this queue
         $queue->update([
             'status'    => 'serving',
-            'served_by' => $request->served_by,
+            'served_by' => $request->counter,
         ]);
 
         return back();
     }
 
     /* =========================
-     * COMPLETE SERVING
+     * COMPLETE QUEUE
      * ========================= */
     public function complete(Queue $queue)
     {
         $queue->update([
             'status'    => 'served',
-            'served_by' => null
+            'served_by' => null,
         ]);
 
         return back();
     }
 
     /* =========================
-     * LIVE TV DISPLAY (NO LOGIN)
+     * CLEAR / RESET QUEUES
      * ========================= */
-    public function liveTV()
+    public function clear()
     {
-        $servingJhune = Queue::where('status', 'serving')
-                             ->where('served_by', 'Jhune')
-                             ->first();
-
-        $servingReymar = Queue::where('status', 'serving')
-                              ->where('served_by', 'Reymar')
-                              ->first();
-
-        $nextQueue = Queue::where('status', 'waiting')
-                          ->orderBy('queue_number')
-                          ->first();
-
-        return view('queues.live-tv', compact(
-            'servingJhune',
-            'servingReymar',
-            'nextQueue'
-        ));
+        Queue::truncate();
+        return back()->with('success', 'All queues have been cleared.');
     }
+
+    /* =========================
+     * LIVE TV
+     * ========================= */
+   public function liveTV()
+{
+    $servingJhune = Queue::where('status', 'serving')
+        ->where('served_by', 'Jhune')
+        ->latest('updated_at')
+        ->first();
+
+    $servingReymar = Queue::where('status', 'serving')
+        ->where('served_by', 'Reymar')
+        ->latest('updated_at')
+        ->first();
+
+    $nextQueues = Queue::where('status', 'waiting')
+        ->orderBy('id')
+        ->take(3)
+        ->get();
+
+    return view('queues.live-tv', compact(
+        'servingJhune',
+        'servingReymar',
+        'nextQueues'
+    ));
+}
+
 }

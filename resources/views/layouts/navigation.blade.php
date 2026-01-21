@@ -137,15 +137,6 @@
     </div>
 </nav>
 
-<!-- ✅ Dashboard Launch Live TV Button -->
-@role('admin|it_staff')
-<div class="container mx-auto mt-6 text-center">
-    <a href="{{ route('queues.live-tv') }}" target="_blank"
-       class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-2xl shadow-lg transition duration-300">
-        🚀 Launch Live TV
-    </a>
-</div>
-@endrole
 
 <!-- AlpineJS -->
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

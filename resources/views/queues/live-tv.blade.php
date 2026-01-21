@@ -1,59 +1,79 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MIS Queuing System – Live TV</title>
 
-@section('content')
-<div class="w-full h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <!-- Hidden auto-refresh every 5 seconds -->
+    <meta http-equiv="refresh" content="5">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <h1 class="text-5xl font-bold mb-8 text-center">🎫 ICTO-MIS Helpdesk & Queuing System</h1>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
 
-    <div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8">
+<body class="bg-black text-white w-screen h-screen flex flex-col justify-between overflow-hidden">
 
-        @php
-            $counters = ['Sir Jhune', 'Sir Reymar'];
-        @endphp
-
-        @foreach($counters as $counter)
-        <div class="bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center">
-            <h2 class="text-4xl font-semibold mb-6">Counter: {{ $counter }}</h2>
-
-            @php
-                $current = $queues->where('counter', $counter)->where('status', 'serving')->first();
-                $next    = $queues->where('status', 'waiting')->sortBy('queue_number')->first();
-            @endphp
-
-            <!-- Current Serving -->
-            <div class="w-full mb-6 text-center">
-                <p class="text-2xl font-medium text-gray-500">Now Serving</p>
-                <div class="text-8xl font-bold text-yellow-500 mt-2">
-                    {{ $current->queue_number ?? '-' }}
-                </div>
-            </div>
-
-            <!-- Next Queue Preview -->
-            <div class="w-full mt-4 text-center">
-                <p class="text-2xl font-medium text-gray-500">Next Queue</p>
-                <div class="text-6xl font-bold text-green-500 mt-2">
-                    {{ $next ? $next->queue_number : '-' }}
-                </div>
-            </div>
-        </div>
-        @endforeach
-
+    <!-- HEADER -->
+    <div class="text-center py-8">
+        <h1 class="text-[5vw] font-extrabold tracking-wide">
+            ICTO–MIS ENROLLMENT CONCERN
+        </h1>
     </div>
 
-    <div class="mt-12 text-gray-400 text-xl">Auto-refresh every 5 seconds</div>
+    <!-- COUNTERS -->
+    <div class="flex-1 flex items-center justify-center px-8">
+        @if(isset($servingJhune) || isset($servingReymar))
+            <div class="grid {{ isset($servingJhune) && isset($servingReymar) ? 'grid-cols-2' : 'grid-cols-1' }} gap-12 w-full h-full items-center">
+                
+               {{-- COUNTER 1 --}}
+@if(isset($servingJhune))
+<div class="border-[6px] border-yellow-400 rounded-2xl p-4 text-center h-85 flex flex-col justify-center">
+    <h1 class="text-[3.5vw] font-bold mb-1">COUNTER 1</h1>
+    <p class="text-[1.5vw] mb-2">Sir Jhune</p>
+    <div class="text-[4vw] font-extrabold text-yellow-400 mb-2">
+        {{ $servingJhune->queue_number }}
+    </div>
+    <p class="text-[1.5vw] text-gray-300">NOW SERVING</p>
 </div>
+@endif
 
-<!-- Auto-refresh every 5 seconds -->
-<meta http-equiv="refresh" content="5">
-@endsection
+{{-- COUNTER 2 --}}
+@if(isset($servingReymar))
+<div class="border-[6px] border-green-400 rounded-2xl p-4 text-center h-85 flex flex-col justify-center">
+    <h1 class="text-[3.5vw] font-bold mb-1">COUNTER 2</h1>
+    <p class="text-[1.5vw] mb-2">Sir Reymar</p>
+    <div class="text-[4vw] font-extrabold text-green-400 mb-2">
+        {{ $servingReymar->queue_number }}
+    </div>
+    <p class="text-[1.5vw] text-gray-300">NOW SERVING</p>
+</div>
+@endif
 
-@section('styles')
-<style>
-    /* Fullscreen TV mode */
-    html, body, #app {
-        height: 100%;
-        margin: 0;
-        overflow: hidden;
-    }
-</style>
-@endsection
+            </div>
+        @else
+            <div class="text-center">
+                <p class="text-[4vw] text-gray-400">NO QUEUE CURRENTLY SERVING</p>
+                <p class="text-[2vw] mt-2 text-gray-500">Please wait…</p>
+            </div>
+        @endif
+    </div>
+
+    <!-- NEXT QUEUE -->
+    <div class="bg-gray-900 py-6 text-center">
+        <p class="text-[2.5vw] mb-3">NEXT QUEUE</p>
+
+        @if($nextQueues->isNotEmpty())
+            <div class="flex justify-center gap-6">
+                @foreach($nextQueues as $queue)
+                    <span class="text-[4vw] font-bold text-blue-400">
+                        {{ $queue->queue_number }}
+                    </span>
+                @endforeach
+            </div>
+        @else
+            <div class="text-[3vw] text-gray-500">---</div>
+        @endif
+    </div>
+
+</body>
+</html>

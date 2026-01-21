@@ -1,74 +1,84 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto p-6">
+<div class="container mx-auto p-4">
+    <h2 class="text-3xl font-bold mb-6 text-center">ICTO-MIS Queuing System</h2>
 
-    <h1 class="text-3xl font-bold mb-6">MIS Queuing – Operator Panel</h1>
-
-    <!-- ADD QUEUE NUMBER -->
-    <form method="POST" action="{{ route('queues.add') }}" class="mb-8 flex gap-4">
-        @csrf
-        <input type="number" name="queue_number" required
-               class="border rounded px-4 py-2"
-               placeholder="Manual Queue Number">
-
-        <button class="bg-blue-600 text-white px-6 py-2 rounded">
-            ➕ Add Queue Number
-        </button>
-    </form>
-
-    <!-- WAITING QUEUES -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-        @foreach(['Jhune', 'Reymar'] as $operator)
-        <div class="bg-white rounded-xl shadow p-6">
-            <h2 class="text-2xl font-bold mb-4">Operator: {{ $operator }}</h2>
-
-            @php
-                $current = ${'serving'.$operator} ?? null;
-            @endphp
-
-            <!-- CURRENT SERVING -->
-            <div class="mb-4">
-                <p class="text-gray-500">Now Serving</p>
-                <div class="text-4xl font-bold text-yellow-500">
-                    {{ $current->queue_number ?? '-' }}
-                </div>
-            </div>
-
-            <!-- COMPLETE BUTTON -->
-            @if($current)
-                <form method="POST" action="{{ route('queues.complete', $current->id) }}">
-                    @csrf
-                    @method('PATCH') <!-- FIXED: PATCH METHOD -->
-                    <button class="bg-green-600 text-white px-4 py-2 rounded mb-4">
-                        ✔ Complete
-                    </button>
-                </form>
-            @endif
-
-            <!-- NEXT QUEUES -->
-            <h3 class="font-semibold mb-2">Waiting</h3>
-
-            @foreach($waiting as $queue)
-                <form method="POST"
-                      action="{{ route('queues.serve', $queue->id) }}"
-                      class="flex justify-between items-center mb-2">
-                    @csrf
-                    @method('PATCH') <!-- FIXED: PATCH METHOD -->
-                    <input type="hidden" name="counter" value="{{ $operator }}">
-
-                    <span class="text-xl">{{ $queue->queue_number }}</span>
-
-                    <button class="bg-yellow-500 text-white px-3 py-1 rounded">
-                        Serve
-                    </button>
-                </form>
-            @endforeach
-
-        </div>
-        @endforeach
-
+    {{-- Launch Live TV Button --}}
+    <div class="mb-6 text-center">
+        <a href="{{ route('queues.live-tv') }}" target="_blank"
+           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            🚀 Launch Live TV
+        </a>
     </div>
+
+    {{-- Add Queue & Clear Buttons --}}
+    <div class="mb-6 text-center flex justify-center gap-4">
+        @if($canAddQueue)
+        <form action="{{ route('queues.add') }}" method="POST">
+            @csrf
+            <button class="bg-green-500 text-white px-6 py-2 rounded-lg text-xl">➕ Add Queue Number</button>
+        </form>
+        @endif
+
+        <form action="{{ route('queues.clear') }}" method="POST">
+            @csrf
+            <button class="bg-red-500 text-white px-6 py-2 rounded-lg text-xl">🧹 Clear & Reset</button>
+        </form>
+    </div>
+
+    <table class="w-full text-center border border-gray-200 text-3xl">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border p-4">Queue #</th>
+                <th class="border p-4">Status</th>
+                <th class="border p-4">Counter</th>
+                <th class="border p-4">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($queues as $queue)
+            <tr class="{{ $queue->status == 'serving' ? 'bg-yellow-200' : '' }}">
+                <td class="border p-4">{{ $queue->queue_number }}</td>
+                <td class="border p-4 capitalize">{{ $queue->status }}</td>
+                <td class="border p-4">{{ $queue->served_by ?? '-' }}</td>
+                <td class="border p-4 flex justify-center gap-2">
+                    @if($queue->status == 'waiting')
+                    <form action="{{ route('queues.serve', $queue->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="counter" value="Jhune">
+                        <button class="bg-blue-500 text-white px-6 py-2 rounded text-xl">Serve (Jhune)</button>
+                    </form>
+                    <form action="{{ route('queues.serve', $queue->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="counter" value="Reymar">
+                        <button class="bg-green-500 text-white px-6 py-2 rounded text-xl">Serve (Reymar)</button>
+                    </form>
+                    @elseif($queue->status == 'serving')
+                    <form action="{{ route('queues.complete', $queue->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <button class="bg-gray-700 text-white px-6 py-2 rounded text-xl">Complete</button>
+                    </form>
+                    @endif
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    @if(session('success'))
+    <div class="mt-4 p-4 bg-green-200 text-green-800 rounded">
+        {{ session('success') }}
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="mt-4 p-4 bg-red-200 text-red-800 rounded">
+        {{ session('error') }}
+    </div>
+    @endif
 </div>
 @endsection
