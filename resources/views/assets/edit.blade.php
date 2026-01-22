@@ -2,9 +2,7 @@
 
 @section('styles')
 <style>
-    .form-label {
-        font-weight: 600;
-    }
+    .form-label { font-weight: 600; }
     .form-input {
         border-radius: 0.5rem;
         border: 1px solid #cbd5e0;
@@ -52,7 +50,6 @@
             @method('PUT')
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Left Column -->
                 <div class="flex flex-col">
                     <label class="form-label" for="entity_name">Entity Name</label>
                     <input type="text" name="entity_name" id="entity_name" value="{{ old('entity_name', $asset->entity_name) }}" class="form-input">
@@ -94,7 +91,6 @@
                 </div>
             </div>
 
-            <!-- Full Width Fields -->
             <div class="flex flex-col mt-4">
                 <label class="form-label" for="description">Description</label>
                 <textarea name="description" id="description" class="form-textarea">{{ old('description', $asset->description) }}</textarea>
@@ -127,7 +123,6 @@
                 </div>
             </div>
 
-            <!-- Buttons -->
             <div class="flex justify-end mt-6 gap-2">
                 <a href="{{ route('assets.index') }}" class="btn bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded shadow flex items-center gap-2">
                     Cancel

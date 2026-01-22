@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Queue;
+use PDF; // Make sure barryvdh/laravel-dompdf is installed
 
 class QueueController extends Controller
 {
@@ -104,28 +105,41 @@ class QueueController extends Controller
     /* =========================
      * LIVE TV
      * ========================= */
-   public function liveTV()
-{
-    $servingJhune = Queue::where('status', 'serving')
-        ->where('served_by', 'Jhune')
-        ->latest('updated_at')
-        ->first();
+    public function liveTV()
+    {
+        $servingJhune = Queue::where('status', 'serving')
+            ->where('served_by', 'Jhune')
+            ->latest('updated_at')
+            ->first();
 
-    $servingReymar = Queue::where('status', 'serving')
-        ->where('served_by', 'Reymar')
-        ->latest('updated_at')
-        ->first();
+        $servingReymar = Queue::where('status', 'serving')
+            ->where('served_by', 'Reymar')
+            ->latest('updated_at')
+            ->first();
 
-    $nextQueues = Queue::where('status', 'waiting')
-        ->orderBy('id')
-        ->take(3)
-        ->get();
+        $nextQueues = Queue::where('status', 'waiting')
+            ->orderBy('id')
+            ->take(3)
+            ->get();
 
-    return view('queues.live-tv', compact(
-        'servingJhune',
-        'servingReymar',
-        'nextQueues'
-    ));
-}
+        return view('queues.live-tv', compact(
+            'servingJhune',
+            'servingReymar',
+            'nextQueues'
+        ));
+    }
 
+    /* =========================
+     * PDF REPORT
+     * ========================= */
+    public function pdfReport()
+    {
+        $queues = Queue::orderBy('id', 'asc')->get();
+        $timestamp = now('Asia/Manila')->format('F d, Y | h:i A');
+
+        $pdf = PDF::loadView('queues.pdf', compact('queues', 'timestamp'))
+                  ->setPaper('A4', 'portrait');
+
+        return $pdf->download('ICTO-MIS_Queue_Report_' . now('Asia/Manila')->format('Ymd_His') . '.pdf');
+    }
 }

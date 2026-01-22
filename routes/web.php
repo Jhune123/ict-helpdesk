@@ -80,6 +80,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/serve/{queue}', [QueueController::class, 'serve'])->name('queues.serve');
         Route::patch('/complete/{queue}', [QueueController::class, 'complete'])->name('queues.complete');
         Route::post('/clear', [QueueController::class, 'clear'])->name('queues.clear');
+
+        /* ✅ PDF Report for Queues */
+        Route::get('/pdf', [QueueController::class, 'pdfReport'])->name('queues.pdf');
     });
 
     /* --------------------------------------------------------------------------

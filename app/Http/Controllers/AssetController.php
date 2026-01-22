@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf; // PDF support
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AssetController extends Controller
 {
     // Display all assets
     public function index()
     {
-        $assets = Asset::latest()->paginate(10);
+        // ✅ Fetch all assets for client-side DataTables paging
+        $assets = Asset::latest()->get();
         return view('assets.index', compact('assets'));
     }
 
@@ -46,7 +47,7 @@ class AssetController extends Controller
         return redirect()->route('assets.index')->with('success', 'Asset added successfully.');
     }
 
-    // View single asset
+    // Show single asset
     public function show(Asset $asset)
     {
         return view('assets.show', compact('asset'));
@@ -58,7 +59,7 @@ class AssetController extends Controller
         return view('assets.edit', compact('asset'));
     }
 
-    // Update record
+    // Update asset
     public function update(Request $request, Asset $asset)
     {
         $validated = $request->validate([
@@ -90,17 +91,14 @@ class AssetController extends Controller
         return redirect()->route('assets.index')->with('success', 'Asset deleted successfully.');
     }
 
-    /**
-     * Export all assets to PDF (A4 Landscape)
-     */
+    // Export PDF
     public function exportPdf()
-{
-    $assets = Asset::all(); // ✅ Fetch all rows
+    {
+        $assets = Asset::all();
 
-    $pdf = Pdf::loadView('assets.pdf', compact('assets'))
-              ->setPaper('A4', 'landscape'); // ✅ Landscape
+        $pdf = Pdf::loadView('assets.pdf', compact('assets'))
+                  ->setPaper('A4', 'landscape');
 
-    $fileName = 'ICTO_Assets_'.now()->format('Ymd_His').'.pdf';
-    return $pdf->download($fileName);
-}
+        return $pdf->download('ICTO_Assets_'.now()->format('Ymd_His').'.pdf');
+    }
 }
