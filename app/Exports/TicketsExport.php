@@ -2,66 +2,56 @@
 
 namespace App\Exports;
 
-use App\Models\Ticket;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Support\Carbon;
 
-class TicketsExport implements FromCollection, WithHeadings, WithMapping
+class TicketsExport implements FromCollection, WithHeadings
 {
-    /**
-     * Retrieve all tickets with related data
-     */
-    public function collection()
+    protected $tickets;
+
+    public function __construct($tickets)
     {
-        return Ticket::with(['category', 'assignee', 'creator'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $this->tickets = $tickets;
     }
 
-    /**
-     * Define column headings
-     */
+    public function collection()
+    {
+        return $this->tickets->map(function($ticket){
+            return [
+                'Ticket #' => $ticket->ticket_number,
+                'Title' => $ticket->title,
+                'Description' => $ticket->description,
+                'Category' => $ticket->category?->name ?? '-',
+                'Department' => $ticket->department ?? '-',
+                'IT Personnel' => $ticket->assignee?->name ?? '-',
+                'Client Name' => $ticket->client_name,
+                'Priority' => $ticket->priority,
+                'Contact Number' => $ticket->contact_number,
+                'Remarks' => $ticket->remarks,
+                'Status' => $ticket->status,
+                'Date Submitted' => optional($ticket->date_submitted)->timezone('Asia/Manila')->format('M d, Y h:i A'),
+                'Date Finished' => optional($ticket->date_finished)->timezone('Asia/Manila')->format('M d, Y h:i A'),
+            ];
+        });
+    }
+
     public function headings(): array
     {
         return [
-            'Ticket ID',
+            'Ticket #',
             'Title',
             'Description',
             'Category',
             'Department',
             'IT Personnel',
-            'Priority',
             'Client Name',
+            'Priority',
             'Contact Number',
             'Remarks',
             'Status',
             'Date Submitted',
             'Date Finished',
-            'Created By',
-        ];
-    }
-
-    /**
-     * Map each ticket to row data
-     */
-    public function map($ticket): array
-    {
-        return [
-            $ticket->id,
-            $ticket->title,
-            $ticket->description,
-            $ticket->category?->name ?? 'N/A',
-            $ticket->department ?? 'N/A',
-            $ticket->assignee?->name ?? 'Unassigned',
-            $ticket->priority ?? 'Normal',
-            $ticket->client_name,
-            $ticket->contact_number ?? '',
-            $ticket->remarks ?? '',
-            $ticket->status,
-            $ticket->date_submitted?->format('Y-m-d H:i'),
-            $ticket->date_finished?->format('Y-m-d H:i') ?? '',
-            $ticket->creator?->name ?? 'System',
         ];
     }
 }

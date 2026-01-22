@@ -12,6 +12,10 @@
                         Dashboard
                     </x-nav-link>
 
+                    <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
+                        Queueing / MIS Queue
+                    </x-nav-link>
+
                     <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.*')">
                         Tickets
                     </x-nav-link>
@@ -31,7 +35,6 @@
                             💼 ICTO Assets & Equipment
                         </x-nav-link>
 
-                        <!-- ✅ Activity Logs Button — ADMIN / IT STAFF ONLY -->
                         <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
                             📜 Activity Logs
                         </x-nav-link>

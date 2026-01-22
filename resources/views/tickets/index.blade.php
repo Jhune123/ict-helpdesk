@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('content')
@@ -9,24 +10,27 @@
             🎫 Ticket Management
         </h1>
 
-        @role('admin|it_staff')
-        <a href="{{ route('tickets.create') }}" 
-           class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold shadow flex items-center gap-2 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Create Ticket
+        <a href="{{ route('tickets.create') }}"
+           class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow">
+            + Create Ticket
         </a>
-        @endrole
     </div>
 
-    {{-- SUCCESS MESSAGE --}}
-    @if(session('success'))
-        <div class="mb-4 p-4 text-green-700 bg-green-100 rounded-lg shadow font-medium">
-            {{ session('success') }}
-        </div>
-    @endif
+    {{-- FILTER & EXPORT --}}
+    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+        <form method="GET" class="flex flex-wrap items-center gap-2">
+           {{-- Month Dropdown --}}
+<label for="month" class="text-gray-700 font-semibold inline-block w-25">Month:</label>
+<select name="month" class="border rounded p-1 w-36">
+    <option value="">-- All --</option>
+    @for($m = 1; $m <= 12; $m++)
+        <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+        </option>
+    @endfor
+</select>
 
+<<<<<<< Updated upstream
     {{-- SEARCH & FILTERS --}}
     <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap items-center justify-between gap-4">
 
@@ -88,61 +92,71 @@
                 </button>
             </div>
         </form>
+=======
+{{-- Year Dropdown --}}
+<label for="year" class="text-gray-700 font-semibold inline-block w-25">Year:</label>
+<select name="year" class="border rounded p-1 w-36">
+    <option value="">-- All --</option>
+    @for($y = date('Y'); $y >= 2000; $y--)
+        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+            {{ $y }}
+        </option>
+    @endfor
+</select>
+
+
+            <button type="submit" class="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800">Filter</button>
+            <a href="{{ route('tickets.index') }}" class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">Reset</a>
+        </form>
+
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('tickets.export', ['type'=>'csv'] + request()->all()) }}" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">CSV</a>
+            <a href="{{ route('tickets.export', ['type'=>'xlsx'] + request()->all()) }}" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Excel</a>
+            <a href="{{ route('tickets.export', ['type'=>'pdf'] + request()->all()) }}" class="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600">PDF</a>
+            <button onclick="window.print()" class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">Print</button>
+        </div>
+>>>>>>> Stashed changes
     </div>
 
-    {{-- TICKET TABLE --}}
+    {{-- TICKETS TABLE --}}
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+<<<<<<< Updated upstream
         <table class="min-w-full border border-gray-200 text-sm">
             <thead class="bg-blue-700 text-white">
+=======
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-100">
+>>>>>>> Stashed changes
                 <tr>
-                    <th class="px-3 py-3 text-left">Ticket #</th>
-                    <th class="px-3 py-3 text-left">Title</th>
-                    <th class="px-3 py-3 text-left">Description</th>
-                    <th class="px-3 py-3 text-left">Category</th>
-                    <th class="px-3 py-3 text-left">Department</th>
-                    <th class="px-3 py-3 text-left">IT Personnel</th>
-                    <th class="px-3 py-3 text-left">Client Name</th>
-                    <th class="px-3 py-3 text-left">Priority</th>
-                    <th class="px-3 py-3 text-left">Contact No.</th>
-                    <th class="px-3 py-3 text-left">Remarks</th>
-                    <th class="px-3 py-3 text-left">Status</th>
-                    <th class="px-3 py-3 text-left">Date Submitted</th>
-                    <th class="px-3 py-3 text-left">Date Finished</th>
-                    <th class="px-3 py-3 text-center">Actions</th>
+                    <th class="px-3 py-2">Ticket #</th>
+                    <th class="px-3 py-2">Title</th>
+                    <th class="px-3 py-2">Description</th>
+                    <th class="px-3 py-2">Category</th>
+                    <th class="px-3 py-2">Department</th>
+                    <th class="px-3 py-2">IT Personnel</th>
+                    <th class="px-3 py-2">Client Name</th>
+                    <th class="px-3 py-2">Priority</th>
+                    <th class="px-3 py-2">Contact No.</th>
+                    <th class="px-3 py-2">Remarks</th>
+                    <th class="px-3 py-2">Status</th>
+                    <th class="px-3 py-2">Date Submitted</th>
+                    <th class="px-3 py-2">Date Finished</th>
+                    <th class="px-3 py-2 text-center">Actions</th>
                 </tr>
             </thead>
 
-            <tbody class="text-gray-700 divide-y divide-gray-200">
+            <tbody class="divide-y">
                 @forelse($tickets as $ticket)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-3 py-2 font-semibold text-gray-800">#{{ $ticket->ticket_number }}</td>
-                        <td class="px-3 py-2">{{ $ticket->title }}</td>
-                        <td class="px-3 py-2">{{ Str::limit($ticket->description, 50) }}</td>
-                        <td class="px-3 py-2">{{ $ticket->category->name ?? 'N/A' }}</td>
-                        <td class="px-3 py-2">{{ $ticket->department ?? 'N/A' }}</td>
-                        <td class="px-3 py-2">{{ $ticket->assignee?->name ?? 'Unassigned' }}</td>
-                        <td class="px-3 py-2">{{ $ticket->client_name }}</td>
-                        <td class="px-3 py-2">{{ $ticket->priority ?? 'Normal' }}</td>
-                        <td class="px-3 py-2">{{ $ticket->contact_number }}</td>
-                        <td class="px-3 py-2">{{ $ticket->remarks ?? 'No remarks' }}</td>
-                        <td class="px-3 py-2">
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                @if($ticket->status === 'Open') bg-green-100 text-green-700
-                                @elseif($ticket->status === 'In Progress') bg-yellow-100 text-yellow-700
-                                @elseif($ticket->status === 'Closed') bg-gray-200 text-gray-700
-                                @else bg-blue-100 text-blue-700 @endif">
-                                {{ $ticket->status }}
-                            </span>
-                        </td>
-                        <td class="px-3 py-2">{{ $ticket->date_submitted?->format('M d, Y h:i A') }}</td>
-                        <td class="px-3 py-2">
-                            @if($ticket->status === 'Closed')
-                                {{ $ticket->date_finished?->format('M d, Y h:i A') }}
-                            @else
-                                <span class="text-gray-400 italic">Pending</span>
-                            @endif
-                        </td>
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 font-semibold">{{ $ticket->ticket_number }}</td>
+                    <td class="px-3 py-2">{{ $ticket->title }}</td>
+                    <td class="px-3 py-2">{{ Str::limit($ticket->description, 40) }}</td>
+                    <td class="px-3 py-2">{{ $ticket->category->name ?? '-' }}</td>
+                    <td class="px-3 py-2">{{ $ticket->department ?? '-' }}</td>
+                    <td class="px-3 py-2">{{ $ticket->assignee?->name ?? '-' }}</td>
+                    <td class="px-3 py-2">{{ $ticket->client_name }}</td>
 
+<<<<<<< Updated upstream
                         {{-- ACTIONS --}}
                         <td class="px-3 py-2 text-center space-x-1">
                             <a href="{{ route('tickets.show', $ticket->id) }}" 
@@ -170,13 +184,61 @@
                             @endrole
                         </td>
                     </tr>
+=======
+                    {{-- Priority Badge --}}
+                    <td class="px-3 py-2">
+                        <span class="px-2 py-1 rounded text-white text-xs
+                            {{ $ticket->priority === 'High' ? 'bg-red-500' : ($ticket->priority === 'Medium' ? 'bg-yellow-500' : 'bg-green-500') }}">
+                            {{ $ticket->priority ?? 'Normal' }}
+                        </span>
+                    </td>
+
+                    <td class="px-3 py-2">{{ $ticket->contact_number ?? '-' }}</td>
+                    <td class="px-3 py-2">{{ $ticket->remarks ?? '-' }}</td>
+
+                    {{-- Status Badge --}}
+                    <td class="px-3 py-2">
+                        <span class="px-2 py-1 rounded-full text-white text-xs
+                            {{ $ticket->status === 'Closed' ? 'bg-green-600' : 'bg-gray-500' }}">
+                            {{ $ticket->status }}
+                        </span>
+                    </td>
+
+                    {{-- Date Submitted & Finished --}}
+                    <td class="px-3 py-2">{{ $ticket->date_submitted->format('M d, Y h:i A') }}</td>
+                    <td class="px-3 py-2">
+                        {{ $ticket->date_finished ? $ticket->date_finished->format('M d, Y h:i A') : '-' }}
+                    </td>
+
+                    {{-- ACTIONS --}}
+                    <td class="px-3 py-2 text-center space-x-1">
+                        <a href="{{ route('tickets.show', $ticket) }}" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">View</a>
+                        <a href="{{ route('tickets.joborder.pdf', $ticket) }}" class="bg-indigo-500 text-white px-2 py-1 rounded text-xs">Job Order</a>
+                        @if(auth()->user()->hasAnyRole(['admin','it_staff']))
+                            <a href="{{ route('tickets.edit', $ticket) }}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</a>
+                            <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button onclick="return confirm('Delete ticket?')" class="bg-red-600 text-white px-2 py-1 rounded text-xs">
+                                    Delete
+                                </button>
+                            </form>
+                        @endif
+                    </td>
+                </tr>
+>>>>>>> Stashed changes
                 @empty
-                    <tr>
-                        <td colspan="14" class="px-4 py-6 text-center text-gray-500">No tickets found.</td>
-                    </tr>
+                <tr>
+                    <td colspan="14" class="text-center py-4 text-gray-500">No tickets found.</td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
+
+        {{-- PAGINATION --}}
+        <div class="p-4">
+            {{ $tickets->links() }}
+        </div>
     </div>
 
     {{-- PAGINATION LINKS --}}

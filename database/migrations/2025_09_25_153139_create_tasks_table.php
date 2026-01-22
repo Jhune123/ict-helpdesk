@@ -9,16 +9,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tasks', function (Blueprint $table) {
-    $table->id();
-    $table->date('date');
-    $table->string('description');
-    $table->string('requested_by');
-    $table->string('location');
-    $table->time('start_time')->nullable();   // Start
-    $table->time('end_time')->nullable();     // End
-    $table->string('remarks')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            $table->date('date');
+            $table->string('description');
+
+            // ✅ Link to Departments table
+            $table->foreignId('department_id')->constrained()->onDelete('cascade');
+
+            $table->string('location');
+            $table->time('start_time')->nullable();   // Start
+            $table->time('end_time')->nullable();     // End
+            $table->string('assigned_to')->nullable(); // IT Personnel
+            $table->string('remarks')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void

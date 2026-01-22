@@ -82,7 +82,7 @@
                 multiple>
                 @foreach($itPersonnels as $personnel)
                     <option value="{{ $personnel->id }}"
-                        @if($meeting->itPersonnels->contains($personnel->id)) selected @endif>
+                        {{ in_array($personnel->id, old('it_personnels', $meeting->itPersonnels->pluck('id')->toArray())) ? 'selected' : '' }}>
                         {{ $personnel->name }}
                     </option>
                 @endforeach

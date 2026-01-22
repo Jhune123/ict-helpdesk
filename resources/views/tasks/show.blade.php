@@ -21,12 +21,12 @@
 
         <div class="col-span-2">
             <p class="text-gray-600 font-medium">Description</p>
-            <p class="text-lg">{{ $task->description }}</p>
+            <p class="text-lg break-words">{{ $task->description }}</p>
         </div>
 
         <div>
-            <p class="text-gray-600 font-medium">Requested By</p>
-            <p class="text-lg">{{ $task->requested_by }}</p>
+            <p class="text-gray-600 font-medium">Department</p>
+            <p class="text-lg break-words">{{ $task->department->name ?? $task->requested_by }}</p>
         </div>
 
         <div>
@@ -35,8 +35,13 @@
         </div>
 
         <div class="col-span-2">
+            <p class="text-gray-600 font-medium">IT Personnel</p>
+            <p class="text-lg">{{ $task->assigned_to ?? 'N/A' }}</p>
+        </div>
+
+        <div class="col-span-2">
             <p class="text-gray-600 font-medium">Remarks</p>
-            <p class="text-lg">{{ $task->remarks ?? '—' }}</p>
+            <p class="text-lg break-words">{{ $task->remarks ?? '—' }}</p>
         </div>
     </div>
 

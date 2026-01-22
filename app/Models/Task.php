@@ -9,15 +9,24 @@ class Task extends Model
 {
     use HasFactory;
 
-    // Table name
-   protected $fillable = [
-    'date',
-    'description',
-    'requested_by',
-    'location',
-    'start_time',
-    'end_time',
-    'assigned_to', // ✅ must be here
-    'remarks',
-]; 
+    // Mass assignable fields
+    protected $fillable = [
+        'date',
+        'description',
+        'requested_by',
+        'department_id', // ✅ proper department relationship
+        'location',
+        'start_time',
+        'end_time',
+        'assigned_to',
+        'remarks',
+    ];
+
+    /**
+     * Relationship: Task belongs to a Department
+     */
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

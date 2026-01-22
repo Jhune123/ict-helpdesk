@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('styles')
-<!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
@@ -27,7 +26,6 @@
     .table-responsive {
         overflow-x: auto;
     }
-    /* Force DataTables column sizing */
     table.dataTable {
         table-layout: fixed;
         width: 100% !important;
@@ -36,16 +34,19 @@
         word-wrap: break-word;
         vertical-align: middle;
     }
-    /* Print adjustments */
+    .wrap-text {
+        white-space: normal !important;
+        word-break: break-word;
+    }
     @media print {
         table.dataTable {
             width: 100% !important;
         }
         .dataTables_wrapper .dt-buttons {
-            display: none; /* hide buttons on print */
+            display: none;
         }
         table.dataTable th, table.dataTable td {
-            font-size: 10pt; /* smaller font to fit more columns */
+            font-size: 10pt;
         }
     }
 </style>
@@ -64,7 +65,6 @@
             </a>
             @endrole
 
-            <!-- Export PDF Button -->
             <a href="{{ route('tasks.export.pdf') }}" target="_blank"
                class="inline-block px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700 transition">
                 Export PDF
@@ -79,6 +79,7 @@
                     <th>Date</th>
                     <th>Description</th>
                     <th>Requested By</th>
+                    <th>Department</th>
                     <th>Location</th>
                     <th>Time Range</th>
                     <th>IT Personnel</th>
@@ -96,12 +97,13 @@
                 @endphp
                 <tr class="{{ $isUpcoming ? 'upcoming-task' : ($isOverdue ? 'overdue-task' : '') }}">
                     <td>{{ $taskDate->format('M d, Y') }}</td>
-                    <td>{{ $task->description }}</td>
-                    <td>{{ $task->requested_by }}</td>
+                    <td class="wrap-text">{{ $task->description }}</td>
+                    <td class="wrap-text">{{ $task->requested_by }}</td>
+                    <td class="wrap-text">{{ $task->department->name ?? '—' }}</td>
                     <td>{{ $task->location }}</td>
                     <td>{{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($task->end_time)->format('h:i A') }}</td>
                     <td>{{ $task->assigned_to ?? 'N/A' }}</td>
-                    <td>{{ $task->remarks }}</td>
+                    <td class="wrap-text">{{ $task->remarks ?? '—' }}</td>
                     <td>
                         <a href="{{ route('tasks.show', $task) }}" class="btn-view">View</a>
                         @role('admin|it_staff')

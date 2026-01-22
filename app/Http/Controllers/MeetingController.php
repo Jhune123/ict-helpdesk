@@ -5,40 +5,61 @@ namespace App\Http\Controllers;
 use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class MeetingController extends Controller
 {
+    // 🗂 Meetings Table
     public function index()
     {
-        // Clients can view all meetings but not edit or delete
-        $meetings = Meeting::with('itPersonnels')->latest()->paginate(10);
+        $meetings = Meeting::with('itPersonnel')
+            ->orderBy('date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get();
 
         return view('meetings.index', compact('meetings'));
     }
 
+    // 📆 FullCalendar View
+    public function calendar()
+    {
+        $meetings = Meeting::with('itPersonnel')->get();
+
+        $events = $meetings->map(function ($meeting) {
+            if (!$meeting->date || !$meeting->start_time) return null;
+
+            $title = $meeting->title ?? 'No Title';
+
+            // Append IT personnel names if assigned
+            if ($meeting->itPersonnel->count() > 0) {
+                $title .= ' (IT: ' . $meeting->itPersonnel->pluck('name')->join(', ') . ')';
+            }
+
+            return [
+                'id'    => $meeting->id,
+                'title' => $title,
+                'start' => Carbon::parse($meeting->date . ' ' . $meeting->start_time)->toIso8601String(),
+                'end'   => $meeting->end_time
+                            ? Carbon::parse($meeting->date . ' ' . $meeting->end_time)->toIso8601String()
+                            : null,
+                'url'   => route('meetings.show', $meeting->id),
+                'color' => Carbon::parse($meeting->date)->gte(Carbon::today()) ? '#16A34A' : '#DC2626',
+            ];
+        })->filter()->values()->toArray();
+
+        return view('meetings.calendar', compact('events'));
+    }
+
+    // ➕ Create Meeting
     public function create()
     {
-        // Allow only admin, IT staff, and clients to create
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        // Load only IT staff for selection
-        $itPersonnels = User::where('role', 'it_staff')
-            ->orderBy('name')
-            ->distinct('id')
-            ->get();
-
+        $itPersonnels = User::role('it_staff')->orderBy('name')->get();
         return view('meetings.create', compact('itPersonnels'));
     }
 
+    // 💾 Store Meeting
     public function store(Request $request)
     {
-        // Only admin, IT staff, or client can store
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
-            abort(403, 'Unauthorized action.');
-        }
-
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'date'         => 'required|date',
@@ -51,46 +72,30 @@ class MeetingController extends Controller
         ]);
 
         $meeting = Meeting::create($validated);
-
-        $selected = $request->input('it_personnels') ?? [];
-        $selected = is_array($selected) ? array_filter($selected) : [];
-
-        if (!empty($selected)) {
-            $meeting->itPersonnels()->sync($selected);
-        }
+        $meeting->itPersonnel()->sync(array_filter((array) $request->input('it_personnels')));
 
         return redirect()->route('meetings.index')->with('success', 'Meeting created successfully ✅');
     }
 
+    // 👁 Show Meeting
     public function show(Meeting $meeting)
     {
-        $meeting->load('itPersonnels');
+        $meeting->load('itPersonnel');
         return view('meetings.show', compact('meeting'));
     }
 
+    // ✏ Edit Meeting
     public function edit(Meeting $meeting)
     {
-        // Only admin and IT staff can edit
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
-            abort(403, 'Unauthorized action.');
-        }
+        $itPersonnels = User::role('it_staff')->orderBy('name')->get();
+        $meeting->load('itPersonnel');
 
-        $itPersonnels = User::where('role', 'it_staff')
-            ->orderBy('name')
-            ->distinct('id')
-            ->get();
-
-        $meeting->load('itPersonnels');
         return view('meetings.edit', compact('meeting', 'itPersonnels'));
     }
 
+    // 🔄 Update Meeting
     public function update(Request $request, Meeting $meeting)
     {
-        // Only admin and IT staff can update
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
-            abort(403, 'Unauthorized action.');
-        }
-
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'date'         => 'required|date',
@@ -103,24 +108,15 @@ class MeetingController extends Controller
         ]);
 
         $meeting->update($validated);
-
-        $selected = $request->input('it_personnels') ?? [];
-        $selected = is_array($selected) ? array_filter($selected) : [];
-
-        $meeting->itPersonnels()->sync($selected);
+        $meeting->itPersonnel()->sync(array_filter((array) $request->input('it_personnels')));
 
         return redirect()->route('meetings.index')->with('success', 'Meeting updated successfully ✅');
     }
 
+    // 🗑 Delete Meeting
     public function destroy(Meeting $meeting)
     {
-        // Only admin and IT staff can delete
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
-            abort(403, 'Unauthorized action.');
-        }
-
         $meeting->delete();
-
         return redirect()->route('meetings.index')->with('success', 'Meeting deleted successfully ❌');
     }
 }
