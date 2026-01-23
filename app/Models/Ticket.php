@@ -38,17 +38,59 @@ class Ticket extends Model
         'date_finished' => 'datetime',
     ];
 
+    // =======================
     // RELATIONSHIPS
-    public function creator() { return $this->belongsTo(User::class, 'created_by'); }
-    public function assignee() { return $this->belongsTo(User::class, 'assigned_to'); }
-    public function category() { return $this->belongsTo(Category::class); }
-    public function comments() { return $this->hasMany(Comment::class); }
-    public function attachments() { return $this->hasMany(Attachment::class); }
-    public function feedback() { return $this->hasOne(Feedback::class); }
+    // =======================
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
-    // ACCESSORS
-    public function getAssigneeNameAttribute(): string { return $this->assignee?->name ?? 'Unassigned'; }
-    public function getCategoryNameAttribute(): string { return $this->category?->name ?? 'N/A'; }
-    public function getContactNumberAttribute($value) { return $value ?: 'N/A'; }
-    public function getDepartmentAttribute($value) { return $value ?: 'N/A'; }
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class)->orderBy('created_at', 'asc');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class)->orderBy('created_at', 'asc');
+    }
+
+    public function feedback()
+    {
+        return $this->hasOne(Feedback::class);
+    }
+
+    // =======================
+    // ACCESSORS / HELPER FUNCTIONS
+    // =======================
+    public function getAssigneeNameAttribute(): string
+    {
+        return $this->assignee?->name ?? 'Unassigned';
+    }
+
+    public function getCategoryNameAttribute(): string
+    {
+        return $this->category?->name ?? 'N/A';
+    }
+
+    public function getContactNumberAttribute($value): string
+    {
+        return $value ?: 'N/A';
+    }
+
+    public function getDepartmentAttribute($value): string
+    {
+        return $value ?: 'N/A';
+    }
 }

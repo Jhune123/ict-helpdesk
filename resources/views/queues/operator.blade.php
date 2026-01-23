@@ -14,39 +14,41 @@
     </p>
 
     {{-- 🔹 REPORT & LIVE TV BUTTONS --}}
-    <div class="flex justify-center gap-3 mb-6 relative z-50">
+    <div class="flex justify-center gap-4 mb-6 flex-wrap">
 
         {{-- Detailed Report --}}
         <button onclick="printDetailedReport()"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">
+            class="w-56 h-12 flex items-center justify-center
+                   bg-indigo-600 hover:bg-indigo-700
+                   text-white font-semibold rounded-lg">
             📝 Detailed Report
         </button>
 
-        {{-- Summary Report --}}
-        <button onclick="printSummaryReport()"
-            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold">
-            📊 Summary Report
-        </button>
-
-        {{-- 🚀 Launch Live TV --}}
+        {{-- Launch Live TV --}}
         <a href="{{ route('queues.live-tv') }}" target="_blank"
-           class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold">
-           🚀 Launch Live TV
+           class="w-56 h-12 flex items-center justify-center
+                  bg-orange-600 hover:bg-orange-700
+                  text-white font-semibold rounded-lg">
+            🚀 Launch Live TV
         </a>
     </div>
 
     {{-- MAIN ACTION BUTTONS --}}
-    <div class="flex justify-center gap-4 mb-8">
+    <div class="flex justify-center gap-4 mb-8 flex-wrap">
         <form action="{{ route('queues.add') }}" method="POST">
             @csrf
-            <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold">
+            <button class="w-56 h-12 flex items-center justify-center
+                           bg-green-600 hover:bg-green-700
+                           text-white font-semibold rounded-lg">
                 ➕ Add Queue Number
             </button>
         </form>
 
         <form action="{{ route('queues.clear') }}" method="POST">
             @csrf
-            <button class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold">
+            <button class="w-56 h-12 flex items-center justify-center
+                           bg-red-600 hover:bg-red-700
+                           text-white font-semibold rounded-lg">
                 🧹 Clear & Reset
             </button>
         </form>
@@ -80,7 +82,7 @@
                         <form action="{{ route('queues.serve',$queue->id) }}" method="POST" class="inline">
                             @csrf @method('PATCH')
                             <input type="hidden" name="counter" value="Jhune">
-                            <button class="bg-blue-500 text-white px-3 py-2 rounded">
+                            <button class="w-32 h-10 bg-blue-500 text-white rounded font-semibold">
                                 Serve (Jhune)
                             </button>
                         </form>
@@ -88,14 +90,14 @@
                         <form action="{{ route('queues.serve',$queue->id) }}" method="POST" class="inline">
                             @csrf @method('PATCH')
                             <input type="hidden" name="counter" value="Reymar">
-                            <button class="bg-green-500 text-white px-3 py-2 rounded">
+                            <button class="w-32 h-10 bg-green-500 text-white rounded font-semibold">
                                 Serve (Reymar)
                             </button>
                         </form>
                     @elseif($queue->status === 'serving')
                         <form action="{{ route('queues.complete',$queue->id) }}" method="POST">
                             @csrf @method('PATCH')
-                            <button class="bg-gray-800 text-white px-4 py-2 rounded">
+                            <button class="w-32 h-10 bg-gray-800 text-white rounded font-semibold">
                                 Complete
                             </button>
                         </form>
@@ -106,16 +108,9 @@
         </tbody>
     </table>
 
-    {{-- SIGNATURES --}}
-    <div class="grid grid-cols-2 gap-12 mt-16 text-center">
-        <div>
-            <p class="font-semibold">Prepared by</p>
-            <p class="mt-10 border-t pt-2">ICTO Staff</p>
-        </div>
-        <div>
-            <p class="font-semibold">Approved by</p>
-            <p class="mt-10 border-t pt-2">ICTO Head</p>
-        </div>
+    {{-- PAGINATION --}}
+    <div class="mt-6 flex justify-center">
+        {{ $queues->links() }}
     </div>
 
 </div>
@@ -123,27 +118,31 @@
 {{-- PRINT RULES --}}
 <style>
 @media print {
+
+    /* Force LANDSCAPE */
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
     .no-print { display: none !important; }
-    .summary-only { display: none !important; }
+    .detailed-only { display: table-cell !important; }
+
+    table { width: 100% !important; font-size: 12px; }
+    th, td { padding: 6px !important; white-space: nowrap; }
 }
 </style>
 
 {{-- PRINT JS --}}
 <script>
 function printDetailedReport() {
-    // Show all detailed columns
     document.querySelectorAll('.detailed-only').forEach(el => el.style.display = '');
     window.print();
-}
-
-function printSummaryReport() {
-    // Hide detailed-only columns and actions
-    document.querySelectorAll('.detailed-only').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.no-print').forEach(el => el.style.display = 'none');
-    window.print();
-    // Restore after printing
-    document.querySelectorAll('.detailed-only').forEach(el => el.style.display = '');
-    document.querySelectorAll('.no-print').forEach(el => el.style.display = '');
 }
 </script>
 @endsection

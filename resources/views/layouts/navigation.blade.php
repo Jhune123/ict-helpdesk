@@ -12,10 +12,6 @@
                         Dashboard
                     </x-nav-link>
 
-                    <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
-                        Queueing / MIS Queue
-                    </x-nav-link>
-
                     <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.*')">
                         Tickets
                     </x-nav-link>
@@ -28,7 +24,6 @@
                         Meeting Schedules
                     </x-nav-link>
 
-
                     <!-- ✅ ICTO Assets & Equipment — ADMIN / IT STAFF ONLY -->
                     @role('admin|it_staff')
                         <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
@@ -38,9 +33,7 @@
                         <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
                             📜 Activity Logs
                         </x-nav-link>
-                    @endrole
-                                        <!-- ✅ MIS Queuing System -->
-                    @role('admin|it_staff')
+
                         <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
                             🎫 MIS Queuing System
                         </x-nav-link>
@@ -139,7 +132,6 @@
         </div>
     </div>
 </nav>
-
 
 <!-- AlpineJS -->
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

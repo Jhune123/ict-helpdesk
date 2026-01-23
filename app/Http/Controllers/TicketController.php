@@ -17,13 +17,11 @@ use App\Exports\TicketsExport;
 
 class TicketController extends Controller
 {
-<<<<<<< Updated upstream
     // 📝 Ticket Management Index with Pagination + Search
     public function index(Request $request)
     {
         $query = Ticket::with(['category', 'assignee'])->orderBy('created_at', 'desc');
 
-        // 🔍 Server-side search across multiple fields
         if ($search = $request->input('search')) {
             $query->where(function($q) use ($search) {
                 $q->where('ticket_number', 'like', "%{$search}%")
@@ -36,32 +34,25 @@ class TicketController extends Controller
             });
         }
 
-        $tickets = $query->paginate(20)->withQueryString(); // pagination 20, keep filters
-=======
-    // Show all tickets with Month/Year filter
-    public function index(Request $request)
-{
-    $query = Ticket::with(['category', 'assignee']);
->>>>>>> Stashed changes
+        if ($request->filled('month')) {
+            $query->whereMonth('date_submitted', $request->month);
+        }
+        if ($request->filled('year')) {
+            $query->whereYear('date_submitted', $request->year);
+        }
 
-    // ✅ Filter by MONTH
-    if ($request->filled('month')) {
-        $query->whereMonth('date_submitted', $request->month);
+        $tickets = $query->paginate(20)->withQueryString();
+        return view('tickets.index', compact('tickets'));
     }
 
-<<<<<<< Updated upstream
     // ➕ Create Ticket Form
     public function create()
     {
         $categories = Category::orderBy('name', 'asc')->get();
         $departments = Department::orderBy('name', 'asc')->get();
-        $it_personnel = User::role('it_staff')->select('id', 'name')->orderBy('name', 'asc')->get();
+        $it_personnel = User::role('it_staff')->select('id', 'name')->orderBy('name')->get();
 
-        return view('tickets.create', compact(
-            'categories',
-            'departments',
-            'it_personnel'
-        ));
+        return view('tickets.create', compact('categories', 'departments', 'it_personnel'));
     }
 
     // ✏ Edit Ticket Form
@@ -71,45 +62,10 @@ class TicketController extends Controller
         $departments = Department::orderBy('name', 'asc')->get();
         $it_personnel = User::role('it_staff')->select('id', 'name')->orderBy('name', 'asc')->get();
 
-        return view('tickets.edit', compact(
-            'ticket',
-            'categories',
-            'departments',
-            'it_personnel'
-        ));
+        return view('tickets.edit', compact('ticket', 'categories', 'departments', 'it_personnel'));
     }
 
     // 💾 Store New Ticket
-=======
-    // ✅ Filter by YEAR
-    if ($request->filled('year')) {
-        $query->whereYear('date_submitted', $request->year);
-    }
-
-    $tickets = $query
-        ->orderBy('date_submitted', 'desc')
-        ->paginate(10)
-        ->withQueryString(); // 🔥 keeps filter values on pagination
-
-    return view('tickets.index', compact('tickets'));
-}
-
-    // Show create ticket form
-    public function create()
-    {
-        $categories  = Category::orderBy('name')->get();
-        $departments = Department::orderBy('name')->get();
-        $it_personnel = User::role(['admin','it_staff'])
-            ->orderBy('name')
-            ->get(['id','name']);
-
-        return view('tickets.create', compact(
-            'categories', 'departments', 'it_personnel'
-        ));
-    }
-
-    // Store ticket
->>>>>>> Stashed changes
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -126,53 +82,28 @@ class TicketController extends Controller
             'attachment.*' => 'nullable|file|max:5120',
         ]);
 
-<<<<<<< Updated upstream
-        /* 🎫 Generate Ticket Number */
         $last = Ticket::latest()->first();
-        $next = $last
-            ? str_pad((int) substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
-            : '001';
+        $next = $last ? str_pad((int) substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT) : '001';
         $ticketNumber = 'KSU-ICTO-TIC-' . $next;
 
-        /* 📂 Handle Category */
-=======
-        // Ticket number
-        $last = Ticket::latest()->first();
-        $next = $last
-            ? str_pad((int)substr($last->ticket_number, -3) + 1, 3, '0', STR_PAD_LEFT)
-            : '001';
-        $ticketNumber = 'KSU-ICTO-TIC-' . $next;
-
-        // Handle manual category
->>>>>>> Stashed changes
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-<<<<<<< Updated upstream
-        /* 🏢 Handle Department */
         $departmentName = $validated['department_manual'] ?? $validated['department'] ?? null;
-        $department = $departmentName
-            ? Department::firstOrCreate(['name' => $departmentName])->name
-            : null;
+        $department = $departmentName ? Department::firstOrCreate(['name' => $departmentName])->name : null;
 
-        /* 🔒 Handle Assignment */
-        $assignedTo = Auth::user()->hasRole(['admin', 'it_staff'])
-            ? $validated['assigned_to'] ?? null
-            : null;
+        $assignedTo = Auth::user()->hasRole(['admin', 'it_staff']) ? $validated['assigned_to'] ?? null : null;
 
-=======
-        // Create ticket
->>>>>>> Stashed changes
         $ticket = Ticket::create([
             'ticket_number' => $ticketNumber,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'Normal',
             'category_id' => $categoryId,
-            'department' => $validated['department'] ?? null,
-            'assigned_to' => $validated['assigned_to'] ?? null,
+            'department' => $department,
+            'assigned_to' => $assignedTo,
             'status' => 'Open',
             'remarks' => $validated['remarks'] ?? null,
             'client_name' => $validated['client_name'],
@@ -181,63 +112,24 @@ class TicketController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-<<<<<<< Updated upstream
         ActivityLogger::log('created', $ticket, 'Created Ticket: "' . $ticket->title . '"');
 
         if ($assignedTo && ($it = User::find($assignedTo))) {
             $it->notify(new TicketAssignedNotification($ticket));
             ActivityLogger::log('assigned', $ticket, 'Assigned Ticket to ' . $it->name);
-=======
-        // Save attachments
-        if ($request->hasFile('attachment')) {
-            foreach ($request->file('attachment') as $file) {
-                $path = $file->store('attachments', 'public');
-                $ticket->attachments()->create([
-                    'filename' => $file->getClientOriginalName(),
-                    'path' => $path,
-                ]);
-            }
->>>>>>> Stashed changes
         }
 
-        // Notify IT personnel
-        if ($ticket->assigned_to) {
-            $it = User::find($ticket->assigned_to);
-            if ($it) $it->notify(new TicketAssignedNotification($ticket));
-        }
-
-        ActivityLogger::log('created', $ticket, 'Created Ticket: ' . $ticketNumber);
-
-        return redirect()->route('tickets.index')
-            ->with('success', "Ticket created successfully ✅ ({$ticketNumber})");
+        return redirect()->route('tickets.index')->with('success', "Ticket created successfully ✅ ({$ticketNumber})");
     }
 
-<<<<<<< Updated upstream
-    // 👁 Show Ticket Details
+    // 👁 Show Ticket Details with Comments & Attachments
     public function show(Ticket $ticket)
-=======
-    // Show edit ticket form
-    public function edit(Ticket $ticket)
->>>>>>> Stashed changes
     {
-        $ticket->load('attachments');
-
-        $categories  = Category::orderBy('name')->get();
-        $departments = Department::orderBy('name')->get();
-        $it_personnel = User::role(['admin','it_staff'])
-            ->orderBy('name')
-            ->get(['id','name']);
-
-        return view('tickets.edit', compact(
-            'ticket', 'categories', 'departments', 'it_personnel'
-        ));
+        $ticket->load(['comments.user', 'attachments', 'assignee', 'category']);
+        return view('tickets.show', compact('ticket'));
     }
 
-<<<<<<< Updated upstream
     // 🔄 Update Ticket
-=======
-    // Update ticket
->>>>>>> Stashed changes
     public function update(Request $request, Ticket $ticket)
     {
         $validated = $request->validate([
@@ -256,40 +148,29 @@ class TicketController extends Controller
         ]);
 
         $oldAssignee = $ticket->assigned_to;
+        $oldStatus = $ticket->status;
 
-<<<<<<< Updated upstream
-=======
-        // Manual category handling
->>>>>>> Stashed changes
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-<<<<<<< Updated upstream
         $departmentName = $validated['department_manual'] ?? $validated['department'] ?? null;
         $department = $departmentName ? Department::firstOrCreate(['name' => $departmentName])->name : null;
 
-        $newAssigned = Auth::user()->hasRole(['admin', 'it_staff']) ? $validated['assigned_to'] : $ticket->assigned_to;
-=======
-        // Only admin/IT can reassign
-        $assignedTo = Auth::user()->hasAnyRole(['admin','it_staff'])
-            ? $validated['assigned_to']
-            : $ticket->assigned_to;
->>>>>>> Stashed changes
+        $assignedTo = Auth::user()->hasRole(['admin', 'it_staff']) ? $validated['assigned_to'] : $ticket->assigned_to;
 
         $ticket->update([
             'title' => $validated['title'],
             'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'Normal',
             'category_id' => $categoryId,
-            'department' => $validated['department'],
+            'department' => $department,
             'assigned_to' => $assignedTo,
             'client_name' => $validated['client_name'],
             'contact_number' => $validated['contact_number'],
             'remarks' => $validated['remarks'],
             'status' => $validated['status'],
-<<<<<<< Updated upstream
             'date_finished' => $validated['status'] === 'Closed' ? Carbon::now('Asia/Manila') : null,
         ]);
 
@@ -299,8 +180,8 @@ class TicketController extends Controller
             ActivityLogger::log('status_changed', $ticket, 'Changed status from ' . $oldStatus . ' to ' . $validated['status']);
         }
 
-        if ($oldAssignee != $newAssigned && $newAssigned) {
-            if ($it = User::find($newAssigned)) {
+        if ($oldAssignee != $assignedTo && $assignedTo) {
+            if ($it = User::find($assignedTo)) {
                 $it->notify(new TicketAssignedNotification($ticket));
                 ActivityLogger::log('assigned', $ticket, 'Reassigned Ticket to ' . $it->name);
             }
@@ -319,114 +200,24 @@ class TicketController extends Controller
     }
 
     // 🧑‍💻 Tickets Created by Logged-in User
-=======
-            'date_finished' => $validated['status'] === 'Closed'
-                ? Carbon::now('Asia/Manila')
-                : null,
-        ]);
-
-        // Save attachments
-        if ($request->hasFile('attachment')) {
-            foreach ($request->file('attachment') as $file) {
-                $path = $file->store('attachments', 'public');
-                $ticket->attachments()->create([
-                    'filename' => $file->getClientOriginalName(),
-                    'path' => $path,
-                ]);
-            }
-        }
-
-        // Notify reassigned IT personnel
-        if ($oldAssignee != $ticket->assigned_to && $ticket->assigned_to) {
-            $it = User::find($ticket->assigned_to);
-            if ($it) $it->notify(new TicketAssignedNotification($ticket));
-        }
-
-        ActivityLogger::log('updated', $ticket, 'Updated Ticket');
-
-        return redirect()->route('tickets.index')
-            ->with('success', 'Ticket updated successfully ✅');
-    }
-
-    // Delete ticket
-    public function destroy(Ticket $ticket)
-    {
-        ActivityLogger::log('deleted', $ticket, 'Deleted Ticket');
-        $ticket->delete();
-
-        return back()->with('success', 'Ticket deleted successfully ❌');
-    }
-
-    // Show ticket details
-    public function show(Ticket $ticket)
-    {
-        $ticket->load(['category', 'assignee', 'attachments']);
-        return view('tickets.show', compact('ticket'));
-    }
-
-    // My tickets
->>>>>>> Stashed changes
     public function mine()
     {
-        $tickets = Ticket::where('created_by', Auth::id())
-            ->latest()
-            ->paginate(20);
-
+        $tickets = Ticket::where('created_by', Auth::id())->latest()->paginate(20);
         return view('tickets.mine', compact('tickets'));
     }
 
-<<<<<<< Updated upstream
     // 🏢 Tickets Grouped by Department
     public function byDepartment()
     {
-        $tickets = Ticket::with('category')
-            ->latest()
-            ->get()
-            ->groupBy('department');
-
+        $tickets = Ticket::with('category')->latest()->get()->groupBy('department');
         return view('tickets.departments', compact('tickets'));
     }
 
-    // 💾 Export Tickets
-    public function export($type)
-    {
-        $file = 'tickets_' . now()->format('Ymd_His');
-
-        if (in_array($type, ['csv', 'xlsx'])) {
-            return Excel::download(new TicketsExport, "{$file}.{$type}");
-        }
-
-        if ($type === 'pdf') {
-            $tickets = Ticket::with(['category', 'assignee'])->get();
-            return Pdf::loadView('tickets.pdf', compact('tickets'))
-                ->download("{$file}.pdf");
-        }
-
-        return back()->with('error', 'Export type not supported');
-    }
-
-    // 🧾 Generate Job Order PDF
-    public function jobOrderPdf(Ticket $ticket)
-    {
-        $ticket->load(['category', 'assignee']);
-=======
-    // Job Order PDF
-    public function jobOrderPdf(Ticket $ticket)
-    {
-        $ticket->load(['category', 'assignee', 'attachments']);
-
->>>>>>> Stashed changes
-        return Pdf::loadView('tickets.job_order', compact('ticket'))
-            ->setPaper('A4')
-            ->download('JobOrder-' . $ticket->ticket_number . '.pdf');
-    }
-
-    // Export Tickets (CSV, Excel, PDF)
+    // 💾 Export Tickets (CSV, XLSX, PDF)
     public function export(Request $request, $type)
     {
         $query = Ticket::with(['category','assignee'])->latest();
 
-        // Apply same month/year filter as table
         if ($request->filled('month') && $request->filled('year')) {
             $query->whereMonth('date_submitted', $request->month)
                   ->whereYear('date_submitted', $request->year);
@@ -435,13 +226,21 @@ class TicketController extends Controller
         $tickets = $query->get();
 
         if ($type === 'csv' || $type === 'xlsx') {
-            return Excel::download(new \App\Exports\TicketsExport($tickets), 'tickets.'.$type);
+            return Excel::download(new TicketsExport($tickets), 'tickets.'.$type);
         } elseif ($type === 'pdf') {
-            $pdf = Pdf::loadView('tickets.export_pdf', compact('tickets'))
-                      ->setPaper('A4', 'landscape');
+            $pdf = Pdf::loadView('tickets.export_pdf', compact('tickets'))->setPaper('A4', 'landscape');
             return $pdf->download('tickets.pdf');
         }
 
         return back()->with('error', 'Invalid export type!');
+    }
+
+    // 🧾 Generate Job Order PDF
+    public function jobOrderPdf(Ticket $ticket)
+    {
+        $ticket->load(['category', 'assignee']);
+        return Pdf::loadView('tickets.job_order', compact('ticket'))
+            ->setPaper('A4')
+            ->download('JobOrder-' . $ticket->ticket_number . '.pdf');
     }
 }

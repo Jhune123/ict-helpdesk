@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>MIS Queuing System – Live TV</title>
 
-    <!-- Auto-refresh every 5 seconds -->
+    <!-- Auto-refresh every 3 seconds -->
     <meta http-equiv="refresh" content="3">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 

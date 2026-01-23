@@ -9,6 +9,7 @@ use App\Models\Department;
 class DepartmentController extends Controller
 {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     /**
      * Display a listing of the departments (ASC order).
      */
@@ -76,6 +77,22 @@ class DepartmentController extends Controller
             'name' => 'required|string|unique:departments,name'
         ]);
 
+=======
+    public function index()
+    {
+    $departments = Department::orderBy('name')->get();
+    return view('departments.index', compact('departments'));
+}
+
+    public function store(Request $request)
+{
+    {
+        // validate input
+        $request->validate([
+            'name' => 'required|string|unique:departments,name'
+        ]);
+
+>>>>>>> Stashed changes
         try {
             $department = Department::create([
                 'name' => $request->name
@@ -93,6 +110,9 @@ class DepartmentController extends Controller
                 'message' => 'Error adding department: ' . $e->getMessage()
             ], 500);
         }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
 }

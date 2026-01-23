@@ -12,24 +12,25 @@ class QueueController extends Controller
      * OPERATOR DASHBOARD
      * ========================= */
     public function operator()
-    {
-        $queues = Queue::orderBy('id', 'asc')->get();
+{
+    // Latest queues on top, paginate 10 per page
+    $queues = Queue::orderBy('id', 'desc')->paginate(10);
 
-        $waiting = $queues->where('status', 'waiting');
-        $servingJhune = $queues->where('status', 'serving')->where('served_by', 'Jhune')->first();
-        $servingReymar = $queues->where('status', 'serving')->where('served_by', 'Reymar')->first();
+    // Get currently serving queues for counters
+    $servingJhune = $queues->where('status', 'serving')->where('served_by', 'Jhune')->first();
+    $servingReymar = $queues->where('status', 'serving')->where('served_by', 'Reymar')->first();
 
-        // Check if new queue can be added (max 5)
-        $canAddQueue = $queues->whereIn('status', ['waiting', 'serving'])->count() < 5;
+    // Check if new queue can be added (max 5)
+    $canAddQueue = Queue::whereIn('status', ['waiting', 'serving'])->count() < 5;
 
-        return view('queues.operator', compact(
-            'queues',
-            'waiting',
-            'servingJhune',
-            'servingReymar',
-            'canAddQueue'
-        ));
-    }
+    return view('queues.operator', compact(
+        'queues',
+        'servingJhune',
+        'servingReymar',
+        'canAddQueue'
+    ));
+}
+
 
     /* =========================
      * ADD QUEUE NUMBER
@@ -138,7 +139,7 @@ class QueueController extends Controller
         $timestamp = now('Asia/Manila')->format('F d, Y | h:i A');
 
         $pdf = PDF::loadView('queues.pdf', compact('queues', 'timestamp'))
-                  ->setPaper('A4', 'portrait');
+                  ->setPaper('A4', 'landscape'); // Landscape for wide table
 
         return $pdf->download('ICTO-MIS_Queue_Report_' . now('Asia/Manila')->format('Ymd_His') . '.pdf');
     }

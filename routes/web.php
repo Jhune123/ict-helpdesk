@@ -19,14 +19,9 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\QueueController;
-<<<<<<< Updated upstream
-=======
-use App\Http\Controllers\DisplayController;
->>>>>>> Stashed changes
 
 /* --------------------------------------------------------------------------
 | PUBLIC ROUTES
-<<<<<<< Updated upstream
 |--------------------------------------------------------------------------*/
 
 /* ROOT → LOGIN */
@@ -34,62 +29,23 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-/* 🔴 PUBLIC LIVE TV (NO LOGIN – DISPLAY ONLY) */
-Route::get('/mis-queue/live-tv', [QueueController::class, 'liveTV'])
-    ->name('queues.live-tv');
+/* PUBLIC LIVE TV (NO LOGIN) */
+Route::get('/mis-queue/live-tv', [QueueController::class, 'liveTV'])->name('queues.live-tv');
+Route::get('/mis-queue/live-tv-data', [QueueController::class, 'liveTVData'])->name('queues.live-tv-data');
 
-/* 🔴 LIVE TV AJAX DATA */
-Route::get('/mis-queue/live-tv-data', [QueueController::class, 'liveTVData'])
-    ->name('queues.live-tv-data');
-
-/* --------------------------------------------------------------------------
-=======
-|--------------------------------------------------------------------------
-*/
-
-/* ROOT → ALWAYS LOGIN */
-Route::get('/', function () {
-    return redirect()->route('login');
-});
-
-/* PUBLIC DISPLAY (QUEUE / MONITOR) */
-Route::get('/display', [DisplayController::class, 'index'])->name('display');
-
-/*
-|--------------------------------------------------------------------------
->>>>>>> Stashed changes
-| DASHBOARD
-|--------------------------------------------------------------------------*/
+/* DASHBOARD */
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-/* --------------------------------------------------------------------------
-| ANALYTICS
-<<<<<<< Updated upstream
-|--------------------------------------------------------------------------*/
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])
-        ->name('dashboard.analytics');
-
-    Route::get('/analytics', [AnalyticsController::class, 'index'])
-        ->name('analytics.index');
-
-    Route::get('/dashboard/assets-analytics', [AssetController::class, 'analytics'])
-        ->name('assets.analytics');
-=======
-|--------------------------------------------------------------------------
-*/
+/* ANALYTICS */
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])->name('dashboard.analytics');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/dashboard/assets-analytics', [AssetController::class, 'analytics'])->name('assets.analytics');
->>>>>>> Stashed changes
 });
 
-/* --------------------------------------------------------------------------
-| AUTHENTICATED ROUTES
-|--------------------------------------------------------------------------*/
+/* AUTHENTICATED ROUTES */
 Route::middleware('auth')->group(function () {
 
     /* PROFILE */
@@ -97,50 +53,37 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-<<<<<<< Updated upstream
-    /*------------------------------------------------------
-    | ICTO – MIS QUEUING SYSTEM
-    |------------------------------------------------------*/
+    /* MIS QUEUING SYSTEM */
     Route::prefix('mis-queue')->group(function () {
-
         Route::get('/', [QueueController::class, 'operator'])->name('queues.index');
         Route::get('/operator', [QueueController::class, 'operator'])->name('queues.operator');
-
         Route::post('/add', [QueueController::class, 'add'])->name('queues.add');
         Route::patch('/serve/{queue}', [QueueController::class, 'serve'])->name('queues.serve');
         Route::patch('/complete/{queue}', [QueueController::class, 'complete'])->name('queues.complete');
         Route::post('/clear', [QueueController::class, 'clear'])->name('queues.clear');
 
-        /* ✅ PDF Report for Queues */
-        Route::get('/pdf', [QueueController::class, 'pdfReport'])->name('queues.pdf');
+        /* PDF Reports */
+        Route::get('/pdf/detailed', [QueueController::class, 'pdfDetailed'])->name('queues.pdf.detailed');
+        Route::get('/pdf/summary', [QueueController::class, 'pdfSummary'])->name('queues.pdf.summary');
     });
 
-    /* --------------------------------------------------------------------------
+    /* ----------------------------------------------------------------------
     | TICKETS
-    |--------------------------------------------------------------------------*/
-=======
-    /* QUEUES */
-    Route::get('/queues', [QueueController::class, 'index'])->name('queues.index');
-    Route::post('/queues', [QueueController::class, 'store'])->name('queues.store');
-    Route::post('/queues/call-next/{window}', [QueueController::class, 'callNext'])->name('queues.callNext');
-    Route::post('/queues/done/{queue}', [QueueController::class, 'done'])->name('queues.done');
-
-    /* TICKETS */
->>>>>>> Stashed changes
+    |---------------------------------------------------------------------- */
     Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
     Route::get('/tickets/departments', [TicketController::class, 'byDepartment'])->name('tickets.departments');
     Route::get('/tickets/export/{type}', [TicketController::class, 'export'])->name('tickets.export');
-    Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.joborder.pdf');
+
+    // ✅ Job Order PDF (fixed)
+    Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
+
+    // Resource CRUD routes
     Route::resource('tickets', TicketController::class);
 
     /* CATEGORIES */
     Route::resource('categories', CategoryController::class);
 
-<<<<<<< Updated upstream
     /* DEPARTMENTS (ADMIN / IT STAFF) */
-=======
-    /* DEPARTMENTS (ADMIN / IT STAFF ONLY) */
->>>>>>> Stashed changes
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit']);
     });
@@ -153,11 +96,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     Route::resource('meetings', MeetingController::class);
 
-<<<<<<< Updated upstream
     /* ASSETS (ADMIN / IT STAFF) */
-=======
-    /* ASSETS (ADMIN / IT STAFF ONLY) */
->>>>>>> Stashed changes
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('assets', AssetController::class);
         Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
@@ -185,20 +124,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/feedbacks/{feedback}', [FeedbackController::class, 'show'])->name('feedbacks.show');
     Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->name('feedbacks.destroy');
 
-<<<<<<< Updated upstream
     /* ACTIVITY LOGS (ADMIN / IT STAFF) */
-=======
-    /* ACTIVITY LOGS (ADMIN / IT STAFF ONLY) */
->>>>>>> Stashed changes
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('/activity-logs/export/{type}', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     });
 });
 
-<<<<<<< Updated upstream
 /* AUTH ROUTES */
-=======
-/* AUTH ROUTES (LOGIN / REGISTER / PASSWORD RESET) */
->>>>>>> Stashed changes
 require __DIR__ . '/auth.php';

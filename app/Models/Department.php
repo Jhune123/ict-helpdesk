@@ -16,7 +16,6 @@ class Department extends Model
         'name',
     ];
 
-<<<<<<< Updated upstream
     /**
      * Relationship to tickets
      * Ticket.department (string) → Department.name
@@ -29,11 +28,4 @@ class Department extends Model
             'name'        // local key in departments table
         );
     }
-=======
-    // Relationship to tickets (optional)
-   public function tickets()
-{
-    return $this->hasMany(\App\Models\Ticket::class, 'department', 'name');
-}
->>>>>>> Stashed changes
 }

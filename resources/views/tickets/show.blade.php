@@ -25,7 +25,6 @@
             <!-- 🧾 Client Information -->
             <div class="bg-gray-50 rounded-xl p-4 mt-4 border border-gray-200">
                 <h3 class="font-semibold text-gray-900 mb-2">👤 Client Information</h3>
-
                 <p><span class="font-semibold">Client Name:</span> <span class="ml-2">{{ $ticket->client_name }}</span></p>
                 <p><span class="font-semibold">Contact Number:</span> <span class="ml-2">{{ $ticket->contact_number ?? 'N/A' }}</span></p>
             </div>
