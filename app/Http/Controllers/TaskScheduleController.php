@@ -16,7 +16,7 @@ class TaskScheduleController extends Controller
     {
         $search = $request->input('search');
 
-        $tasks = Task::with('department') // ✅ eager load department
+        $tasks = Task::with('department')
             ->when($search, function ($query, $search) {
                 $query->where('description', 'like', "%{$search}%")
                       ->orWhere('requested_by', 'like', "%{$search}%")
@@ -26,8 +26,8 @@ class TaskScheduleController extends Controller
                       ->orWhere('location', 'like', "%{$search}%")
                       ->orWhere('remarks', 'like', "%{$search}%");
             })
-            ->orderBy('date', 'asc')
-            ->paginate(10);
+            ->orderBy('date', 'desc') // ✅ Changed to 'desc' (Latest date first)
+            ->paginate(15);           // ✅ Keeps your requested limit of 15
 
         return view('tasks.index', compact('tasks', 'search'));
     }

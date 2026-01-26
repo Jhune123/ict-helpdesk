@@ -142,8 +142,8 @@ $(document).ready(function() {
         paging: true,
         searching: true,
         ordering: true,
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
+        pageLength: 15,            // ✅ FIXED: Changed from 10 to 15
+        lengthMenu: [5, 10, 15, 25, 50], // ✅ FIXED: Added 15 to the dropdown menu options
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel',
@@ -163,7 +163,7 @@ $(document).ready(function() {
                 }
             }
         ],
-        order: [[0, 'asc']],
+        order: [[0, 'desc']],      // ✅ FIXED: Changed 'asc' to 'desc' (Newest date first)
         autoWidth: false
     });
 });
