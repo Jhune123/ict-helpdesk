@@ -4,9 +4,10 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 use Illuminate\Support\Carbon;
 
-class TicketsExport implements FromCollection, WithHeadings
+class TicketsExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $tickets;
 
@@ -15,27 +16,42 @@ class TicketsExport implements FromCollection, WithHeadings
         $this->tickets = $tickets;
     }
 
+    /**
+     * Return collection
+     */
     public function collection()
     {
-        return $this->tickets->map(function($ticket){
-            return [
-                'Ticket #' => $ticket->ticket_number,
-                'Title' => $ticket->title,
-                'Description' => $ticket->description,
-                'Category' => $ticket->category?->name ?? '-',
-                'Department' => $ticket->department ?? '-',
-                'IT Personnel' => $ticket->assignee?->name ?? '-',
-                'Client Name' => $ticket->client_name,
-                'Priority' => $ticket->priority,
-                'Contact Number' => $ticket->contact_number,
-                'Remarks' => $ticket->remarks,
-                'Status' => $ticket->status,
-                'Date Submitted' => optional($ticket->date_submitted)->timezone('Asia/Manila')->format('M d, Y h:i A'),
-                'Date Finished' => optional($ticket->date_finished)->timezone('Asia/Manila')->format('M d, Y h:i A'),
-            ];
-        });
+        return $this->tickets;
     }
 
+    /**
+     * Map each row (SAFE for Excel & NULL dates)
+     */
+    public function map($ticket): array
+    {
+        return [
+            $ticket->ticket_number,
+            $ticket->title,
+            $ticket->description,
+            $ticket->category?->name ?? '-',
+            $ticket->department ?? '-',
+            $ticket->assignee?->name ?? '-',
+            $ticket->client_name ?? '-',
+            $ticket->priority ?? '-',
+            $ticket->contact_number ?? '-',
+            $ticket->remarks ?? '-',
+            ucfirst($ticket->status),
+
+            // ✅ Dates (NULL-safe + PH timezone)
+            $this->formatDate($ticket->created_at),
+            $this->formatDate($ticket->updated_at),
+            $this->formatDate($ticket->date_finished),
+        ];
+    }
+
+    /**
+     * Column headers
+     */
     public function headings(): array
     {
         return [
@@ -50,8 +66,23 @@ class TicketsExport implements FromCollection, WithHeadings
             'Contact Number',
             'Remarks',
             'Status',
-            'Date Submitted',
+            'Date Created',
+            'Last Updated',
             'Date Finished',
         ];
+    }
+
+    /**
+     * Helper: Excel-safe date formatter
+     */
+    private function formatDate($date): string
+    {
+        if (!$date) {
+            return '-';
+        }
+
+        return Carbon::parse($date)
+            ->timezone('Asia/Manila')
+            ->format('M d, Y h:i A');
     }
 }
