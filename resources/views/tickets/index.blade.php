@@ -58,33 +58,33 @@
                 <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow font-semibold">
                     Filter
                 </button>
-                <a href="{{ route('tickets.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded-lg shadow hover:bg-gray-500">
+                <a href="{{ route('tickets.index') }}"
+                   class="px-4 py-2 bg-gray-400 text-white rounded-lg shadow hover:bg-gray-500">
                     Reset
                 </a>
             </div>
 
-            {{-- EXPORT BUTTONS --}}
+            {{-- EXPORT --}}
             <div class="flex gap-2 flex-wrap ml-auto">
-                @php
-                    $exportBtns = ['csv' => 'CSV', 'xlsx' => 'Excel', 'pdf' => 'PDF'];
-                @endphp
-                @foreach($exportBtns as $type => $label)
+                @foreach(['csv'=>'CSV','xlsx'=>'Excel','pdf'=>'PDF'] as $type => $label)
                     <a href="{{ route('tickets.export', ['type'=>$type] + request()->all()) }}"
-                       class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium"
-                       target="_blank">{{ $label }}</a>
+                       class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 shadow text-sm"
+                       target="_blank">
+                        {{ $label }}
+                    </a>
                 @endforeach
 
                 <button onclick="window.print()"
-                        class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 transition shadow text-sm font-medium">
+                        class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 shadow text-sm">
                     Print
                 </button>
             </div>
         </form>
     </div>
 
-    {{-- TICKETS TABLE --}}
+    {{-- TABLE --}}
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <table class="min-w-full divide-y text-sm">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="px-3 py-2">Ticket #</th>
@@ -93,13 +93,13 @@
                     <th class="px-3 py-2">Category</th>
                     <th class="px-3 py-2">Department</th>
                     <th class="px-3 py-2">IT Personnel</th>
-                    <th class="px-3 py-2">Client Name</th>
+                    <th class="px-3 py-2">Client</th>
                     <th class="px-3 py-2">Priority</th>
-                    <th class="px-3 py-2">Contact No.</th>
+                    <th class="px-3 py-2">Contact</th>
                     <th class="px-3 py-2">Remarks</th>
                     <th class="px-3 py-2">Status</th>
-                    <th class="px-3 py-2">Date Submitted</th>
-                    <th class="px-3 py-2">Date Finished</th>
+                    <th class="px-3 py-2">Submitted</th>
+                    <th class="px-3 py-2">Finished</th>
                     <th class="px-3 py-2 text-center">Actions</th>
                 </tr>
             </thead>
@@ -114,40 +114,42 @@
                     <td class="px-3 py-2">{{ $ticket->department ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->assignee?->name ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->client_name }}</td>
-                    <td class="px-3 py-2">
-                        <span class="px-2 py-1 rounded text-white text-xs
-                            {{ $ticket->priority === 'High' ? 'bg-red-500' : ($ticket->priority === 'Medium' ? 'bg-yellow-500' : 'bg-green-500') }}">
-                            {{ $ticket->priority ?? 'Normal' }}
-                        </span>
-                    </td>
+                    <td class="px-3 py-2">{{ $ticket->priority ?? 'Normal' }}</td>
                     <td class="px-3 py-2">{{ $ticket->contact_number ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->remarks ?? '-' }}</td>
-                    <td class="px-3 py-2">
-                        <span class="px-2 py-1 rounded-full text-white text-xs
-                            {{ $ticket->status === 'Closed' ? 'bg-green-600' : 'bg-gray-500' }}">
-                            {{ $ticket->status }}
-                        </span>
-                    </td>
+                    <td class="px-3 py-2">{{ $ticket->status }}</td>
                     <td class="px-3 py-2">{{ $ticket->date_submitted->format('M d, Y h:i A') }}</td>
                     <td class="px-3 py-2">{{ $ticket->date_finished?->format('M d, Y h:i A') ?? '-' }}</td>
 
                     {{-- ACTIONS --}}
                     <td class="px-3 py-2 text-center space-x-1">
                         <a href="{{ route('tickets.show', $ticket) }}" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">View</a>
-                        <a href="{{ route('tickets.jobOrderPdf', $ticket) }}?{{ http_build_query(request()->all()) }}" 
-                           class="bg-indigo-500 text-white px-2 py-1 rounded text-xs" target="_blank">
+
+                        <a href="{{ route('tickets.jobOrderPdf', $ticket) }}" target="_blank"
+                           class="bg-indigo-500 text-white px-2 py-1 rounded text-xs">
                            Job Order
                         </a>
-                        @if(auth()->user()->hasAnyRole(['admin','it_staff']))
-                            <a href="{{ route('tickets.edit', $ticket) }}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</a>
+
+                        @if($ticket->status === 'Closed')
+                            <a href="{{ route('feedbacks.create', $ticket) }}"
+                               class="bg-green-600 text-white px-2 py-1 rounded text-xs">
+                                Feedback
+                            </a>
+                        @endif
+
+                        @role('admin|it_staff')
+                            <a href="{{ route('tickets.edit', $ticket) }}"
+                               class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</a>
+
                             <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button onclick="return confirm('Delete ticket?')" class="bg-red-600 text-white px-2 py-1 rounded text-xs">
+                                <button onclick="return confirm('Delete ticket?')"
+                                        class="bg-red-600 text-white px-2 py-1 rounded text-xs">
                                     Delete
                                 </button>
                             </form>
-                        @endif
+                        @endrole
                     </td>
                 </tr>
                 @empty
@@ -158,11 +160,9 @@
             </tbody>
         </table>
 
-        {{-- PAGINATION --}}
         <div class="p-4">
             {{ $tickets->links() }}
         </div>
     </div>
-
 </div>
 @endsection

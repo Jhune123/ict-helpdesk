@@ -7,21 +7,21 @@
 
 <style>
     table.dataTable thead {
-        background-color: #1E40AF; /* Blue header */
+        background-color: #1E40AF;
         color: #fff;
     }
     table.dataTable tbody tr:hover {
-        background-color: #E0F2FE; /* Light blue hover */
+        background-color: #E0F2FE;
     }
     .upcoming-task {
-        background-color: #DCFCE7 !important; /* Light green */
+        background-color: #DCFCE7 !important;
     }
     .overdue-task {
-        background-color: #FEE2E2 !important; /* Light red */
+        background-color: #FEE2E2 !important;
     }
     table.dataTable td .btn {
         white-space: nowrap;
-        margin-right: 2px;
+        margin-right: 4px;
     }
     .table-responsive {
         overflow-x: auto;
@@ -30,7 +30,8 @@
         table-layout: fixed;
         width: 100% !important;
     }
-    table.dataTable td, table.dataTable th {
+    table.dataTable th,
+    table.dataTable td {
         word-wrap: break-word;
         vertical-align: middle;
     }
@@ -39,13 +40,13 @@
         word-break: break-word;
     }
     @media print {
-        table.dataTable {
-            width: 100% !important;
-        }
-        .dataTables_wrapper .dt-buttons {
+        .dataTables_wrapper .dt-buttons,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length {
             display: none;
         }
-        table.dataTable th, table.dataTable td {
+        table.dataTable th,
+        table.dataTable td {
             font-size: 10pt;
         }
     }
@@ -59,21 +60,21 @@
 
         <div class="flex gap-2">
             @role('admin|it_staff')
-            <a href="{{ route('tasks.create') }}" 
-               class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
+            <a href="{{ route('tasks.create') }}"
+               class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700">
                 + Add Task
             </a>
             @endrole
 
             <a href="{{ route('tasks.export.pdf') }}" target="_blank"
-               class="inline-block px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700 transition">
+               class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700">
                 Export PDF
             </a>
         </div>
     </div>
 
-    <div class="table-responsive bg-white shadow rounded-lg">
-        <table id="tasksTable" class="display nowrap stripe hover" style="width:100%">
+    <div class="table-responsive bg-white shadow rounded-lg p-2">
+        <table id="tasksTable" class="display nowrap stripe hover w-full">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -87,31 +88,48 @@
                     <th>Actions</th>
                 </tr>
             </thead>
+
             <tbody>
                 @foreach($tasks as $task)
                 @php
                     $today = \Carbon\Carbon::today();
                     $taskDate = \Carbon\Carbon::parse($task->date);
-                    $isUpcoming = $taskDate->between($today, $today->copy()->addDays(7));
-                    $isOverdue = $taskDate->lt($today);
+
+                    $rowClass = $taskDate->lt($today)
+                        ? 'overdue-task'
+                        : ($taskDate->between($today, $today->copy()->addDays(7)) ? 'upcoming-task' : '');
                 @endphp
-                <tr class="{{ $isUpcoming ? 'upcoming-task' : ($isOverdue ? 'overdue-task' : '') }}">
-                    <td>{{ $taskDate->format('M d, Y') }}</td>
+
+                <tr class="{{ $rowClass }}">
+                    {{-- 🔥 IMPORTANT FIX: data-order --}}
+                    <td data-order="{{ $taskDate->format('Y-m-d') }}">
+                        {{ $taskDate->format('M d, Y') }}
+                    </td>
+
                     <td class="wrap-text">{{ $task->description }}</td>
                     <td class="wrap-text">{{ $task->requested_by }}</td>
                     <td class="wrap-text">{{ $task->department->name ?? '—' }}</td>
                     <td>{{ $task->location }}</td>
-                    <td>{{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($task->end_time)->format('h:i A') }}</td>
+                    <td>
+                        {{ \Carbon\Carbon::parse($task->start_time)->format('h:i A') }}
+                        –
+                        {{ \Carbon\Carbon::parse($task->end_time)->format('h:i A') }}
+                    </td>
                     <td>{{ $task->assigned_to ?? 'N/A' }}</td>
                     <td class="wrap-text">{{ $task->remarks ?? '—' }}</td>
                     <td>
-                        <a href="{{ route('tasks.show', $task) }}" class="btn-view">View</a>
+                        <a href="{{ route('tasks.show', $task) }}" class="btn btn-sm btn-info">View</a>
+
                         @role('admin|it_staff')
-                        <a href="{{ route('tasks.edit', $task) }}" class="btn-edit">Edit</a>
-                        <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="d-inline">
+                        <a href="{{ route('tasks.edit', $task) }}" class="btn btn-sm btn-warning">Edit</a>
+
+                        <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button onclick="return confirm('Delete this task?')" class="btn-delete">Delete</button>
+                            <button onclick="return confirm('Delete this task?')"
+                                    class="btn btn-sm btn-danger">
+                                Delete
+                            </button>
                         </form>
                         @endrole
                     </td>
@@ -135,15 +153,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
 <script>
-$(document).ready(function() {
+$(document).ready(function () {
     $('#tasksTable').DataTable({
         responsive: true,
         scrollX: true,
-        paging: true,
-        searching: true,
-        ordering: true,
-        pageLength: 15,            // ✅ FIXED: Changed from 10 to 15
-        lengthMenu: [5, 10, 15, 25, 50], // ✅ FIXED: Added 15 to the dropdown menu options
+        pageLength: 15,
+        lengthMenu: [5, 10, 15, 25, 50],
+        order: [[0, 'desc']], // ✅ Latest date FIRST
+        autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel',
@@ -155,16 +172,9 @@ $(document).ready(function() {
             },
             {
                 extend: 'print',
-                title: 'Task Schedule',
-                customize: function (win) {
-                    $(win.document.body).css('font-size', '10pt');
-                    $(win.document.body).find('table').addClass('compact').css('font-size', '10pt');
-                    $(win.document.body).find('table').css('width', '100%');
-                }
+                title: 'Task Schedule'
             }
-        ],
-        order: [[0, 'desc']],      // ✅ FIXED: Changed 'asc' to 'desc' (Newest date first)
-        autoWidth: false
+        ]
     });
 });
 </script>

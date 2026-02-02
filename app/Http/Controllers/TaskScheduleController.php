@@ -5,32 +5,37 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\Department;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf; // PDF support
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TaskScheduleController extends Controller
 {
     /**
-     * Display a listing of tasks with search and department eager-load.
+     * Display a listing of tasks with search + pagination.
+     * Latest tasks appear on TOP.
      */
     public function index(Request $request)
-    {
-        $search = $request->input('search');
+{
+    $search = $request->input('search');
 
-        $tasks = Task::with('department')
-            ->when($search, function ($query, $search) {
-                $query->where('description', 'like', "%{$search}%")
-                      ->orWhere('requested_by', 'like', "%{$search}%")
-                      ->orWhereHas('department', function($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
-                      })
-                      ->orWhere('location', 'like', "%{$search}%")
-                      ->orWhere('remarks', 'like', "%{$search}%");
-            })
-            ->orderBy('date', 'desc') // ✅ Changed to 'desc' (Latest date first)
-            ->paginate(15);           // ✅ Keeps your requested limit of 15
+    $tasks = Task::with('department')
+        ->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('requested_by', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhere('remarks', 'like', "%{$search}%")
+                  ->orWhereHas('department', function ($dq) use ($search) {
+                      $dq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        })
+        ->orderBy('created_at', 'desc') // ✅ REAL FIX: latest ADDED first
+        ->get();                         // ✅ REQUIRED for DataTables
 
-        return view('tasks.index', compact('tasks', 'search'));
-    }
+    return view('tasks.index', compact('tasks', 'search'));
+}
+
+
 
     /**
      * Show the form for creating a new task.
@@ -47,7 +52,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Store a newly created task in storage.
+     * Store a newly created task.
      */
     public function store(Request $request)
     {
@@ -55,18 +60,13 @@ class TaskScheduleController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Ensure time has seconds
-        $startTime = $request->start_time;
-        $endTime = $request->end_time;
-        if (strlen($startTime) === 5) $startTime .= ':00';
-        if (strlen($endTime) === 5) $endTime .= ':00';
-
+        // Normalize time format (ensure seconds)
         $request->merge([
-            'start_time' => $startTime,
-            'end_time'   => $endTime,
+            'start_time' => strlen($request->start_time) === 5 ? $request->start_time . ':00' : $request->start_time,
+            'end_time'   => strlen($request->end_time) === 5 ? $request->end_time . ':00' : $request->end_time,
         ]);
 
-        $request->validate([
+        $validated = $request->validate([
             'date'          => 'required|date',
             'description'   => 'required|string|max:255',
             'requested_by'  => 'required|string|max:255',
@@ -78,7 +78,7 @@ class TaskScheduleController extends Controller
             'remarks'       => 'nullable|string|max:500',
         ]);
 
-        Task::create($request->all());
+        Task::create($validated);
 
         return redirect()->route('tasks.index')
             ->with('success', 'Task Schedule created successfully ✅');
@@ -109,7 +109,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Update the specified task in storage.
+     * Update the specified task.
      */
     public function update(Request $request, Task $task)
     {
@@ -117,17 +117,12 @@ class TaskScheduleController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $startTime = $request->start_time;
-        $endTime = $request->end_time;
-        if (strlen($startTime) === 5) $startTime .= ':00';
-        if (strlen($endTime) === 5) $endTime .= ':00';
-
         $request->merge([
-            'start_time' => $startTime,
-            'end_time'   => $endTime,
+            'start_time' => strlen($request->start_time) === 5 ? $request->start_time . ':00' : $request->start_time,
+            'end_time'   => strlen($request->end_time) === 5 ? $request->end_time . ':00' : $request->end_time,
         ]);
 
-        $request->validate([
+        $validated = $request->validate([
             'date'          => 'required|date',
             'description'   => 'required|string|max:255',
             'requested_by'  => 'required|string|max:255',
@@ -139,14 +134,14 @@ class TaskScheduleController extends Controller
             'remarks'       => 'nullable|string|max:500',
         ]);
 
-        $task->update($request->all());
+        $task->update($validated);
 
         return redirect()->route('tasks.index')
             ->with('success', 'Task Schedule updated successfully ✅');
     }
 
     /**
-     * Remove the specified task from storage.
+     * Remove the specified task.
      */
     public function destroy(Task $task)
     {
@@ -165,12 +160,15 @@ class TaskScheduleController extends Controller
      */
     public function exportPdf()
     {
-        $tasks = Task::with('department')->orderBy('date', 'asc')->get();
+        $tasks = Task::with('department')
+            ->orderBy('date', 'asc')
+            ->get();
 
         $pdf = Pdf::loadView('tasks.pdf', compact('tasks'))
-                  ->setPaper('A4', 'landscape');
+            ->setPaper('A4', 'landscape');
 
-        $fileName = 'task_schedule_' . now()->format('Ymd_His') . '.pdf';
-        return $pdf->download($fileName);
+        return $pdf->download(
+            'task_schedule_' . now()->format('Ymd_His') . '.pdf'
+        );
     }
 }
