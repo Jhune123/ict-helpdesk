@@ -14,10 +14,21 @@ class Ticket extends Model
 {
     use HasFactory;
 
+    /**
+     * =======================
+     * MASS ASSIGNABLE FIELDS
+     * =======================
+     */
     protected $fillable = [
         'ticket_number',
         'title',
         'description',
+
+        // ✅ NEW EQUIPMENT FIELDS
+        'equipment_type',
+        'brand_model',
+        'serial_no',
+
         'status',
         'priority',
         'category_id',
@@ -31,16 +42,23 @@ class Ticket extends Model
         'remarks',
     ];
 
+    /**
+     * =======================
+     * CASTS
+     * =======================
+     */
     protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
         'date_submitted' => 'datetime',
-        'date_finished' => 'datetime',
+        'date_finished'  => 'datetime',
     ];
 
-    // =======================
-    // RELATIONSHIPS
-    // =======================
+    /**
+     * =======================
+     * RELATIONSHIPS
+     * =======================
+     */
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -71,9 +89,11 @@ class Ticket extends Model
         return $this->hasOne(Feedback::class);
     }
 
-    // =======================
-    // ACCESSORS / HELPER FUNCTIONS
-    // =======================
+    /**
+     * =======================
+     * ACCESSORS / HELPERS
+     * =======================
+     */
     public function getAssigneeNameAttribute(): string
     {
         return $this->assignee?->name ?? 'Unassigned';
@@ -90,6 +110,22 @@ class Ticket extends Model
     }
 
     public function getDepartmentAttribute($value): string
+    {
+        return $value ?: 'N/A';
+    }
+
+    // ✅ Equipment info helpers (safe display)
+    public function getEquipmentTypeAttribute($value): string
+    {
+        return $value ?: 'N/A';
+    }
+
+    public function getBrandModelAttribute($value): string
+    {
+        return $value ?: 'N/A';
+    }
+
+    public function getSerialNoAttribute($value): string
     {
         return $value ?: 'N/A';
     }
