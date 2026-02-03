@@ -15,6 +15,9 @@
                         <th class="px-4 py-2 border">Department</th>
                         <th class="px-4 py-2 border">Client</th>
                         <th class="px-4 py-2 border">IT Personnel</th>
+                        <th class="px-4 py-2 border">Equipment Type</th>
+                        <th class="px-4 py-2 border">Brand / Model</th>
+                        <th class="px-4 py-2 border">Serial No.</th>
                         <th class="px-4 py-2 border">Status</th>
                         <th class="px-4 py-2 border">Date Created</th>
                         <th class="px-4 py-2 border">Date Finished</th>
@@ -30,6 +33,9 @@
                             <td class="px-4 py-2 border">{{ $ticket->department ?? 'N/A' }}</td>
                             <td class="px-4 py-2 border">{{ $ticket->client_name ?? 'N/A' }}</td>
                             <td class="px-4 py-2 border">{{ $ticket->assigneeName ?? 'N/A' }}</td>
+                            <td class="px-4 py-2 border">{{ $ticket->equipment_type ?? 'N/A' }}</td>
+                            <td class="px-4 py-2 border">{{ $ticket->brand_model ?? 'N/A' }}</td>
+                            <td class="px-4 py-2 border">{{ $ticket->serial_no ?? 'N/A' }}</td>
                             <td class="px-4 py-2 border">
                                 <span class="px-2 py-1 rounded-lg text-sm 
                                     @if($ticket->status === 'Open') bg-green-100 text-green-700
@@ -49,13 +55,13 @@
                             <!-- Actions -->
                             <td class="px-4 py-2 border flex gap-2 items-center">
 
-                                <!-- View button (always visible) -->
+                                <!-- View button -->
                                 <a href="{{ route('tickets.show', $ticket->id) }}" 
                                    class="px-3 py-1 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">
                                     👁️ View
                                 </a>
 
-                                <!-- Submit Feedback Button for Completed Tickets -->
+                                <!-- Submit Feedback -->
                                 @if($ticket->status === 'Closed')
                                     @if(!$ticket->feedback)
                                         <a href="{{ route('feedbacks.create', $ticket->id) }}" 
@@ -74,13 +80,11 @@
                                 @endphp
 
                                 @if(in_array($role, ['admin', 'it_staff']))
-                                    <!-- Edit button -->
                                     <a href="{{ route('tickets.edit', $ticket->id) }}" 
                                        class="px-3 py-1 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
                                         ✏️ Edit
                                     </a>
 
-                                    <!-- Delete button -->
                                     <form action="{{ route('tickets.destroy', $ticket->id) }}" 
                                           method="POST" 
                                           onsubmit="return confirm('Are you sure you want to delete this ticket?')" 
@@ -97,7 +101,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-4 text-center text-gray-500">
+                            <td colspan="13" class="px-4 py-4 text-center text-gray-500">
                                 You have no tickets yet.
                             </td>
                         </tr>

@@ -26,6 +26,37 @@
             @error('description') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
         </div>
 
+        <!-- ✅ Equipment Information -->
+        <div class="mb-4 bg-gray-50 p-4 rounded border">
+            <h3 class="font-semibold mb-2">🖥 Equipment Information</h3>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block font-semibold">Equipment Type</label>
+                    <input type="text" name="equipment_type" 
+                           value="{{ old('equipment_type', $ticket->equipment_type) }}" 
+                           class="w-full border rounded-lg p-2" required>
+                    @error('equipment_type') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block font-semibold">Brand & Model No.</label>
+                    <input type="text" name="brand_model" 
+                           value="{{ old('brand_model', $ticket->brand_model) }}" 
+                           class="w-full border rounded-lg p-2" required>
+                    @error('brand_model') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block font-semibold">Serial No.</label>
+                    <input type="text" name="serial_no" 
+                           value="{{ old('serial_no', $ticket->serial_no) }}" 
+                           class="w-full border rounded-lg p-2" required>
+                    @error('serial_no') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </div>
+
         <!-- Category -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Category</label>
@@ -91,30 +122,10 @@
             <select name="status" class="w-full border rounded-lg p-2" required>
                 @php $statuses = ['Open','In Progress','Closed']; @endphp
                 @foreach($statuses as $status)
-                    <option value="{{ $status }}" {{ old('status', $ticket->status) == $status ? 'selected' : '' }}>
-                        {{ $status }}
-                    </option>
+                    <option value="{{ $status }}" {{ old('status', $ticket->status) == $status ? 'selected' : '' }}>{{ $status }}</option>
                 @endforeach
             </select>
             @error('status') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
-        </div>
-
-        <!-- Date Submitted -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Date Submitted (Philippine Time)</label>
-            <input type="datetime-local" name="date_submitted"
-                   value="{{ old('date_submitted', optional($ticket->date_submitted)->format('Y-m-d\TH:i')) }}"
-                   class="w-full border rounded-lg p-2">
-            @error('date_submitted') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
-        </div>
-
-        <!-- Date Finished -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Date Finished (Philippine Time)</label>
-            <input type="datetime-local" name="date_finished"
-                   value="{{ old('date_finished', optional($ticket->date_finished)->format('Y-m-d\TH:i')) }}"
-                   class="w-full border rounded-lg p-2">
-            @error('date_finished') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
         </div>
 
         <!-- Client Name -->
@@ -141,23 +152,6 @@
             <textarea name="remarks" rows="3"
                       class="w-full border rounded-lg p-2">{{ old('remarks', $ticket->remarks) }}</textarea>
             @error('remarks') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
-        </div>
-
-        <!-- Attachments -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-semibold">Attachments</label>
-            <input type="file" name="attachment[]" multiple class="w-full border rounded-lg p-2">
-            @if($ticket->attachments->isNotEmpty())
-                <ul class="mt-2 list-disc list-inside text-sm">
-                    @foreach($ticket->attachments as $file)
-                        <li>
-                            <a href="{{ Storage::url($file->path) }}" target="_blank" class="text-blue-600 hover:underline">
-                                {{ $file->filename }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
         </div>
 
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">

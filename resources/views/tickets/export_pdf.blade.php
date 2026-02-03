@@ -1,109 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <title>Tickets Export</title>
-
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-        }
+        body { font-family: sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
-
-    <h2>KSU ICTO – Ticket List</h2>
-
-    <p style="text-align:center; font-size:10px;">
-        Generated on {{ now('Asia/Manila')->format('F d, Y | h:i A') }} (PH Time)
-    </p>
-
+    <h2>Tickets Export</h2>
     <table>
         <thead>
             <tr>
                 <th>Ticket #</th>
                 <th>Title</th>
                 <th>Description</th>
+                <th>Equipment Type</th>
+                <th>Brand / Model</th>
+                <th>Serial No.</th>
                 <th>Category</th>
                 <th>Department</th>
                 <th>IT Personnel</th>
-                <th>Client Name</th>
+                <th>Client</th>
                 <th>Priority</th>
-                <th>Contact Number</th>
-                <th>Remarks</th>
+                <th>Contact</th>
                 <th>Status</th>
-                <th>Date Submitted</th>
-                <th>Date Finished</th>
+                <th>Submitted</th>
+                <th>Finished</th>
             </tr>
         </thead>
-
         <tbody>
             @foreach($tickets as $ticket)
             <tr>
                 <td>{{ $ticket->ticket_number }}</td>
-
                 <td>{{ $ticket->title }}</td>
-
                 <td>{{ $ticket->description }}</td>
-
+                <td>{{ $ticket->equipment_type ?? '-' }}</td>
+                <td>{{ $ticket->brand_model ?? '-' }}</td>
+                <td>{{ $ticket->serial_no ?? '-' }}</td>
                 <td>{{ $ticket->category?->name ?? '-' }}</td>
-
                 <td>{{ $ticket->department ?? '-' }}</td>
-
                 <td>{{ $ticket->assignee?->name ?? '-' }}</td>
-
                 <td>{{ $ticket->client_name }}</td>
-
-                <td>{{ $ticket->priority }}</td>
-
-                <td>{{ $ticket->contact_number }}</td>
-
-                <td>{{ $ticket->remarks }}</td>
-
-                <td>{{ ucfirst($ticket->status) }}</td>
-
-                {{-- DATE SUBMITTED --}}
-                <td>
-                    {{ $ticket->created_at
-                        ? $ticket->created_at->timezone('Asia/Manila')->format('M d, Y h:i A')
-                        : '-' }}
-                </td>
-
-                {{-- DATE FINISHED --}}
-                <td>
-                    {{ $ticket->date_finished
-                        ? \Carbon\Carbon::parse($ticket->date_finished)
-                            ->timezone('Asia/Manila')
-                            ->format('M d, Y h:i A')
-                        : '-' }}
-                </td>
+                <td>{{ $ticket->priority ?? 'Normal' }}</td>
+                <td>{{ $ticket->contact_number ?? '-' }}</td>
+                <td>{{ $ticket->status }}</td>
+                <td>{{ $ticket->date_submitted?->format('M d, Y h:i A') ?? '-' }}</td>
+                <td>{{ $ticket->date_finished?->format('M d, Y h:i A') ?? '-' }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
-
 </body>
 </html>

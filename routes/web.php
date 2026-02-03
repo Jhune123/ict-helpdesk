@@ -70,14 +70,23 @@ Route::middleware('auth')->group(function () {
     /* ----------------------------------------------------------------------
     | TICKETS
     |---------------------------------------------------------------------- */
+    // My Tickets
     Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
-    Route::get('/tickets/departments', [TicketController::class, 'byDepartment'])->name('tickets.departments');
-    Route::get('/tickets/export/{type}', [TicketController::class, 'export'])->name('tickets.export');
 
-    // ✅ Job Order PDF (fixed)
+    // Tickets by Department
+    Route::get('/tickets/departments', [TicketController::class, 'byDepartment'])->name('tickets.departments');
+
+    // ✅ Export Tickets
+    Route::prefix('tickets/export')->group(function () {
+        Route::get('/pdf', [TicketController::class, 'exportPdf'])->name('tickets.export.pdf');
+        Route::get('/excel', [TicketController::class, 'exportExcel'])->name('tickets.export.excel');
+        Route::get('/csv', [TicketController::class, 'exportCsv'])->name('tickets.export.csv');
+    });
+
+    // ✅ Job Order PDF (single ticket)
     Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
 
-    // Resource CRUD routes
+    // Resource CRUD routes (index, create, store, show, edit, update, destroy)
     Route::resource('tickets', TicketController::class);
 
     /* CATEGORIES */
