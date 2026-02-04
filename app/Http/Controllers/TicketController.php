@@ -318,21 +318,36 @@ class TicketController extends Controller
     }
 
     /**
-     * 🏢 Tickets by Department
-     */
-    public function byDepartment()
-    {
-        // Load all tickets with assignee and category
-        $tickets = Ticket::with(['assignee', 'category'])
-            ->orderBy('department')
-            ->orderBy('created_at', 'desc')
-            ->get();
+ * 🏢 Tickets by Department (WITH OVERALL SEARCH)
+ */
+public function byDepartment(Request $request)
+{
+    $query = Ticket::with(['assignee', 'category'])
+        ->orderBy('department')
+        ->orderBy('created_at', 'desc');
 
-        // Group tickets by department for Blade
-        $tickets = $tickets->groupBy(function ($ticket) {
+    // 🔍 Overall Search inside Tickets by Department
+    if ($search = $request->input('search')) {
+        $query->where(function ($q) use ($search) {
+            $q->where('ticket_number', 'like', "%{$search}%")
+              ->orWhere('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhere('department', 'like', "%{$search}%")
+              ->orWhere('client_name', 'like', "%{$search}%")
+              ->orWhere('priority', 'like', "%{$search}%")
+              ->orWhere('status', 'like', "%{$search}%")
+              ->orWhere('equipment_type', 'like', "%{$search}%")
+              ->orWhere('brand_model', 'like', "%{$search}%")
+              ->orWhere('serial_no', 'like', "%{$search}%");
+        });
+    }
+
+    $tickets = $query->get()
+        ->groupBy(function ($ticket) {
             return $ticket->department ?? 'Unspecified Department';
         });
 
-        return view('tickets.departments', compact('tickets'));
-    }
+    return view('tickets.departments', compact('tickets'));
+}
+
 }
