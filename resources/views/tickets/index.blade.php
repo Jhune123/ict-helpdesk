@@ -20,13 +20,12 @@
     <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
         <form method="GET" class="flex flex-wrap items-end gap-4 w-full md:flex-nowrap">
 
-            {{-- SEARCH --}}
+            {{-- SEARCH (FIXED: Removed onkeyup so it only submits on ENTER) --}}
             <div class="w-[500px]">
                 <label class="text-sm font-semibold text-gray-600">Search Tickets</label>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Ticket #, Title, Description, Equipment, Client..."
-                       class="border rounded p-2 w-full"
-                       onkeyup="this.form.submit()">
+                       class="border rounded p-2 w-full">
             </div>
 
             {{-- MONTH & YEAR --}}
