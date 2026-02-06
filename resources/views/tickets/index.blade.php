@@ -113,9 +113,11 @@
 
             <tbody class="divide-y">
                 @forelse($tickets as $ticket)
+                
                 <tr class="
-    hover:bg-gray-50
-    {{ $ticket->status === 'Closed' ? 'bg-green-50 border-l-4 border-green-500' : '' }}
+    {{ $ticket->status === 'Closed'
+        ? 'bg-green-500 text-white [&_a]:text-white [&_svg]:text-white hover:bg-green-600'
+        : 'hover:bg-gray-50' }}
 ">
 
                     <td class="px-3 py-2 font-semibold">{{ $ticket->ticket_number }}</td>
