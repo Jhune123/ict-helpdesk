@@ -24,11 +24,9 @@
             @error('description') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
         </div>
 
-        <!-- EQUIPMENT INFORMATION TABLE -->
+        <!-- EQUIPMENT INFORMATION -->
         <div class="mb-6">
-            <label class="block text-gray-700 font-semibold mb-2">
-                Equipment Information
-            </label>
+            <label class="block text-gray-700 font-semibold mb-2">Equipment Information</label>
 
             <div class="overflow-x-auto">
                 <table class="w-full border border-gray-300 text-sm">
@@ -44,39 +42,44 @@
                             <td class="border px-2 py-2">
                                 <input type="text" name="equipment_type"
                                        value="{{ old('equipment_type') }}"
-                                       class="w-full border rounded p-2"
-                                       placeholder="e.g. Desktop, Laptop, Printer" required>
+                                       class="w-full border rounded p-2" required>
                             </td>
                             <td class="border px-2 py-2">
                                 <input type="text" name="brand_model"
                                        value="{{ old('brand_model') }}"
-                                       class="w-full border rounded p-2"
-                                       placeholder="e.g. Dell OptiPlex 7090" required>
+                                       class="w-full border rounded p-2" required>
                             </td>
                             <td class="border px-2 py-2">
                                 <input type="text" name="serial_no"
                                        value="{{ old('serial_no') }}"
-                                       class="w-full border rounded p-2"
-                                       placeholder="Serial Number" required>
+                                       class="w-full border rounded p-2" required>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
-            @error('equipment_type') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
-            @error('brand_model') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
-            @error('serial_no') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
         </div>
 
         <!-- Priority -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Priority</label>
             <select name="priority" class="w-full border rounded-lg p-2">
-                @php $priorities = ['Low', 'Normal', 'High', 'Urgent']; @endphp
-                @foreach($priorities as $priority)
+                @foreach(['Low','Normal','High','Urgent'] as $priority)
                     <option value="{{ $priority }}" {{ old('priority') == $priority ? 'selected' : '' }}>
                         {{ $priority }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- ✅ STATUS (NEW) -->
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold">Status</label>
+            <select name="status" class="w-full border rounded-lg p-2" required>
+                @foreach(['Open','In Progress','Closed','Condemned'] as $status)
+                    <option value="{{ $status }}"
+                        {{ old('status','Open') == $status ? 'selected' : '' }}>
+                        {{ $status }}
                     </option>
                 @endforeach
             </select>
@@ -103,22 +106,14 @@
         <!-- Department -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Department</label>
-            <div class="flex gap-2">
-                <select id="department-select" name="department"
-                        class="w-full border rounded-lg p-2">
-                    <option value="">-- Select Department --</option>
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept->name }}" {{ old('department') == $dept->name ? 'selected' : '' }}>
-                            {{ $dept->name }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <button type="button" id="add-department-btn"
-                        class="bg-green-600 text-white px-3 rounded hover:bg-green-700">
-                    + Add
-                </button>
-            </div>
+            <select name="department" class="w-full border rounded-lg p-2">
+                <option value="">-- Select Department --</option>
+                @foreach($departments as $dept)
+                    <option value="{{ $dept->name }}" {{ old('department') == $dept->name ? 'selected' : '' }}>
+                        {{ $dept->name }}
+                    </option>
+                @endforeach
+            </select>
         </div>
 
         <!-- Assign To -->
@@ -134,7 +129,7 @@
             </select>
         </div>
 
-        <!-- Client Name -->
+        <!-- Client -->
         <div class="mb-4">
             <label class="block text-gray-700 font-semibold">Client Name</label>
             <input type="text" name="client_name"
