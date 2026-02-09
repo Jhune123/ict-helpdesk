@@ -53,6 +53,7 @@
                     <th class="px-3 py-2">Status</th>
                     <th class="px-3 py-2">Submitted</th>
                     <th class="px-3 py-2">Condemned</th>
+                    <th class="px-3 py-2 text-center">Attachment</th> {{-- ADDED --}}
                     <th class="px-3 py-2">Actions</th>
                 </tr>
             </thead>
@@ -87,8 +88,21 @@
                             {{ $equipment->status }}
                         </span>
                     </td>
-                    <td class="px-3 py-2">{{ $equipment->date_submitted?->format('M d, Y') }}</td>
-                    <td class="px-3 py-2">{{ $equipment->date_condemned?->format('M d, Y') }}</td>
+                    {{-- SAFE DATE FORMATTING --}}
+                    <td class="px-3 py-2">{{ optional($equipment->date_submitted)->format('M d, Y') }}</td>
+                    <td class="px-3 py-2">{{ optional($equipment->date_condemned)->format('M d, Y') }}</td>
+
+                    {{-- ATTACHMENT COLUMN --}}
+                    <td class="px-3 py-2 text-center">
+                        @if($equipment->attachment_path)
+                            <a href="{{ asset('storage/' . $equipment->attachment_path) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-bold text-lg" title="Download">
+                                📎
+                            </a>
+                        @else
+                            <span class="text-gray-300">-</span>
+                        @endif
+                    </td>
+
                     <td class="px-3 py-2">
                         <div class="flex gap-1">
                             {{-- VIEW: Visible to ALL --}}
@@ -120,7 +134,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="18" class="text-center py-6 text-gray-500">
+                    <td colspan="19" class="text-center py-6 text-gray-500">
                         No condemned equipment found.
                     </td>
                 </tr>
