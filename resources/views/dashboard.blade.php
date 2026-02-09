@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- Full-page background -->
 <div class="min-h-screen flex flex-col items-center justify-start"
      style="
         background-image: url('{{ asset('image/school-logo.jpg') }}');
@@ -10,7 +9,6 @@
         background-position: center;
      ">
 
-    <!-- Header / Title -->
     <div class="text-center mt-10 mb-8">
         <img src="{{ asset('image/icto-logo.png') }}" alt="ICTO Logo" class="mx-auto w-32 h-32 drop-shadow-lg">
         <h1 class="text-4xl font-bold text-white mt-4 drop-shadow-md">
@@ -24,8 +22,7 @@
         </p>
     </div>
 
-    <!-- Dashboard Buttons -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 px-6 mb-10 w-full max-w-6xl">
+   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 px-6 mb-10 w-full max-w-6xl">
         <a href="{{ route('tickets.create') }}"
            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             + Create Ticket
@@ -46,7 +43,6 @@
             Departments
         </a>
 
-        <!-- Client Feedback Button -->
         <a href="{{ route('feedbacks.index') }}"
            class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             Client Feedback
@@ -56,9 +52,14 @@
            class="bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             Analytics Dashboard
         </a>
+
+        <a href="{{ route('condemned-equipment.index') }}"
+           class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
+            🗑 Condemned Equipment
+        </a>
     </div>
 
-    <!-- Optional: Notifications Bell -->
+
     @auth
     <div class="absolute top-6 right-6">
         <a href="#" class="relative inline-block">
@@ -73,7 +74,6 @@
     @endauth
 </div>
 
-<!-- 🌤️ Light Transparent Footer -->
 <footer class="fixed bottom-0 left-0 w-full backdrop-blur-xl bg-white/30 border-t border-gray-300 text-gray-800 py-4 shadow-md">
     <div class="max-w-5xl mx-auto px-4 text-center">
         <p class="text-base font-semibold mb-1 flex items-center justify-center gap-2">

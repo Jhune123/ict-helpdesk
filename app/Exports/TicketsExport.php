@@ -5,7 +5,6 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Support\Carbon;
 
 class TicketsExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -16,73 +15,50 @@ class TicketsExport implements FromCollection, WithHeadings, WithMapping
         $this->tickets = $tickets;
     }
 
-    /**
-     * Return collection
-     */
     public function collection()
     {
         return $this->tickets;
     }
 
-    /**
-     * Map each row (SAFE for Excel & NULL dates)
-     */
-    public function map($ticket): array
-    {
-        return [
-            $ticket->ticket_number,
-            $ticket->title,
-            $ticket->description,
-            $ticket->category?->name ?? '-',
-            $ticket->department ?? '-',
-            $ticket->assignee?->name ?? '-',
-            $ticket->client_name ?? '-',
-            $ticket->priority ?? '-',
-            $ticket->contact_number ?? '-',
-            $ticket->remarks ?? '-',
-            ucfirst($ticket->status),
-
-            // ✅ Dates (NULL-safe + PH timezone)
-            $this->formatDate($ticket->created_at),
-            $this->formatDate($ticket->updated_at),
-            $this->formatDate($ticket->date_finished),
-        ];
-    }
-
-    /**
-     * Column headers
-     */
     public function headings(): array
     {
         return [
             'Ticket #',
             'Title',
             'Description',
+            'Equipment Type',
+            'Brand / Model',
+            'Serial No.',
             'Category',
             'Department',
             'IT Personnel',
-            'Client Name',
+            'Client',
             'Priority',
-            'Contact Number',
-            'Remarks',
+            'Contact',
             'Status',
-            'Date Created',
-            'Last Updated',
-            'Date Finished',
+            'Submitted',
+            'Finished',
         ];
     }
 
-    /**
-     * Helper: Excel-safe date formatter
-     */
-    private function formatDate($date): string
+    public function map($ticket): array
     {
-        if (!$date) {
-            return '-';
-        }
-
-        return Carbon::parse($date)
-            ->timezone('Asia/Manila')
-            ->format('M d, Y h:i A');
+        return [
+            $ticket->ticket_number,
+            $ticket->title,
+            $ticket->description,
+            $ticket->equipment_type ?? '-',
+            $ticket->brand_model ?? '-',
+            $ticket->serial_no ?? '-',
+            $ticket->category?->name ?? '-',
+            $ticket->department ?? '-',
+            $ticket->assignee?->name ?? '-',
+            $ticket->client_name,
+            $ticket->priority ?? 'Normal',
+            $ticket->contact_number ?? '-',
+            $ticket->status,
+            $ticket->date_submitted?->format('M d, Y h:i A') ?? '-',
+            $ticket->date_finished?->format('M d, Y h:i A') ?? '-',
+        ];
     }
 }

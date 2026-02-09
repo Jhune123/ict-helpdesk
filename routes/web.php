@@ -14,38 +14,49 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\CondemnedEquipmentController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\QueueController;
 
-/* --------------------------------------------------------------------------
+/*
+|--------------------------------------------------------------------------
 | PUBLIC ROUTES
-|--------------------------------------------------------------------------*/
-
-/* ROOT → LOGIN */
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return view('auth.login');
 });
 
-/* PUBLIC LIVE TV (NO LOGIN) */
+/* PUBLIC LIVE TV */
 Route::get('/mis-queue/live-tv', [QueueController::class, 'liveTV'])->name('queues.live-tv');
 Route::get('/mis-queue/live-tv-data', [QueueController::class, 'liveTVData'])->name('queues.live-tv-data');
 
-/* DASHBOARD */
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-/* ANALYTICS */
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD & ANALYTICS
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])->name('dashboard.analytics');
-    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
-    Route::get('/dashboard/assets-analytics', [AssetController::class, 'analytics'])->name('assets.analytics');
+    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+
+    Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])
+        ->name('dashboard.analytics');
+
+    Route::get('/analytics', [AnalyticsController::class, 'index'])
+        ->name('analytics.index');
+
+    Route::get('/dashboard/assets-analytics', [AssetController::class, 'analytics'])
+        ->name('assets.analytics');
 });
 
-/* AUTHENTICATED ROUTES */
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
 
     /* PROFILE */
@@ -53,7 +64,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /* MIS QUEUING SYSTEM */
+    /*
+    |--------------------------------------------------------------------------
+    | MIS QUEUING
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('mis-queue')->group(function () {
         Route::get('/', [QueueController::class, 'operator'])->name('queues.index');
         Route::get('/operator', [QueueController::class, 'operator'])->name('queues.operator');
@@ -62,83 +77,150 @@ Route::middleware('auth')->group(function () {
         Route::patch('/complete/{queue}', [QueueController::class, 'complete'])->name('queues.complete');
         Route::post('/clear', [QueueController::class, 'clear'])->name('queues.clear');
 
-        /* PDF Reports */
         Route::get('/pdf/detailed', [QueueController::class, 'pdfDetailed'])->name('queues.pdf.detailed');
         Route::get('/pdf/summary', [QueueController::class, 'pdfSummary'])->name('queues.pdf.summary');
     });
 
-    /* ----------------------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
     | TICKETS
-    |---------------------------------------------------------------------- */
-    // My Tickets
+    |--------------------------------------------------------------------------
+    */
     Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
-
-    // Tickets by Department
     Route::get('/tickets/departments', [TicketController::class, 'byDepartment'])->name('tickets.departments');
 
-    // ✅ Export Tickets
     Route::prefix('tickets/export')->group(function () {
         Route::get('/pdf', [TicketController::class, 'exportPdf'])->name('tickets.export.pdf');
         Route::get('/excel', [TicketController::class, 'exportExcel'])->name('tickets.export.excel');
         Route::get('/csv', [TicketController::class, 'exportCsv'])->name('tickets.export.csv');
     });
 
-    // ✅ Job Order PDF (single ticket)
-    Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
+    Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])
+        ->name('tickets.jobOrderPdf');
 
-    // Resource CRUD routes (index, create, store, show, edit, update, destroy)
     Route::resource('tickets', TicketController::class);
 
-    /* CATEGORIES */
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORIES & DEPARTMENTS
+    |--------------------------------------------------------------------------
+    */
     Route::resource('categories', CategoryController::class);
 
-    /* DEPARTMENTS (ADMIN / IT STAFF) */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit']);
+        Route::resource('departments', DepartmentController::class)
+            ->except(['create', 'show', 'edit']);
     });
 
-    /* TASKS */
+    /*
+    |--------------------------------------------------------------------------
+    | TASKS & MEETINGS
+    |--------------------------------------------------------------------------
+    */
     Route::resource('tasks', TaskScheduleController::class);
     Route::get('/tasks/export/pdf', [TaskScheduleController::class, 'exportPdf'])->name('tasks.export.pdf');
 
-    /* MEETINGS */
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     Route::resource('meetings', MeetingController::class);
 
-    /* ASSETS (ADMIN / IT STAFF) */
+    /*
+    |--------------------------------------------------------------------------
+    | ASSETS
+    |--------------------------------------------------------------------------
+    */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('assets', AssetController::class);
         Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
         Route::get('/assets/print', [AssetController::class, 'print'])->name('assets.print');
     });
 
-    /* COMMENTS */
-    Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    /*
+    |--------------------------------------------------------------------------
+    | CONDEMNED EQUIPMENT
+    |--------------------------------------------------------------------------
+    */
+    // 🔒 ADMIN / IT STAFF ROUTES (MUST BE DEFINED BEFORE WILDCARD SHOW ROUTE)
+    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+        // Export
+        Route::get('/condemned-equipment/export/pdf', [CondemnedEquipmentController::class, 'exportPdf'])
+            ->name('condemned-equipment.export.pdf');
+        Route::get('/condemned-equipment/export/excel', [CondemnedEquipmentController::class, 'exportExcel'])
+            ->name('condemned-equipment.export.excel');
+        Route::get('/condemned-equipment/export/csv', [CondemnedEquipmentController::class, 'exportCsv'])
+            ->name('condemned-equipment.export.csv');
 
-    /* ATTACHMENTS */
-    Route::post('/tickets/{ticket}/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
-    Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
-    Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
+        // Create & Store (Must be before /{id})
+        Route::get('/condemned-equipment/create', [CondemnedEquipmentController::class, 'create'])
+            ->name('condemned-equipment.create');
+        Route::post('/condemned-equipment', [CondemnedEquipmentController::class, 'store'])
+            ->name('condemned-equipment.store');
 
-    /* NOTIFICATIONS */
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
-    Route::post('/notifications/{id}/unread', [NotificationController::class, 'markAsUnread'])->name('notifications.markAsUnread');
+        // Edit, Update, Destroy
+        Route::get('/condemned-equipment/{condemnedEquipment}/edit', [CondemnedEquipmentController::class, 'edit'])
+            ->name('condemned-equipment.edit');
+        Route::put('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'update'])
+            ->name('condemned-equipment.update');
+        Route::delete('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'destroy'])
+            ->name('condemned-equipment.destroy');
+    });
 
-    /* FEEDBACK */
+    // ✅ PUBLIC/CLIENT ROUTES (Index and Show)
+    Route::get('/condemned-equipment', [CondemnedEquipmentController::class, 'index'])
+        ->name('condemned-equipment.index');
+
+    // Show (Must be LAST so "create" isn't treated as an ID)
+    Route::get('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])
+        ->name('condemned-equipment.show');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | COMMENTS, ATTACHMENTS, FEEDBACK, NOTIFICATIONS
+    |--------------------------------------------------------------------------
+    */
+    Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])
+        ->name('tickets.comments.store');
+
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->name('comments.destroy');
+
+    Route::post('/tickets/{ticket}/attachments', [AttachmentController::class, 'store'])
+        ->name('attachments.store');
+
+    Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])
+        ->name('attachments.download');
+
+    Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])
+        ->name('attachments.destroy');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.markAsRead');
+
+    Route::post('/notifications/{id}/unread', [NotificationController::class, 'markAsUnread'])
+        ->name('notifications.markAsUnread');
+
     Route::get('/feedbacks', [FeedbackController::class, 'index'])->name('feedbacks.index');
     Route::get('/tickets/{ticket}/feedback', [FeedbackController::class, 'create'])->name('feedbacks.create');
     Route::post('/tickets/{ticket}/feedback', [FeedbackController::class, 'store'])->name('feedbacks.store');
     Route::get('/feedbacks/{feedback}', [FeedbackController::class, 'show'])->name('feedbacks.show');
     Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->name('feedbacks.destroy');
 
-    /* ACTIVITY LOGS (ADMIN / IT STAFF) */
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVITY LOGS
+    |--------------------------------------------------------------------------
+    */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
-        Route::get('/activity-logs/export/{type}', [ActivityLogController::class, 'export'])->name('activity-logs.export');
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+            ->name('activity-logs.index');
+
+        Route::get('/activity-logs/export/{type}', [ActivityLogController::class, 'export'])
+            ->name('activity-logs.export');
     });
 });
 
-/* AUTH ROUTES */
+/* AUTH */
 require __DIR__ . '/auth.php';
