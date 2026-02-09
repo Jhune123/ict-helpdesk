@@ -6,34 +6,56 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
-        Schema::create('condemned_equipment', function (Blueprint $table) {
-            $table->id();
-            $table->string('ticket_number')->unique(); // TIC-XXXXX
-            $table->string('property_no');
-            $table->string('item_name');
-            $table->string('title');
-            $table->text('description')->nullable();
-            
-            // ✅ This is the new column you asked for
-            $table->string('attachment_path')->nullable(); 
-
-            $table->string('equipment_type'); // e.g., Monitor, CPU
-            $table->enum('priority', ['Low', 'Medium', 'High', 'Critical'])->default('Low');
-            $table->enum('status', ['Open', 'In Progress', 'Finished', 'Closed', 'Condemned'])->default('Open');
-            $table->timestamps();
-        });
+        // 1. If the table doesn't exist, CREATE it
+        if (!Schema::hasTable('condemned_equipments')) {
+            Schema::create('condemned_equipments', function (Blueprint $table) {
+                $table->id();
+                $table->string('ticket_number')->nullable()->unique(); // New column
+                $table->string('property_no')->nullable();
+                $table->string('item_name')->nullable();
+                $table->string('title')->nullable();
+                $table->text('description')->nullable();
+                $table->string('attachment_path')->nullable(); // New column
+                $table->string('equipment_type')->nullable();
+                $table->string('brand_model')->nullable();
+                $table->string('serial_no')->nullable();
+                $table->string('category')->nullable();
+                $table->string('department')->nullable();
+                $table->string('it_personnel')->nullable();
+                $table->string('client_name')->nullable();
+                $table->string('priority')->nullable();
+                $table->string('contact')->nullable();
+                $table->string('status')->default('Pending');
+                $table->timestamp('date_submitted')->nullable();
+                $table->timestamp('date_condemned')->nullable();
+                $table->timestamps();
+            });
+        } 
+        
+        // 2. If table DOES exist (from a partial run), ensure new columns are added
+        else {
+            Schema::table('condemned_equipments', function (Blueprint $table) {
+                if (!Schema::hasColumn('condemned_equipments', 'ticket_number')) {
+                    $table->string('ticket_number')->nullable()->unique();
+                }
+                if (!Schema::hasColumn('condemned_equipments', 'attachment_path')) {
+                    $table->string('attachment_path')->nullable();
+                }
+                if (!Schema::hasColumn('condemned_equipments', 'item_name')) {
+                    $table->string('item_name')->nullable();
+                }
+                // Ensure date columns exist
+                if (!Schema::hasColumn('condemned_equipments', 'date_condemned')) {
+                    $table->timestamp('date_condemned')->nullable();
+                }
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('condemned_equipment');
+        Schema::dropIfExists('condemned_equipments');
     }
 };
