@@ -22,7 +22,7 @@
         </p>
     </div>
 
-   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 px-6 mb-10 w-full max-w-6xl">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 px-6 mb-10 w-full max-w-6xl">
         <a href="{{ route('tickets.create') }}"
            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             + Create Ticket
@@ -53,12 +53,14 @@
             Analytics Dashboard
         </a>
 
-        <a href="{{ route('condemned-equipment.index') }}"
-           class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
-            🗑 Condemned Equipment
-        </a>
+        {{-- Only Visible to Admin & IT Staff --}}
+        @if(auth()->user()->hasRole(['admin', 'it_staff']))
+            <a href="{{ route('condemned-equipment.index') }}"
+               class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
+                🗑 Condemned Equipment
+            </a>
+        @endif
     </div>
-
 
     @auth
     <div class="absolute top-6 right-6">
