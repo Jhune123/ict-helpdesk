@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\Category;
 use App\Models\Department;
 use App\Models\User;
+use App\Models\CondemnedEquipment; // ✅ IMPORTANT: Must be imported
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -14,6 +15,7 @@ use App\Notifications\TicketAssignedNotification;
 use App\Helpers\ActivityLogger;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TicketsExport;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -53,7 +55,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 🏷 My Tickets (Created by or Assigned to Current User)
+     * 🏷 My Tickets
      */
     public function mine(Request $request)
     {
@@ -193,7 +195,7 @@ class TicketController extends Controller
     }
 
     /**
-     * ✏ Update Ticket
+     * ✏ Update Ticket (With FORCED CONDEMN Logic)
      */
     public function update(Request $request, Ticket $ticket)
     {
@@ -214,6 +216,57 @@ class TicketController extends Controller
             'status'          => 'required|string',
         ]);
 
+        // ======================================================
+        // 🔴 CONDEMNED EQUIPMENT TRANSFER LOGIC
+        // ======================================================
+        if ($validated['status'] === 'Condemned') {
+            try {
+                // 1. Check if this ticket was ALREADY moved to Condemned Equipment
+                $alreadyExists = CondemnedEquipment::where('description', 'like', "%{$ticket->ticket_number}%")->exists();
+
+                if (!$alreadyExists) {
+                    
+                    // 2. Get Safe Category Name
+                    $categoryName = 'Uncategorized';
+                    if ($ticket->category) {
+                        $categoryName = $ticket->category->name;
+                    } elseif ($ticket->category_id) {
+                        $cat = Category::find($ticket->category_id);
+                        if ($cat) $categoryName = $cat->name;
+                    }
+
+                    // 3. Create the Record
+                    CondemnedEquipment::create([
+                        'item_name'       => $ticket->title,
+                        'title'           => $ticket->title,
+                        'description'     => "From Ticket #{$ticket->ticket_number}: " . $ticket->description,
+                        'equipment_type'  => $ticket->equipment_type,
+                        'brand_model'     => $ticket->brand_model,
+                        'serial_no'       => $ticket->serial_no,
+                        'category'        => $categoryName,
+                        'department'      => $ticket->department,
+                        'client_name'     => $ticket->client_name,
+                        'priority'        => $ticket->priority,
+                        'contact'         => $ticket->contact_number, 
+                        'status'          => 'Condemned',
+                        
+                        // Default values for required fields
+                        'property_no'     => 'PENDING', 
+                        'it_personnel'    => Auth::user()->name, 
+                        'date_submitted'  => $ticket->created_at,
+                        'date_condemned'  => now(),
+                    ]);
+                    
+                    Log::info("✅ Successfully moved Ticket {$ticket->ticket_number} to Condemned table.");
+                }
+
+            } catch (\Exception $e) {
+                // 🛑 If it fails, show error.
+                return redirect()->back()->withInput()->with('error', 'Failed to move to Condemned List: ' . $e->getMessage());
+            }
+        }
+        // ======================================================
+
         $oldAssignee = $ticket->assigned_to;
         $oldStatus   = $ticket->status;
 
@@ -230,6 +283,12 @@ class TicketController extends Controller
             ? $validated['assigned_to']
             : $ticket->assigned_to;
 
+        // ✅ FIX: Set date_finished if status is Closed OR Condemned
+        $dateFinished = null;
+        if ($validated['status'] === 'Closed' || $validated['status'] === 'Condemned') {
+            $dateFinished = Carbon::now('Asia/Manila');
+        }
+
         $ticket->update([
             'title'           => $validated['title'],
             'description'     => $validated['description'],
@@ -244,9 +303,7 @@ class TicketController extends Controller
             'contact_number'  => $validated['contact_number'],
             'remarks'         => $validated['remarks'],
             'status'          => $validated['status'],
-            'date_finished'   => $validated['status'] === 'Closed'
-                ? Carbon::now('Asia/Manila')
-                : null,
+            'date_finished'   => $dateFinished, // ✅ Saves date for Closed OR Condemned
         ]);
 
         ActivityLogger::log('updated', $ticket, 'Updated Ticket: "' . $ticket->title . '"');
@@ -277,7 +334,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 🧾 Job Order PDF (Single Ticket)
+     * 🧾 Job Order PDF
      */
     public function jobOrderPdf(Ticket $ticket)
     {
@@ -288,19 +345,18 @@ class TicketController extends Controller
     }
 
     /**
-     * 📄 Export All Tickets as PDF
+     * 📄 Export PDF
      */
     public function exportPdf()
     {
         $tickets = Ticket::with(['category', 'assignee'])->orderBy('created_at', 'desc')->get();
-
         return Pdf::loadView('tickets.export_pdf', compact('tickets'))
             ->setPaper('A4', 'landscape')
             ->download('Tickets-' . now()->format('Y-m-d_H-i') . '.pdf');
     }
 
     /**
-     * 📊 Export Tickets as Excel
+     * 📊 Export Excel
      */
     public function exportExcel()
     {
@@ -309,7 +365,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 🗂 Export Tickets as CSV
+     * 🗂 Export CSV
      */
     public function exportCsv()
     {
@@ -318,36 +374,31 @@ class TicketController extends Controller
     }
 
     /**
- * 🏢 Tickets by Department (WITH OVERALL SEARCH)
- */
-public function byDepartment(Request $request)
-{
-    $query = Ticket::with(['assignee', 'category'])
-        ->orderBy('department')
-        ->orderBy('created_at', 'desc');
+     * 🏢 Tickets by Department
+     */
+    public function byDepartment(Request $request)
+    {
+        $query = Ticket::with(['assignee', 'category'])->orderBy('department')->orderBy('created_at', 'desc');
 
-    // 🔍 Overall Search inside Tickets by Department
-    if ($search = $request->input('search')) {
-        $query->where(function ($q) use ($search) {
-            $q->where('ticket_number', 'like', "%{$search}%")
-              ->orWhere('title', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%")
-              ->orWhere('department', 'like', "%{$search}%")
-              ->orWhere('client_name', 'like', "%{$search}%")
-              ->orWhere('priority', 'like', "%{$search}%")
-              ->orWhere('status', 'like', "%{$search}%")
-              ->orWhere('equipment_type', 'like', "%{$search}%")
-              ->orWhere('brand_model', 'like', "%{$search}%")
-              ->orWhere('serial_no', 'like', "%{$search}%");
-        });
-    }
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ticket_number', 'like', "%{$search}%")
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('department', 'like', "%{$search}%")
+                  ->orWhere('client_name', 'like', "%{$search}%")
+                  ->orWhere('priority', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhere('equipment_type', 'like', "%{$search}%")
+                  ->orWhere('brand_model', 'like', "%{$search}%")
+                  ->orWhere('serial_no', 'like', "%{$search}%");
+            });
+        }
 
-    $tickets = $query->get()
-        ->groupBy(function ($ticket) {
+        $tickets = $query->get()->groupBy(function ($ticket) {
             return $ticket->department ?? 'Unspecified Department';
         });
 
-    return view('tickets.departments', compact('tickets'));
-}
-
+        return view('tickets.departments', compact('tickets'));
+    }
 }

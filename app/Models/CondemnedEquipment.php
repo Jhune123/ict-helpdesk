@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class CondemnedEquipment extends Model
 {
@@ -11,30 +12,12 @@ class CondemnedEquipment extends Model
 
     protected $table = 'condemned_equipments';
 
-    protected $fillable = [
-        'property_no',
-        'item_name',
-        'title',
-        'description',
-        'ticket_number',
-        'attachment_path',
-        'equipment_type',
-        'brand_model',
-        'serial_no',
-        'category',
-        'department',
-        'it_personnel',
-        'client_name',
-        'priority',
-        'contact',
-        'status',
-        'date_submitted',
-        'date_condemned',
-    ];
+    // 🔓 FIX: Using guarded = [] automatically allows ALL columns (like attachment_path) to be saved.
+    // This prevents "Mass Assignment" errors permanently.
+    protected $guarded = [];
 
     /**
      * The attributes that should be cast to native types.
-     * This fixes the "Call to member function format() on string" error.
      */
     protected $casts = [
         'date_submitted' => 'datetime',
@@ -47,19 +30,22 @@ class CondemnedEquipment extends Model
     protected static function booted()
     {
         static::creating(function ($model) {
-            if (empty($model->ticket_number)) {
-                $year = now()->year;
+            $year = now()->year;
+
+            // FIX: Check if the ticket number is empty OR if it's the old 'KSU-ICTO' format.
+            // We want to force a new 'COND-' number for this table.
+            if (empty($model->ticket_number) || !str_starts_with($model->ticket_number, 'COND-')) {
                 
-                // Find the last ticket created this year
+                // Find the last COND ticket created this year
                 $lastTicket = self::whereYear('created_at', $year)
-                                  ->whereNotNull('ticket_number')
+                                  ->where('ticket_number', 'like', "COND-{$year}-%")
                                   ->orderBy('id', 'desc')
                                   ->first();
                 
                 $nextNumber = 1;
 
                 if ($lastTicket && $lastTicket->ticket_number) {
-                    // Extract the number part from COND-2026-00001
+                    // Extract the number part safely from COND-2026-00001
                     if (preg_match('/-(\d{5})$/', $lastTicket->ticket_number, $matches)) {
                         $nextNumber = intval($matches[1]) + 1;
                     }
