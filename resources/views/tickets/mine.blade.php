@@ -26,7 +26,8 @@
                 </thead>
                 <tbody>
                     @forelse($tickets as $ticket)
-                        <tr class="text-gray-700 hover:bg-gray-50">
+                        {{-- ✅ UPDATED: Highlights row in Red if Condemned --}}
+                        <tr class="{{ $ticket->status === 'Condemned' ? 'bg-red-100 text-red-900 hover:bg-red-200' : 'text-gray-700 hover:bg-gray-50' }}">
                             <td class="px-4 py-2 border">{{ $ticket->id }}</td>
                             <td class="px-4 py-2 border">{{ $ticket->title }}</td>
                             <td class="px-4 py-2 border">{{ $ticket->categoryName ?? 'N/A' }}</td>
@@ -37,10 +38,12 @@
                             <td class="px-4 py-2 border">{{ $ticket->brand_model ?? 'N/A' }}</td>
                             <td class="px-4 py-2 border">{{ $ticket->serial_no ?? 'N/A' }}</td>
                             <td class="px-4 py-2 border">
+                                {{-- ✅ UPDATED: Added badge style for Condemned --}}
                                 <span class="px-2 py-1 rounded-lg text-sm 
                                     @if($ticket->status === 'Open') bg-green-100 text-green-700
                                     @elseif($ticket->status === 'In Progress') bg-yellow-100 text-yellow-700
                                     @elseif($ticket->status === 'Closed') bg-red-100 text-red-700
+                                    @elseif($ticket->status === 'Condemned') bg-red-200 text-red-900 font-bold
                                     @endif">
                                     {{ $ticket->status }}
                                 </span>
@@ -52,16 +55,13 @@
                                 {{ $ticket->date_finished ? \Carbon\Carbon::parse($ticket->date_finished)->timezone('Asia/Manila')->format('F d, Y h:i A') : 'N/A' }}
                             </td>
 
-                            <!-- Actions -->
                             <td class="px-4 py-2 border flex gap-2 items-center">
 
-                                <!-- View button -->
                                 <a href="{{ route('tickets.show', $ticket->id) }}" 
                                    class="px-3 py-1 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">
                                     👁️ View
                                 </a>
 
-                                <!-- Submit Feedback -->
                                 @if($ticket->status === 'Closed')
                                     @if(!$ticket->feedback)
                                         <a href="{{ route('feedbacks.create', $ticket->id) }}" 

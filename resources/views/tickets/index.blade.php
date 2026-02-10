@@ -20,7 +20,7 @@
     <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
         <form method="GET" class="flex flex-wrap items-end gap-4 w-full md:flex-nowrap">
 
-            {{-- SEARCH (FIXED: Removed onkeyup so it only submits on ENTER) --}}
+            {{-- SEARCH --}}
             <div class="w-[500px]">
                 <label class="text-sm font-semibold text-gray-600">Search Tickets</label>
                 <input type="text" name="search" value="{{ request('search') }}"
@@ -114,11 +114,15 @@
             <tbody class="divide-y">
                 @forelse($tickets as $ticket)
                 
+                {{-- UPDATED ROW CLASS LOGIC --}}
                 <tr class="
-    {{ $ticket->status === 'Closed'
-        ? 'bg-green-500 text-white [&_a]:text-white [&_svg]:text-white hover:bg-green-600'
-        : 'hover:bg-gray-50' }}
-">
+                    {{ $ticket->status === 'Closed' 
+                        ? 'bg-green-500 text-white [&_a]:text-white [&_svg]:text-white hover:bg-green-600' 
+                        : ($ticket->status === 'Condemned' 
+                            ? 'bg-red-100 text-red-900 hover:bg-red-200' 
+                            : 'hover:bg-gray-50') 
+                    }}
+                ">
 
                     <td class="px-3 py-2 font-semibold">{{ $ticket->ticket_number }}</td>
                     <td class="px-3 py-2">{{ $ticket->title }}</td>
