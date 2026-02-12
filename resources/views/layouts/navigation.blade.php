@@ -1,7 +1,6 @@
 <nav x-data="{ open: false, notifyOpen: false }" class="bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <!-- Left: Logo + Nav -->
             <div class="flex items-center">
                 <a href="{{ route('dashboard') }}">
                     <x-application-logo class="block h-10 w-auto fill-current text-gray-600" />
@@ -24,7 +23,6 @@
                         Meeting Schedules
                     </x-nav-link>
 
-                    <!-- ✅ ICTO Assets & Equipment — ADMIN / IT STAFF ONLY -->
                     @role('admin|it_staff')
                         <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
                             💼 ICTO Assets & Equipment
@@ -41,9 +39,7 @@
                 </div>
             </div>
 
-            <!-- Right: Notifications + User -->
             <div class="flex items-center space-x-6">
-                <!-- Gold Bell Notification -->
                 <div class="relative">
                     <button @click="notifyOpen = !notifyOpen" class="relative focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -68,7 +64,6 @@
                         @endif
                     </button>
 
-                    <!-- Dropdown Panel -->
                     <div x-show="notifyOpen" x-transition @click.away="notifyOpen = false"
                         class="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg z-50">
                         <div class="p-3 font-bold border-b">Notifications</div>
@@ -97,7 +92,6 @@
                     </div>
                 </div>
 
-                <!-- User Dropdown -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button
@@ -133,5 +127,4 @@
     </div>
 </nav>
 
-<!-- AlpineJS -->
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
