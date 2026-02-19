@@ -56,7 +56,7 @@
         <div class="bg-gray-50 rounded-xl p-4 mt-6 border border-gray-200">
             <h3 class="font-semibold text-gray-900 mb-2">👤 Client Information</h3>
             <p><strong>Client Name:</strong> {{ $ticket->client_name }}</p>
-            <p><strong>Contact Number:</strong> {{ $ticket->contact_number ?? 'N/A' }}</p>
+            <p><strong>Contact Number / E-mail Address:</strong> {{ $ticket->contact_number ?? 'N/A' }}</p>
         </div>
 
         <!-- Buttons -->

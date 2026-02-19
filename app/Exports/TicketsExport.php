@@ -34,7 +34,7 @@ class TicketsExport implements FromCollection, WithHeadings, WithMapping
             'IT Personnel',
             'Client',
             'Priority',
-            'Contact',
+            'Contact Number / E-mail Address',
             'Status',
             'Submitted',
             'Finished',

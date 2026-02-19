@@ -26,7 +26,7 @@
                 <th>IT Personnel</th>
                 <th>Client</th>
                 <th>Priority</th>
-                <th>Contact</th>
+                <th>Contact Number / E-mail Address</th>
                 <th>Status</th>
                 <th>Submitted</th>
                 <th>Finished</th>

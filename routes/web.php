@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail; // <--- Added for Direct Email Test
 use Spatie\Permission\Middleware\RoleMiddleware;
 
 /* CONTROLLERS */
@@ -121,7 +122,7 @@ Route::middleware('auth')->group(function () {
         Route::get('maintenance/create', [MaintenanceScheduleController::class, 'create'])->name('maintenance.create');
         Route::post('maintenance', [MaintenanceScheduleController::class, 'store'])->name('maintenance.store');
         
-        // This is the critical route for the "Complete" button in your index.blade.php
+        // This is the critical route for the "Complete" button
         Route::post('maintenance/{id}/complete', [MaintenanceScheduleController::class, 'completeTask'])->name('maintenance.complete');
         
         Route::get('maintenance/{maintenance}/edit', [MaintenanceScheduleController::class, 'edit'])->name('maintenance.edit');
@@ -192,6 +193,48 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('/activity-logs/export/{type}', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| TEMPORARY TESTING ROUTES
+|--------------------------------------------------------------------------
+*/
+
+// TEST 1: Direct Email Connection (Debug SMTP)
+Route::get('/test-email-direct', function () {
+    try {
+        Mail::raw('This is a direct SMTP test from KSU ICT Helpdesk.', function ($msg) {
+            $msg->to('doctor.rogeliojr@gmail.com') // <--- Change this to your target email if needed
+                ->subject('KSU ICT Helpdesk - Direct SMTP Connection Test');
+        });
+        return '✅ SUCCESS: Direct Email Sent! Check your inbox (doctor.rogeliojr@gmail.com) and Spam folder.';
+    } catch (\Exception $e) {
+        return '❌ FAILED: ' . $e->getMessage();
+    }
+});
+
+// TEST 2: Full Notification System (SMS + Email)
+Route::get('/test-sms-ticket', function () {
+    // 1. Get the latest ticket
+    $ticket = \App\Models\Ticket::latest()->first();
+
+    if (!$ticket) {
+        return "No tickets found in the database to test with.";
+    }
+
+    // 2. Temporarily force a phone number for testing
+    // Replace this with your actual mobile number to receive the test SMS
+    $ticket->contact_number = '09171234567'; 
+
+    // 3. Trigger the notification
+    try {
+        // This will now use YOUR TicketStatusChanged.php logic (Email + SMS)
+        $ticket->notify(new \App\Notifications\TicketStatusChanged('COMPLETED'));
+        return "✅ Notification Triggered! <br> 1. Check your Email Inbox. <br> 2. Check laravel.log for SMS status.";
+    } catch (\Exception $e) {
+        return "❌ Error: " . $e->getMessage();
+    }
 });
 
 /* AUTH */

@@ -74,7 +74,7 @@
                 <th>IT Personnel</th>
                 <th>Priority</th>
                 <th>Client Name</th>
-                <th>Contact Number</th>
+                <th>Contact Number / E-mail Address</th>
                 <th>Remarks</th>
                 <th>Status</th>
                 <th>Date Submitted</th>

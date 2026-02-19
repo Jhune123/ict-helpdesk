@@ -115,7 +115,7 @@
             <td class="value">{{ $ticket->department }}</td>
         </tr>
         <tr>
-            <td><strong>Contact Number</strong></td>
+            <td><strong>Contact Number / E-mail Address</strong></td>
             <td class="value">{{ $ticket->contact_number ?? '—' }}</td>
         </tr>
     </table>

@@ -24,7 +24,7 @@ class CondemnedEquipmentExport implements FromCollection, WithHeadings
             'it_personnel',
             'client_name',
             'priority',
-            'contact',
+            'contact Number / E-mail Address',
             'status',
             'date_submitted',
             'date_condemned' // Fixed: Matches your database column

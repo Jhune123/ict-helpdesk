@@ -137,7 +137,7 @@
 
         {{-- Contact Number --}}
         <div class="mb-4">
-            <label class="block font-semibold">Contact Number</label>
+            <label class="block font-semibold">Contact Number / E-mail Address</label>
             <input type="text" name="contact_number"
                    value="{{ old('contact_number', $ticket->contact_number) }}"
                    class="w-full border rounded-lg p-2">

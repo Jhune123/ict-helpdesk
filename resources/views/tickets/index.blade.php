@@ -103,7 +103,7 @@
                     <th class="px-3 py-2">IT Personnel</th>
                     <th class="px-3 py-2">Client</th>
                     <th class="px-3 py-2">Priority</th>
-                    <th class="px-3 py-2">Contact</th>
+                    <th class="px-3 py-2">Contact #: / E-mail Address</th>
                     <th class="px-3 py-2">Status</th>
                     <th class="px-3 py-2">Submitted</th>
                     <th class="px-3 py-2">Finished</th>

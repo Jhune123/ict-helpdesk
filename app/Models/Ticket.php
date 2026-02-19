@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable; // ✅ REQUIRED for sending Emails/SMS
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Comment;
@@ -12,7 +13,7 @@ use App\Models\Feedback;
 
 class Ticket extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable; // ✅ REQUIRED
 
     /**
      * =======================
@@ -24,7 +25,7 @@ class Ticket extends Model
         'title',
         'description',
 
-        // ✅ NEW EQUIPMENT FIELDS
+        // Equipment Fields
         'equipment_type',
         'brand_model',
         'serial_no',
@@ -36,7 +37,7 @@ class Ticket extends Model
         'department',
         'date_submitted',
         'date_finished',
-        'contact_number',
+        'contact_number', // Acts as Phone OR Email
         'assigned_to',
         'created_by',
         'remarks',
@@ -114,7 +115,6 @@ class Ticket extends Model
         return $value ?: 'N/A';
     }
 
-    // ✅ Equipment info helpers (safe display)
     public function getEquipmentTypeAttribute($value): string
     {
         return $value ?: 'N/A';
@@ -128,5 +128,43 @@ class Ticket extends Model
     public function getSerialNoAttribute($value): string
     {
         return $value ?: 'N/A';
+    }
+
+    /**
+     * =======================
+     * 🧠 SMART NOTIFICATION ROUTING
+     * =======================
+     */
+
+    /**
+     * 📧 Route for Email:
+     * Only returns the address if it looks like a valid email.
+     */
+    public function routeNotificationForMail($notification)
+    {
+        // Get the raw value (ignoring the "N/A" accessor)
+        $contact = $this->getRawOriginal('contact_number');
+
+        if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+            return $contact;
+        }
+
+        return null; // Not an email? Don't send email.
+    }
+
+    /**
+     * 📱 Route for Semaphore (SMS):
+     * Only returns the number if it is NOT an email.
+     */
+    public function routeNotificationForSemaphore()
+    {
+        $contact = $this->getRawOriginal('contact_number');
+
+        // If it's an email or empty, don't send SMS
+        if (empty($contact) || filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+
+        return $contact;
     }
 }

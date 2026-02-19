@@ -7,11 +7,12 @@ use App\Models\Ticket;
 use App\Models\Category;
 use App\Models\Department;
 use App\Models\User;
-use App\Models\CondemnedEquipment; // ✅ IMPORTANT: Must be imported
+use App\Models\CondemnedEquipment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Notifications\TicketAssignedNotification;
+use App\Notifications\TicketStatusChanged; 
 use App\Helpers\ActivityLogger;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TicketsExport;
@@ -121,7 +122,8 @@ class TicketController extends Controller
             'department'      => 'nullable|string|max:255',
             'assigned_to'     => 'nullable|integer',
             'client_name'     => 'required|string|max:255',
-            'contact_number'  => 'nullable|string|max:20',
+            // ✅ CHANGED MAX:20 to MAX:255 to allow emails
+            'contact_number'  => 'nullable|string|max:255', 
             'remarks'         => 'nullable|string|max:500',
         ]);
 
@@ -166,7 +168,11 @@ class TicketController extends Controller
         ActivityLogger::log('created', $ticket, 'Created Ticket: "' . $ticket->title . '"');
 
         if ($assignedTo && ($it = User::find($assignedTo))) {
-            $it->notify(new TicketAssignedNotification($ticket));
+            try {
+                $it->notify(new TicketAssignedNotification($ticket));
+            } catch (\Exception $e) {
+                Log::error("Assignment Email Failed: " . $e->getMessage());
+            }
             ActivityLogger::log('assigned', $ticket, 'Assigned Ticket to ' . $it->name);
         }
 
@@ -195,10 +201,12 @@ class TicketController extends Controller
     }
 
     /**
-     * ✏ Update Ticket (With FORCED CONDEMN Logic)
+     * ✏ Update Ticket
      */
     public function update(Request $request, Ticket $ticket)
     {
+        Log::info("Update Ticket Request Hit for ID: " . $ticket->id);
+
         $validated = $request->validate([
             'title'           => 'required|string|max:255',
             'description'     => 'required|string',
@@ -211,7 +219,8 @@ class TicketController extends Controller
             'department'      => 'nullable|string|max:255',
             'assigned_to'     => 'nullable|integer',
             'client_name'     => 'required|string|max:255',
-            'contact_number'  => 'nullable|string|max:20',
+            // ✅ CHANGED MAX:20 to MAX:255 to allow emails
+            'contact_number'  => 'nullable|string|max:255', 
             'remarks'         => 'nullable|string|max:500',
             'status'          => 'required|string',
         ]);
@@ -221,12 +230,8 @@ class TicketController extends Controller
         // ======================================================
         if ($validated['status'] === 'Condemned') {
             try {
-                // 1. Check if this ticket was ALREADY moved to Condemned Equipment
                 $alreadyExists = CondemnedEquipment::where('description', 'like', "%{$ticket->ticket_number}%")->exists();
-
                 if (!$alreadyExists) {
-                    
-                    // 2. Get Safe Category Name
                     $categoryName = 'Uncategorized';
                     if ($ticket->category) {
                         $categoryName = $ticket->category->name;
@@ -235,7 +240,6 @@ class TicketController extends Controller
                         if ($cat) $categoryName = $cat->name;
                     }
 
-                    // 3. Create the Record
                     CondemnedEquipment::create([
                         'item_name'       => $ticket->title,
                         'title'           => $ticket->title,
@@ -249,23 +253,17 @@ class TicketController extends Controller
                         'priority'        => $ticket->priority,
                         'contact'         => $ticket->contact_number, 
                         'status'          => 'Condemned',
-                        
-                        // Default values for required fields
                         'property_no'     => 'PENDING', 
                         'it_personnel'    => Auth::user()->name, 
                         'date_submitted'  => $ticket->created_at,
                         'date_condemned'  => now(),
                     ]);
-                    
                     Log::info("✅ Successfully moved Ticket {$ticket->ticket_number} to Condemned table.");
                 }
-
             } catch (\Exception $e) {
-                // 🛑 If it fails, show error.
-                return redirect()->back()->withInput()->with('error', 'Failed to move to Condemned List: ' . $e->getMessage());
+                Log::error("Condemn Transfer Failed: " . $e->getMessage());
             }
         }
-        // ======================================================
 
         $oldAssignee = $ticket->assigned_to;
         $oldStatus   = $ticket->status;
@@ -280,15 +278,15 @@ class TicketController extends Controller
             : null;
 
         $assignedTo = Auth::user()->hasRole(['admin', 'it_staff'])
-            ? $validated['assigned_to']
+            ? ($validated['assigned_to'] ?? null)
             : $ticket->assigned_to;
 
-        // ✅ FIX: Set date_finished if status is Closed OR Condemned
         $dateFinished = null;
-        if ($validated['status'] === 'Closed' || $validated['status'] === 'Condemned') {
+        if (in_array($validated['status'], ['Closed', 'Condemned'])) {
             $dateFinished = Carbon::now('Asia/Manila');
         }
 
+        // SAVE DATABASE FIRST
         $ticket->update([
             'title'           => $validated['title'],
             'description'     => $validated['description'],
@@ -300,21 +298,31 @@ class TicketController extends Controller
             'department'      => $department,
             'assigned_to'     => $assignedTo,
             'client_name'     => $validated['client_name'],
-            'contact_number'  => $validated['contact_number'],
-            'remarks'         => $validated['remarks'],
+            'contact_number'  => $validated['contact_number'] ?? null,
+            'remarks'         => $validated['remarks'] ?? null,
             'status'          => $validated['status'],
-            'date_finished'   => $dateFinished, // ✅ Saves date for Closed OR Condemned
+            'date_finished'   => $dateFinished,
         ]);
 
         ActivityLogger::log('updated', $ticket, 'Updated Ticket: "' . $ticket->title . '"');
 
+        // ✅ NOTIFICATIONS WITH SAFETY NET
         if ($oldStatus !== $validated['status']) {
             ActivityLogger::log('status_changed', $ticket, "Changed status from {$oldStatus} to {$validated['status']}");
+            try {
+                $ticket->notify(new TicketStatusChanged($validated['status']));
+            } catch (\Exception $e) {
+                Log::error("Status Change Notification Failed for {$ticket->ticket_number}: " . $e->getMessage());
+            }
         }
 
         if ($oldAssignee != $assignedTo && $assignedTo) {
             if ($it = User::find($assignedTo)) {
-                $it->notify(new TicketAssignedNotification($ticket));
+                try {
+                    $it->notify(new TicketAssignedNotification($ticket));
+                } catch (\Exception $e) {
+                    Log::error("Assignment Notification Failed: " . $e->getMessage());
+                }
                 ActivityLogger::log('assigned', $ticket, 'Reassigned Ticket to ' . $it->name);
             }
         }

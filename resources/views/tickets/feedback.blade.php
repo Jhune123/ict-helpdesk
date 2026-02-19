@@ -27,7 +27,7 @@
                 <h3 class="font-semibold text-gray-900 mb-2">👤 Client Information</h3>
 
                 <p><span class="font-semibold">Client Name:</span> <span class="ml-2">{{ $ticket->client_name }}</span></p>
-                <p><span class="font-semibold">Contact Number:</span> <span class="ml-2">{{ $ticket->contact_number ?? 'N/A' }}</span></p>
+                <p><span class="font-semibold">Contact Number / E-mail Address:</span> <span class="ml-2">{{ $ticket->contact_number ?? 'N/A' }}</span></p>
             </div>
 
             <div><span class="font-semibold">IT Personnel:</span> <span class="ml-2">{{ $ticket->assigneeName }}</span></div>
