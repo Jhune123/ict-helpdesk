@@ -6,57 +6,73 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
 <style>
-    /* Force full-screen width */
-    .container, .container-fluid { 
+    /* 1. Force full-screen width & override layout constraints */
+    .container, .container-fluid, #app, main { 
         max-width: 100% !important; 
         width: 100% !important; 
-        padding-left: 20px; 
-        padding-right: 20px; 
+        padding-left: 10px !important; 
+        padding-right: 10px !important; 
     }
 
-    /* Tighten table spacing and font size */
-    table.dataTable { font-size: 12px !important; width: 100% !important; }
+    /* 2. Tighten table font and structure */
+    table.dataTable { 
+        font-size: 11.5px !important; 
+        width: 100% !important; 
+        table-layout: fixed !important; /* Critical for controlling column widths */
+    }
+
     table.dataTable thead th { 
         background-color: #1E40AF; 
         color: #fff; 
-        padding: 8px 4px !important; /* Reduced padding */
+        padding: 6px 4px !important;
         white-space: nowrap;
-    }
-    table.dataTable tbody td { 
-        padding: 4px 4px !important; /* Tightened padding */
-        vertical-align: middle;
+        text-transform: uppercase;
+        font-size: 10.5px;
     }
 
-    table.dataTable tbody tr:hover { background-color: #E0F2FE; }
-    .high-value { color: #DC2626; font-weight: bold; }
-    .recent-asset { background-color: #DCFCE7 !important; }
+    table.dataTable tbody td { 
+        padding: 4px !important; 
+        vertical-align: top; /* Better for wrapped text */
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* 3. Limit the Description Column specifically */
+    /* Target the 6th column (Description) */
+    #assetsTable th:nth-child(6), 
+    #assetsTable td:nth-child(6) {
+        width: 250px !important; /* Adjust this value if you want it wider/narrower */
+        white-space: normal !important; /* Allows text to wrap */
+        word-break: break-word;
+        line-height: 1.4;
+    }
+
+    /* 4. Action buttons and Badges */
+    .btn-view { background-color: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
+    .btn-edit { background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
+    .btn-delete { background-color: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; border: none; cursor: pointer; }
     
-    /* Action Button Styles - Compact */
-    .btn-view { background-color: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-decoration: none; }
-    .btn-edit { background-color: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-decoration: none; }
-    .btn-delete { background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; }
-    
-    /* Status Badges */
-    .status-badge { padding: 2px 5px; font-size: 10px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; }
+    .status-badge { padding: 2px 4px; font-size: 9px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; white-space: nowrap; }
     .bg-success { background-color: #198754; }
     .bg-warning { background-color: #ffc107; color: #000; }
     .bg-danger { background-color: #dc3545; }
     .bg-info { background-color: #0dcaf0; color: #000; }
     .bg-secondary { background-color: #6c757d; }
 
-    .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; }
+    .high-value { color: #DC2626; font-weight: bold; }
+    .recent-asset { background-color: #f0fff4 !important; }
+    .table-responsive { width: 100%; overflow-x: auto; }
 </style>
 @endsection
 
 @section('content')
-<div class="w-full px-2">
-    <div class="flex justify-between mb-4 items-center">
-        <h1 class="text-xl font-bold">💼 ICTO Assets & Equipment</h1>
+<div class="w-full">
+    <div class="flex justify-between mb-4 items-center px-2">
+        <h1 class="text-xl font-bold text-blue-900">💼 ICTO Assets & Equipment</h1>
 
         <div class="flex gap-2">
             @role('admin|it_staff')
             <a href="{{ route('assets.create') }}" 
-               class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow text-sm flex items-center gap-2">
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-3 rounded shadow text-xs flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -65,49 +81,44 @@
             @endrole
 
             <a href="{{ route('assets.export.pdf') }}" target="_blank"
-               class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded shadow text-sm flex items-center gap-2">
+               class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1 px-3 rounded shadow text-xs flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10l-4 4m0 0l-4-4m4 4V4m0 12h8" />
                 </svg>
-                Export PDF
+                Export PDF (Long)
             </a>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success text-center py-2 mb-4">{{ session('success') }}</div>
+        <div class="alert alert-success text-center py-2 mb-4 text-sm">{{ session('success') }}</div>
     @endif
 
-    <div class="table-responsive bg-white p-2 shadow-sm">
-        <table id="assetsTable" class="display nowrap table table-striped table-hover">
+    <div class="table-responsive bg-white shadow-sm border border-gray-200">
+        <table id="assetsTable" class="display table table-striped table-hover">
             <thead>
                 <tr>
-                    <th>Entity Name</th>
-                    <th>Fund Cluster</th>
-                    <th>PAR No.</th>
-                    <th>Qty</th>
-                    <th>Unit</th>
-                    <th>Description</th>
-                    <th>Property No.</th>
-                    <th>Status</th> 
-                    <th>Acquired</th>
-                    <th>Amount</th>
-                    <th>Purpose</th>
-                    <th>Issuance</th>
-                    <th>From</th>
-                    <th>Received By</th>
-                    <th>Counted</th>
-                    <th>Actions</th>
+                    <th style="width: 100px;">Entity Name</th>
+                    <th style="width: 80px;">Fund</th>
+                    <th style="width: 120px;">PAR No.</th>
+                    <th style="width: 40px;">Qty</th>
+                    <th style="width: 50px;">Unit</th>
+                    <th>Description</th> <th style="width: 100px;">Property No.</th>
+                    <th style="width: 80px;">Status</th> 
+                    <th style="width: 80px;">Acquired</th>
+                    <th style="width: 80px;">Amount</th>
+                    <th style="width: 100px;">Purpose</th>
+                    <th style="width: 80px;">Issuance</th>
+                    <th style="width: 80px;">From</th>
+                    <th style="width: 80px;">By</th>
+                    <th style="width: 80px;">Counted</th>
+                    <th style="width: 110px;">Actions</th>
                     <th style="display:none;">Created At</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($assets as $asset)
-                @php
-                    $isHighValue = $asset->amount > 100000;
-                    $isRecent = isset($asset->created_at) && \Carbon\Carbon::parse($asset->created_at)->greaterThan(\Carbon\Carbon::now()->subDays(7));
-                @endphp
-                <tr class="{{ $isRecent ? 'recent-asset' : '' }}">
+                <tr class="{{ (isset($asset->created_at) && $asset->created_at->gt(now()->subDays(7))) ? 'recent-asset' : '' }}">
                     <td>{{ $asset->entity_name }}</td>
                     <td>{{ $asset->fund_cluster }}</td>
                     <td>{{ $asset->par_no }}</td>
@@ -128,7 +139,7 @@
                         <span class="status-badge {{ $badgeClass }}">{{ $asset->unit_status }}</span>
                     </td>
                     <td>{{ $asset->date_acquired }}</td>
-                    <td class="{{ $isHighValue ? 'high-value' : '' }}">{{ number_format($asset->amount, 2) }}</td>
+                    <td class="{{ $asset->amount > 100000 ? 'high-value' : '' }}">{{ number_format($asset->amount, 2) }}</td>
                     <td>{{ $asset->purpose }}</td>
                     <td>{{ $asset->approved_for_issuance }}</td>
                     <td>{{ $asset->received_from }}</td>
@@ -158,18 +169,20 @@
 @section('scripts')
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
 <script>
 $(document).ready(function() {
     $('#assetsTable').DataTable({
-        responsive: false, // Turned off to allow full width expansion without hiding columns
+        responsive: false,
         scrollX: true,
         pageLength: 25,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'print'],
         order: [[16, 'desc']], 
-        autoWidth: false
+        autoWidth: false,
+        columnDefs: [
+            { width: "250px", targets: 5 } // Reinforce description width
+        ]
     });
 });
 </script>
