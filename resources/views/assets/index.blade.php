@@ -6,61 +6,74 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
 <style>
-    /* 1. Force full-screen width & override layout constraints */
-    .container, .container-fluid, #app, main { 
-        max-width: 100% !important; 
-        width: 100% !important; 
-        padding-left: 10px !important; 
-        padding-right: 10px !important; 
-    }
+/* 1. Force full-screen width & override layout constraints */
+.container, .container-fluid, #app, main { 
+    max-width: 100% !important; 
+    width: 100% !important; 
+    padding-left: 10px !important; 
+    padding-right: 10px !important; 
+}
 
-    /* 2. Tighten table font and structure */
-    table.dataTable { 
-        font-size: 11.5px !important; 
-        width: 100% !important; 
-        table-layout: fixed !important; /* Critical for controlling column widths */
-    }
+/* 2. Tighten table font and structure */
+table.dataTable { 
+    font-size: 11.5px !important; 
+    width: 100% !important; 
+    table-layout: fixed !important;
+}
 
-    table.dataTable thead th { 
-        background-color: #1E40AF; 
-        color: #fff; 
-        padding: 6px 4px !important;
-        white-space: nowrap;
-        text-transform: uppercase;
-        font-size: 10.5px;
-    }
+table.dataTable thead th { 
+    background-color: #1E40AF; 
+    color: #fff; 
+    padding: 6px 4px !important;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 10.5px;
+}
 
-    table.dataTable tbody td { 
-        padding: 4px !important; 
-        vertical-align: top; /* Better for wrapped text */
-        border-bottom: 1px solid #e2e8f0;
-    }
+table.dataTable tbody td { 
+    padding: 4px !important; 
+    vertical-align: top;
+    border-bottom: 1px solid #e2e8f0;
+}
 
-    /* 3. Limit the Description Column specifically */
-    /* Target the 6th column (Description) */
-    #assetsTable th:nth-child(6), 
-    #assetsTable td:nth-child(6) {
-        width: 250px !important; /* Adjust this value if you want it wider/narrower */
-        white-space: normal !important; /* Allows text to wrap */
-        word-break: break-word;
-        line-height: 1.4;
-    }
+/* ✅ FIXED DESCRIPTION WRAPPING */
+#assetsTable th:nth-child(6), 
+#assetsTable td:nth-child(6) {
+    width: 250px !important;
+    max-width: 250px !important;
 
-    /* 4. Action buttons and Badges */
-    .btn-view { background-color: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
-    .btn-edit { background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
-    .btn-delete { background-color: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; border: none; cursor: pointer; }
-    
-    .status-badge { padding: 2px 4px; font-size: 9px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; white-space: nowrap; }
-    .bg-success { background-color: #198754; }
-    .bg-warning { background-color: #ffc107; color: #000; }
-    .bg-danger { background-color: #dc3545; }
-    .bg-info { background-color: #0dcaf0; color: #000; }
-    .bg-secondary { background-color: #6c757d; }
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
 
-    .high-value { color: #DC2626; font-weight: bold; }
-    .recent-asset { background-color: #f0fff4 !important; }
-    .table-responsive { width: 100%; overflow-x: auto; }
+    line-height: 1.4;
+}
+
+/* Ensure inner content wraps */
+.desc-wrap {
+    display: block;
+    width: 100%;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Buttons */
+.btn-view { background-color: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
+.btn-edit { background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
+.btn-delete { background-color: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; border: none; cursor: pointer; }
+
+.status-badge { padding: 2px 4px; font-size: 9px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; white-space: nowrap; }
+.bg-success { background-color: #198754; }
+.bg-warning { background-color: #ffc107; color: #000; }
+.bg-danger { background-color: #dc3545; }
+.bg-info { background-color: #0dcaf0; color: #000; }
+.bg-secondary { background-color: #6c757d; }
+
+.high-value { color: #DC2626; font-weight: bold; }
+.recent-asset { background-color: #f0fff4 !important; }
+.table-responsive { width: 100%; overflow-x: auto; }
 </style>
 @endsection
 
@@ -72,19 +85,13 @@
         <div class="flex gap-2">
             @role('admin|it_staff')
             <a href="{{ route('assets.create') }}" 
-               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-3 rounded shadow text-xs flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-3 rounded shadow text-xs">
                 Add Asset
             </a>
             @endrole
 
             <a href="{{ route('assets.export.pdf') }}" target="_blank"
-               class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1 px-3 rounded shadow text-xs flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10l-4 4m0 0l-4-4m4 4V4m0 12h8" />
-                </svg>
+               class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1 px-3 rounded shadow text-xs">
                 Export PDF (Long)
             </a>
         </div>
@@ -103,8 +110,9 @@
                     <th style="width: 120px;">PAR No.</th>
                     <th style="width: 40px;">Qty</th>
                     <th style="width: 50px;">Unit</th>
-                    <th>Description</th> <th style="width: 100px;">Property No.</th>
-                    <th style="width: 80px;">Status</th> 
+                    <th>Description</th>
+                    <th style="width: 100px;">Property No.</th>
+                    <th style="width: 80px;">Status</th>
                     <th style="width: 80px;">Acquired</th>
                     <th style="width: 80px;">Amount</th>
                     <th style="width: 100px;">Purpose</th>
@@ -124,7 +132,14 @@
                     <td>{{ $asset->par_no }}</td>
                     <td>{{ $asset->quantity }}</td>
                     <td>{{ $asset->unit }}</td>
-                    <td>{{ $asset->description }}</td>
+
+                    <!-- ✅ WRAPPED DESCRIPTION -->
+                    <td>
+                        <div class="desc-wrap">
+                            {{ $asset->description }}
+                        </div>
+                    </td>
+
                     <td>{{ $asset->property_no }}</td>
                     <td>
                         @php
@@ -178,10 +193,10 @@ $(document).ready(function() {
         pageLength: 25,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'print'],
-        order: [[16, 'desc']], 
+        order: [[16, 'desc']],
         autoWidth: false,
         columnDefs: [
-            { width: "250px", targets: 5 } // Reinforce description width
+            { targets: 5, width: "250px" }
         ]
     });
 });
