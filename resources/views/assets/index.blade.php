@@ -13,7 +13,7 @@
     padding-right: 10px !important; 
 }
 
-/* 2. Strict Table Layout to prevent horizontal overflow */
+/* 2. Strict Table Layout */
 table.dataTable { 
     font-size: 11px !important; 
     width: 100% !important; 
@@ -21,19 +21,10 @@ table.dataTable {
 }
 
 table.dataTable thead th { 
-    background-color: #1E40AF; 
-    color: #fff; 
-    padding: 8px 4px !important;
+    background-color: #1E40AF !important; 
+    color: #ffffff !important; 
+    padding: 10px 5px !important;
     white-space: nowrap;
-    text-align: left;
-}
-
-table.dataTable tbody td { 
-    padding: 6px 4px !important; 
-    vertical-align: top;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    border-bottom: 1px solid #edf2f7;
 }
 
 /* ✅ DESCRIPTION COLUMN WRAPPING */
@@ -43,15 +34,17 @@ table.dataTable tbody td {
     white-space: normal !important;
 }
 
-/* Status Badges */
-.status-badge { padding: 2px 5px; font-size: 9px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; }
-.bg-success { background-color: #198754; }
-.bg-warning { background-color: #ffc107; color: #000; }
-.bg-danger { background-color: #dc3545; }
-.bg-info { background-color: #0dcaf0; color: #000; }
-.bg-secondary { background-color: #6c757d; }
-
-.table-responsive { width: 100%; overflow-x: auto; }
+/* 3. Button Fallbacks (Inline Style helpers) */
+.btn-solid {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    color: white !important;
+    font-weight: bold;
+    text-decoration: none !important;
+    font-size: 11px;
+    border: none;
+}
 </style>
 @endsection
 
@@ -59,11 +52,19 @@ table.dataTable tbody td {
 <div class="w-full">
     <div class="flex justify-between mb-4 items-center px-2">
         <h1 class="text-xl font-bold text-blue-900">💼 ICTO Assets & Equipment</h1>
+        
         <div class="flex gap-2">
             @role('admin|it_staff')
-            <a href="{{ route('assets.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-3 rounded shadow text-xs">Add Asset</a>
+            <a href="{{ route('assets.create') }}" 
+               class="btn-solid" style="background-color: #16a34a;">
+               + Add Asset
+            </a>
             @endrole
-            <a href="{{ route('assets.export.pdf') }}" target="_blank" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1.5 px-3 rounded shadow text-xs">Export PDF</a>
+
+            <a href="{{ route('assets.export.pdf') }}" target="_blank" 
+               class="btn-solid" style="background-color: #334155;">
+               PDF Export
+            </a>
         </div>
     </div>
 
@@ -85,7 +86,7 @@ table.dataTable tbody td {
                     <th style="width: 90px;">From</th>
                     <th style="width: 90px;">Received By</th>
                     <th style="width: 80px;">Counted</th>
-                    <th style="width: 130px;">Actions</th>
+                    <th style="width: 140px;">Actions</th>
                     <th style="display:none;">Created At</th>
                 </tr>
             </thead>
@@ -100,16 +101,9 @@ table.dataTable tbody td {
                     <td>{{ $asset->description }}</td>
                     <td>{{ $asset->property_no }}</td>
                     <td>
-                        @php
-                            $badgeClass = match($asset->unit_status) {
-                                'Active' => 'bg-success',
-                                'Under Repair' => 'bg-warning',
-                                'Condemned', 'Not Found in the Station' => 'bg-danger',
-                                'For Replacement' => 'bg-info',
-                                default => 'bg-secondary'
-                            };
-                        @endphp
-                        <span class="status-badge {{ $badgeClass }}">{{ $asset->unit_status }}</span>
+                        <span style="padding: 2px 5px; border-radius: 4px; color: white; background-color: {{ $asset->unit_status == 'Active' ? '#198754' : '#6c757d' }}; font-size: 9px;">
+                            {{ $asset->unit_status }}
+                        </span>
                     </td>
                     <td>{{ $asset->date_acquired }}</td>
                     <td>{{ number_format($asset->amount, 2) }}</td>
@@ -119,12 +113,14 @@ table.dataTable tbody td {
                     <td>{{ $asset->date_counted }}</td>
                     <td>
                         <div class="flex gap-1">
-                            <a href="{{ route('assets.show', $asset) }}" class="bg-blue-500 text-white px-2 py-1 rounded text-[10px] font-bold no-underline">View</a>
+                            <a href="{{ route('assets.show', $asset) }}" class="btn-solid" style="background-color: #3b82f6; padding: 3px 6px;">View</a>
+                            
                             @role('admin|it_staff')
-                            <a href="{{ route('assets.edit', $asset) }}" class="bg-emerald-500 text-white px-2 py-1 rounded text-[10px] font-bold no-underline">Edit</a>
-                            <form action="{{ route('assets.destroy', $asset) }}" method="POST" class="inline" onsubmit="return confirm('Delete this asset?');">
+                            <a href="{{ route('assets.edit', $asset) }}" class="btn-solid" style="background-color: #10b981; padding: 3px 6px;">Edit</a>
+                            
+                            <form action="{{ route('assets.destroy', $asset) }}" method="POST" class="inline" onsubmit="return confirm('Delete?');">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold">Del</button>
+                                <button type="submit" class="btn-solid" style="background-color: #ef4444; padding: 3px 6px; cursor: pointer;">Del</button>
                             </form>
                             @endrole
                         </div>
@@ -145,15 +141,14 @@ table.dataTable tbody td {
 <script>
 $(document).ready(function() {
     $('#assetsTable').DataTable({
-        "pageLength": 20,       // ✅ Fixed to 20 items per page
-        "lengthMenu": [10, 20, 50, 100], 
+        "pageLength": 20,
         "responsive": false,
         "scrollX": true,
         "autoWidth": false,
-        "order": [[15, 'desc']], // Sort by Created At hidden column
+        "order": [[15, 'desc']],
         "dom": 'Bfrtip',
         "columnDefs": [
-            { "width": "300px", "targets": 5 } // Enforce Description width
+            { "width": "300px", "targets": 5 }
         ]
     });
 });
