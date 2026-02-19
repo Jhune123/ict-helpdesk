@@ -2,7 +2,6 @@
 
 @section('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
 <style>
@@ -14,51 +13,41 @@
     padding-right: 10px !important; 
 }
 
-/* 2. Tighten table font and structure */
+/* 2. Strict Table Layout */
 table.dataTable { 
     font-size: 11px !important; 
     width: 100% !important; 
-    table-layout: fixed !important; /* Forces columns to obey defined widths */
+    table-layout: fixed !important; /* This stops the description from stretching the table */
 }
 
 table.dataTable thead th { 
     background-color: #1E40AF; 
     color: #fff; 
-    padding: 6px 4px !important;
+    padding: 8px 4px !important;
     white-space: nowrap;
-    text-transform: uppercase;
 }
 
 table.dataTable tbody td { 
-    padding: 4px !important; 
+    padding: 6px 4px !important; 
     vertical-align: top;
-    border-bottom: 1px solid #e2e8f0;
-    /* Ensure text wraps in all cells but mainly description */
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
 
-/* ✅ STRICT DESCRIPTION WRAPPING */
+/* ✅ DESCRIPTION COLUMN LIMIT */
 #assetsTable th:nth-child(6), 
 #assetsTable td:nth-child(6) {
-    width: 350px !important; /* Set a specific width for the description */
-    max-width: 350px !important;
-    white-space: normal !important; /* Override DataTables default 'nowrap' */
+    width: 350px !important; /* Adjust this to make the description narrower or wider */
+    white-space: normal !important;
 }
 
-/* Buttons and Badges */
-.btn-view { background-color: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
-.btn-edit { background-color: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-decoration: none; }
-.btn-delete { background-color: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; border: none; cursor: pointer; }
-.status-badge { padding: 2px 4px; font-size: 9px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; }
+.status-badge { padding: 2px 5px; font-size: 9px; font-weight: 700; border-radius: 4px; color: #fff; display: inline-block; }
 .bg-success { background-color: #198754; }
 .bg-warning { background-color: #ffc107; color: #000; }
 .bg-danger { background-color: #dc3545; }
 .bg-info { background-color: #0dcaf0; color: #000; }
 .bg-secondary { background-color: #6c757d; }
 
-.high-value { color: #DC2626; font-weight: bold; }
-.recent-asset { background-color: #f0fff4 !important; }
 .table-responsive { width: 100%; overflow-x: auto; }
 </style>
 @endsection
@@ -71,21 +60,22 @@ table.dataTable tbody td {
             @role('admin|it_staff')
             <a href="{{ route('assets.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-3 rounded shadow text-xs">Add Asset</a>
             @endrole
-            <a href="{{ route('assets.export.pdf') }}" target="_blank" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1 px-3 rounded shadow text-xs">Export PDF (Long)</a>
+            <a href="{{ route('assets.export.pdf') }}" target="_blank" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1 px-3 rounded shadow text-xs">Export PDF</a>
         </div>
     </div>
 
     <div class="table-responsive bg-white shadow-sm border border-gray-200">
-        <table id="assetsTable" class="display table table-striped table-hover" style="width:100%">
+        <table id="assetsTable" class="display table table-striped table-hover">
             <thead>
                 <tr>
-                    <th style="width: 100px;">Entity Name</th>
-                    <th style="width: 100px;">Fund</th>
+                    <th style="width: 100px;">Entity</th>
+                    <th style="width: 80px;">Fund</th>
                     <th style="width: 120px;">PAR No.</th>
                     <th style="width: 40px;">Qty</th>
                     <th style="width: 50px;">Unit</th>
-                    <th>Description</th> <th style="width: 110px;">Property No.</th>
-                    <th style="width: 80px;">Status</th>
+                    <th>Description</th>
+                    <th style="width: 110px;">Property No.</th>
+                    <th style="width: 90px;">Status</th>
                     <th style="width: 80px;">Acquired</th>
                     <th style="width: 80px;">Amount</th>
                     <th style="width: 100px;">Purpose</th>
@@ -95,7 +85,7 @@ table.dataTable tbody td {
             </thead>
             <tbody>
                 @foreach($assets as $asset)
-                <tr class="{{ (isset($asset->created_at) && $asset->created_at->gt(now()->subDays(7))) ? 'recent-asset' : '' }}">
+                <tr>
                     <td>{{ $asset->entity_name }}</td>
                     <td>{{ $asset->fund_cluster }}</td>
                     <td>{{ $asset->par_no }}</td>
@@ -104,29 +94,18 @@ table.dataTable tbody td {
                     <td>{{ $asset->description }}</td>
                     <td>{{ $asset->property_no }}</td>
                     <td>
-                        @php
-                            $badgeClass = match($asset->unit_status) {
-                                'Active' => 'bg-success',
-                                'Under Repair' => 'bg-warning',
-                                'Condemned', 'Not Found in the Station' => 'bg-danger',
-                                'For Replacement' => 'bg-info',
-                                default => 'bg-secondary'
-                            };
-                        @endphp
-                        <span class="status-badge {{ $badgeClass }}">{{ $asset->unit_status }}</span>
+                        <span class="status-badge {{ $asset->unit_status == 'Active' ? 'bg-success' : 'bg-secondary' }}">
+                            {{ $asset->unit_status }}
+                        </span>
                     </td>
                     <td>{{ $asset->date_acquired }}</td>
-                    <td class="{{ $asset->amount > 100000 ? 'high-value' : '' }}">{{ number_format($asset->amount, 2) }}</td>
+                    <td>{{ number_format($asset->amount, 2) }}</td>
                     <td>{{ $asset->purpose }}</td>
                     <td>
                         <div class="flex gap-1">
-                            <a href="{{ route('assets.show', $asset) }}" class="btn-view">View</a>
+                            <a href="{{ route('assets.show', $asset) }}" class="bg-blue-500 text-white px-2 py-1 rounded text-[10px]">View</a>
                             @role('admin|it_staff')
-                            <a href="{{ route('assets.edit', $asset) }}" class="btn-edit">Edit</a>
-                            <form action="{{ route('assets.destroy', $asset) }}" method="POST" class="inline" onsubmit="return confirm('Delete?');">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-delete">Del</button>
-                            </form>
+                            <a href="{{ route('assets.edit', $asset) }}" class="bg-green-500 text-white px-2 py-1 rounded text-[10px]">Edit</a>
                             @endrole
                         </div>
                     </td>
@@ -146,15 +125,15 @@ table.dataTable tbody td {
 <script>
 $(document).ready(function() {
     $('#assetsTable').DataTable({
-        responsive: false,
-        scrollX: true,
-        pageLength: 25,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print'],
-        order: [[12, 'desc']],
-        autoWidth: false, // Prevents DataTables from calculating widths automatically
-        columnDefs: [
-            { targets: 5, width: "350px" } // Reinforce description width in JS
+        "pageLength": 20,       // ✅ Paginate into 20 list items only
+        "lengthMenu": [10, 20, 50, 100], 
+        "responsive": false,
+        "scrollX": true,
+        "autoWidth": false,
+        "order": [[12, 'desc']], 
+        "dom": 'Bfrtip',
+        "columnDefs": [
+            { "width": "350px", "targets": 5 }
         ]
     });
 });
