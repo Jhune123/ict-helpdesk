@@ -41,12 +41,10 @@ table.dataTable tbody td {
 #assetsTable td:nth-child(6) {
     width: 250px !important;
     max-width: 250px !important;
-
     white-space: normal !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
     word-break: break-word !important;
-
     line-height: 1.4;
 }
 
@@ -133,7 +131,6 @@ table.dataTable tbody td {
                     <td>{{ $asset->quantity }}</td>
                     <td>{{ $asset->unit }}</td>
 
-                    <!-- ✅ WRAPPED DESCRIPTION -->
                     <td>
                         <div class="desc-wrap">
                             {{ $asset->description }}
