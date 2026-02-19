@@ -10,10 +10,18 @@
         width: 100%;
         transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .form-input:focus {
+    .form-input:focus, .form-select:focus {
         outline: none;
         border-color: #2563eb; /* Blue focus */
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+    .form-select {
+        border-radius: 0.5rem;
+        border: 1px solid #cbd5e0;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        background-color: white;
+        transition: border-color 0.2s, box-shadow 0.2s;
     }
     .form-textarea {
         border-radius: 0.5rem;
@@ -89,6 +97,17 @@
                     <label class="form-label" for="property_no">Property No.</label>
                     <input type="text" name="property_no" id="property_no" value="{{ old('property_no', $asset->property_no) }}" class="form-input">
                 </div>
+
+                <div class="flex flex-col">
+                    <label class="form-label" for="unit_status">Unit Status <span class="text-red-500">*</span></label>
+                    <select name="unit_status" id="unit_status" class="form-select" required>
+                        <option value="Active" {{ old('unit_status', $asset->unit_status) == 'Active' ? 'selected' : '' }}>Active</option>
+                        <option value="Under Repair" {{ old('unit_status', $asset->unit_status) == 'Under Repair' ? 'selected' : '' }}>Under Repair</option>
+                        <option value="Condemned" {{ old('unit_status', $asset->unit_status) == 'Condemned' ? 'selected' : '' }}>Condemned</option>
+                        <option value="For Replacement" {{ old('unit_status', $asset->unit_status) == 'For Replacement' ? 'selected' : '' }}>For Replacement</option>
+                        <option value="Not Found in the Station" {{ old('unit_status', $asset->unit_status) == 'Not Found in the Station' ? 'selected' : '' }}>Not Found in the Station</option>
+                    </select>
+                </div>
             </div>
 
             <div class="flex flex-col mt-4">
@@ -127,7 +146,7 @@
                 <a href="{{ route('assets.index') }}" class="btn bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded shadow flex items-center gap-2">
                     Cancel
                 </a>
-                <button type="submit" class="btn btn-primary flex items-center gap-2">
+                <button type="submit" class="btn btn-primary flex items-center gap-2 px-4 rounded shadow font-semibold py-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>

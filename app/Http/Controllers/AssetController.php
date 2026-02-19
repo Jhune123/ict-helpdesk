@@ -40,6 +40,7 @@ class AssetController extends Controller
             'received_from' => 'nullable|string',
             'received_by' => 'nullable|string',
             'date_counted' => 'nullable|date',
+            'unit_status' => 'required|string|in:Active,Under Repair,Condemned,For Replacement,Not Found in the Station',
         ]);
 
         Asset::create($validated);
@@ -77,6 +78,7 @@ class AssetController extends Controller
             'received_from' => 'nullable|string',
             'received_by' => 'nullable|string',
             'date_counted' => 'nullable|date',
+            'unit_status' => 'required|string|in:Active,Under Repair,Condemned,For Replacement,Not Found in the Station',
         ]);
 
         $asset->update($validated);

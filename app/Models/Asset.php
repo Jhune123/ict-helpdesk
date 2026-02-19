@@ -16,6 +16,7 @@ class Asset extends Model
         'quantity',
         'unit',
         'description',
+        'unit_status',
         'property_no',
         'date_acquired',
         'amount',
