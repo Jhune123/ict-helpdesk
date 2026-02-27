@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail; // <--- Added for Direct Email Test
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Middleware\RoleMiddleware;
 
 /* CONTROLLERS */
@@ -70,13 +70,15 @@ Route::middleware('auth')->group(function () {
     Route::prefix('mis-queue')->group(function () {
         Route::get('/', [QueueController::class, 'operator'])->name('queues.index');
         Route::get('/operator', [QueueController::class, 'operator'])->name('queues.operator');
-        Route::post('/add', [QueueController::class, 'add'])->name('queues.add');
-        Route::patch('/serve/{queue}', [QueueController::class, 'serve'])->name('queues.serve');
-        Route::patch('/complete/{queue}', [QueueController::class, 'complete'])->name('queues.complete');
-        Route::post('/clear', [QueueController::class, 'clear'])->name('queues.clear');
-
         Route::get('/pdf/detailed', [QueueController::class, 'pdfDetailed'])->name('queues.pdf.detailed');
         Route::get('/pdf/summary', [QueueController::class, 'pdfSummary'])->name('queues.pdf.summary');
+
+        Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+            Route::post('/add', [QueueController::class, 'add'])->name('queues.add');
+            Route::patch('/serve/{queue}', [QueueController::class, 'serve'])->name('queues.serve');
+            Route::patch('/complete/{queue}', [QueueController::class, 'complete'])->name('queues.complete');
+            Route::post('/clear', [QueueController::class, 'clear'])->name('queues.clear');
+        });
     });
 
     /* TICKETS */
@@ -114,24 +116,21 @@ Route::middleware('auth')->group(function () {
     | PREVENTIVE MAINTENANCE (PMS)
     |--------------------------------------------------------------------------
     */
+    // ✅ View-only routes accessible by all authenticated users
     Route::get('maintenance', [MaintenanceScheduleController::class, 'index'])->name('maintenance.index');
     Route::get('maintenance/export/pdf', [MaintenanceScheduleController::class, 'exportPdf'])->name('maintenance.pdf');
     Route::get('maintenance/{id}/job-order', [MaintenanceScheduleController::class, 'downloadJobOrder'])->name('maintenance.job_order');
+    Route::get('maintenance/{maintenance}', [MaintenanceScheduleController::class, 'show'])->name('maintenance.show');
 
+    // ✅ Modification routes restricted to admin & IT staff
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('maintenance/create', [MaintenanceScheduleController::class, 'create'])->name('maintenance.create');
         Route::post('maintenance', [MaintenanceScheduleController::class, 'store'])->name('maintenance.store');
-        
-        // This is the critical route for the "Complete" button
         Route::post('maintenance/{id}/complete', [MaintenanceScheduleController::class, 'completeTask'])->name('maintenance.complete');
-        
         Route::get('maintenance/{maintenance}/edit', [MaintenanceScheduleController::class, 'edit'])->name('maintenance.edit');
         Route::put('maintenance/{maintenance}', [MaintenanceScheduleController::class, 'update'])->name('maintenance.update');
         Route::delete('maintenance/{maintenance}', [MaintenanceScheduleController::class, 'destroy'])->name('maintenance.destroy');
     });
-
-    Route::get('maintenance/{maintenance}', [MaintenanceScheduleController::class, 'show'])->name('maintenance.show');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -153,6 +152,11 @@ Route::middleware('auth')->group(function () {
     | CONDEMNED EQUIPMENT
     |--------------------------------------------------------------------------
     */
+    // ✅ View-only routes accessible by all authenticated users
+    Route::get('/condemned-equipment', [CondemnedEquipmentController::class, 'index'])->name('condemned-equipment.index');
+    Route::get('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
+
+    // ✅ Modification routes restricted to admin & IT staff
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/condemned-equipment/export/pdf', [CondemnedEquipmentController::class, 'exportPdf'])->name('condemned-equipment.export.pdf');
         Route::get('/condemned-equipment/export/excel', [CondemnedEquipmentController::class, 'exportExcel'])->name('condemned-equipment.export.excel');
@@ -165,10 +169,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'update'])->name('condemned-equipment.update');
         Route::delete('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'destroy'])->name('condemned-equipment.destroy');
     });
-
-    Route::get('/condemned-equipment', [CondemnedEquipmentController::class, 'index'])->name('condemned-equipment.index');
-    Route::get('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -209,7 +209,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/test-email-direct', function () {
     try {
         Mail::raw('This is a direct SMTP test from KSU ICT Helpdesk.', function ($msg) {
-            $msg->to('doctor.rogeliojr@gmail.com') // <--- Change this to your target email if needed
+            $msg->to('doctor.rogeliojr@gmail.com') 
                 ->subject('KSU ICT Helpdesk - Direct SMTP Connection Test');
         });
         return '✅ SUCCESS: Direct Email Sent! Check your inbox (doctor.rogeliojr@gmail.com) and Spam folder.';
@@ -220,20 +220,15 @@ Route::get('/test-email-direct', function () {
 
 // TEST 2: Full Notification System (SMS + Email)
 Route::get('/test-sms-ticket', function () {
-    // 1. Get the latest ticket
     $ticket = \App\Models\Ticket::latest()->first();
 
     if (!$ticket) {
         return "No tickets found in the database to test with.";
     }
 
-    // 2. Temporarily force a phone number for testing
-    // Replace this with your actual mobile number to receive the test SMS
     $ticket->contact_number = '09171234567'; 
 
-    // 3. Trigger the notification
     try {
-        // This will now use YOUR TicketStatusChanged.php logic (Email + SMS)
         $ticket->notify(new \App\Notifications\TicketStatusChanged('COMPLETED'));
         return "✅ Notification Triggered! <br> 1. Check your Email Inbox. <br> 2. Check laravel.log for SMS status.";
     } catch (\Exception $e) {

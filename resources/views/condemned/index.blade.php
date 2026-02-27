@@ -18,7 +18,7 @@
             @hasanyrole('admin|it_staff')
             <a href="{{ route('condemned-equipment.create') }}"
                class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded shadow text-sm">
-                + Add Condemned Equipment
+                 + Add Condemned Equipment
             </a>
             @endhasanyrole
         </div>
