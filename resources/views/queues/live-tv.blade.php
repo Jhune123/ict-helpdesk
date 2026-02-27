@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="5"> <title>ICTO Live Queuing Monitor</title>
+    <meta http-equiv="refresh" content="5"> 
+    <title>ICTO Live Queuing Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .blink { animation: blinker 1.5s linear infinite; }
@@ -11,6 +12,9 @@
     </style>
 </head>
 <body class="bg-slate-900 text-white h-screen overflow-hidden flex flex-col">
+
+    {{-- Audio Element --}}
+    <audio id="callSound" src="{{ asset('sounds/punch-gaming-sound-effect-hd_RzlG1GE.mp3') }}" preload="auto"></audio>
 
     {{-- HEADER --}}
     <div class="bg-slate-800 p-6 shadow-2xl flex justify-between items-center border-b-4 border-orange-500">
@@ -52,6 +56,32 @@
             @endforelse
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get current IDs of tickets being served
+            const currentServing = [
+                "{{ $servingJhune->id ?? '' }}",
+                "{{ $servingReymar->id ?? '' }}",
+                "{{ $servingBryan->id ?? '' }}",
+                "{{ $servingWalid->id ?? '' }}"
+            ].join('|');
+
+            const previousServing = localStorage.getItem('last_call_ids');
+
+            // Play sound if a new ticket ID appears in the list
+            if (previousServing && previousServing !== currentServing) {
+                // Only play if the currentServing has at least one actual ticket (not just empty pipes)
+                if (currentServing.replace(/\|/g, '').length > 0) {
+                    const audio = document.getElementById('callSound');
+                    audio.play().catch(e => console.log("Interaction required for audio."));
+                }
+            }
+
+            // Store current state
+            localStorage.setItem('last_call_ids', currentServing);
+        });
+    </script>
 
 </body>
 </html>
