@@ -23,17 +23,17 @@
                         Meeting Schedules
                     </x-nav-link>
 
-                    @role('admin|it_staff')
-                        <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
-                            💼 ICTO Assets & Equipment
-                        </x-nav-link>
+                    <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
+                        💼 KSU Assets & Equipment
+                    </x-nav-link>
 
+                    <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
+                        🎫 ICTO Queuing System
+                    </x-nav-link>
+
+                    @role('admin|it_staff')
                         <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
                             📜 Activity Logs
-                        </x-nav-link>
-
-                        <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
-                            🎫 MIS Queuing System
                         </x-nav-link>
                     @endrole
                 </div>

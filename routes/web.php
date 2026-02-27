@@ -138,10 +138,14 @@ Route::middleware('auth')->group(function () {
     | ASSETS
     |--------------------------------------------------------------------------
     */
+    // ✅ View-only routes accessible by all authenticated users (including clients)
+    Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
+    Route::get('/assets/print', [AssetController::class, 'print'])->name('assets.print');
+    Route::resource('assets', AssetController::class)->only(['index', 'show']);
+
+    // ✅ Modification routes restricted to admin & IT staff
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
-        Route::get('/assets/print', [AssetController::class, 'print'])->name('assets.print');
-        Route::resource('assets', AssetController::class);
+        Route::resource('assets', AssetController::class)->except(['index', 'show']);
     });
 
     /*

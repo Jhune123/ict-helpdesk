@@ -24,6 +24,7 @@
             📝 Detailed Report
         </button>
 
+        @role('admin|it_staff')
         {{-- Launch Live TV --}}
         <a href="{{ route('queues.live-tv') }}" target="_blank"
            class="w-56 h-12 flex items-center justify-center
@@ -31,9 +32,11 @@
                   text-white font-semibold rounded-lg">
             🚀 Launch Live TV
         </a>
+        @endrole
     </div>
 
     {{-- MAIN ACTION BUTTONS --}}
+    @role('admin|it_staff')
     <div class="flex justify-center gap-4 mb-8 flex-wrap">
         <form action="{{ route('queues.add') }}" method="POST">
             @csrf
@@ -53,6 +56,7 @@
             </button>
         </form>
     </div>
+    @endrole
 
     {{-- QUEUE TABLE --}}
     <table id="queueTable" class="w-full border text-center text-xl">
@@ -63,7 +67,10 @@
                 <th class="border p-4">Counter</th>
                 <th class="border p-4 detailed-only">Time Submitted</th>
                 <th class="border p-4 detailed-only">Time Served</th>
+                
+                @role('admin|it_staff')
                 <th class="border p-4 no-print">Actions</th>
+                @endrole
             </tr>
         </thead>
         <tbody>
@@ -77,6 +84,7 @@
                     {{ $queue->status === 'served' ? $queue->updated_at->format('F d, Y | h:i A') : '-' }}
                 </td>
 
+                @role('admin|it_staff')
                 <td class="border p-4 no-print">
                     @if($queue->status === 'waiting')
                         <form action="{{ route('queues.serve',$queue->id) }}" method="POST" class="inline">
@@ -103,6 +111,7 @@
                         </form>
                     @endif
                 </td>
+                @endrole
             </tr>
             @endforeach
         </tbody>

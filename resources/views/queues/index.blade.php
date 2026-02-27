@@ -21,6 +21,7 @@
             📝 Detailed Report
         </button>
 
+        @role('admin|it_staff')
         <button onclick="printSummaryReport()"
             class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-semibold">
             📊 Summary Report
@@ -30,9 +31,11 @@
            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-semibold">
            🚀 Launch Live TV
         </a>
+        @endrole
     </div>
 
     {{-- MAIN ACTION BUTTONS --}}
+    @role('admin|it_staff')
     <div class="flex justify-center gap-3 mb-5">
         <form action="{{ route('queues.add') }}" method="POST">
             @csrf
@@ -48,6 +51,7 @@
             </button>
         </form>
     </div>
+    @endrole
 
     {{-- QUEUE TABLE --}}
     <div class="overflow-x-auto">
@@ -59,7 +63,10 @@
                     <th class="border px-3 py-2">Counter</th>
                     <th class="border px-3 py-2 detailed-only">Time Submitted</th>
                     <th class="border px-3 py-2 detailed-only">Time Served</th>
+                    
+                    @role('admin|it_staff')
                     <th class="border px-3 py-2 no-print">Actions</th>
+                    @endrole
                 </tr>
             </thead>
             <tbody>
@@ -77,6 +84,7 @@
                             : '-' }}
                     </td>
 
+                    @role('admin|it_staff')
                     <td class="border px-3 py-1 no-print">
                         @if($queue->status === 'waiting')
                             <form action="{{ route('queues.serve',$queue->id) }}" method="POST" class="inline">
@@ -103,6 +111,7 @@
                             </form>
                         @endif
                     </td>
+                    @endrole
                 </tr>
                 @endforeach
             </tbody>
