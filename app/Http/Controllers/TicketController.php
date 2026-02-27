@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Log;
 class TicketController extends Controller
 {
     /**
-     * 📝 Ticket List (Pagination + Search)
+     * 📝 Ticket List (Pagination + Search restricted to specific fields)
      */
     public function index(Request $request)
     {
@@ -30,15 +30,11 @@ class TicketController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('ticket_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('serial_no', 'like', "%{$search}%")
                   ->orWhere('department', 'like', "%{$search}%")
-                  ->orWhere('client_name', 'like', "%{$search}%")
-                  ->orWhere('priority', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhere('equipment_type', 'like', "%{$search}%")
-                  ->orWhere('brand_model', 'like', "%{$search}%")
-                  ->orWhere('serial_no', 'like', "%{$search}%");
+                  ->orWhereHas('category', function($catQuery) use ($search) {
+                      $catQuery->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -56,27 +52,26 @@ class TicketController extends Controller
     }
 
     /**
-     * 🏷 My Tickets
+     * 🏷 My Tickets (Search restricted to specific fields)
      */
     public function mine(Request $request)
     {
+        $userId = auth()->id();
         $query = Ticket::with(['category', 'assignee'])
-            ->where('created_by', auth()->id())
-            ->orWhere('assigned_to', auth()->id())
+            ->where(function($q) use ($userId) {
+                $q->where('created_by', $userId)
+                  ->orWhere('assigned_to', $userId);
+            })
             ->orderBy('created_at', 'desc');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('ticket_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('serial_no', 'like', "%{$search}%")
                   ->orWhere('department', 'like', "%{$search}%")
-                  ->orWhere('client_name', 'like', "%{$search}%")
-                  ->orWhere('priority', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhere('equipment_type', 'like', "%{$search}%")
-                  ->orWhere('brand_model', 'like', "%{$search}%")
-                  ->orWhere('serial_no', 'like', "%{$search}%");
+                  ->orWhereHas('category', function($catQuery) use ($search) {
+                      $catQuery->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -122,7 +117,6 @@ class TicketController extends Controller
             'department'      => 'nullable|string|max:255',
             'assigned_to'     => 'nullable|integer',
             'client_name'     => 'required|string|max:255',
-            // ✅ CHANGED MAX:20 to MAX:255 to allow emails
             'contact_number'  => 'nullable|string|max:255', 
             'remarks'         => 'nullable|string|max:500',
         ]);
@@ -219,26 +213,16 @@ class TicketController extends Controller
             'department'      => 'nullable|string|max:255',
             'assigned_to'     => 'nullable|integer',
             'client_name'     => 'required|string|max:255',
-            // ✅ CHANGED MAX:20 to MAX:255 to allow emails
             'contact_number'  => 'nullable|string|max:255', 
             'remarks'         => 'nullable|string|max:500',
             'status'          => 'required|string',
         ]);
 
-        // ======================================================
-        // 🔴 CONDEMNED EQUIPMENT TRANSFER LOGIC
-        // ======================================================
         if ($validated['status'] === 'Condemned') {
             try {
                 $alreadyExists = CondemnedEquipment::where('description', 'like', "%{$ticket->ticket_number}%")->exists();
                 if (!$alreadyExists) {
-                    $categoryName = 'Uncategorized';
-                    if ($ticket->category) {
-                        $categoryName = $ticket->category->name;
-                    } elseif ($ticket->category_id) {
-                        $cat = Category::find($ticket->category_id);
-                        if ($cat) $categoryName = $cat->name;
-                    }
+                    $categoryName = $ticket->category ? $ticket->category->name : 'Uncategorized';
 
                     CondemnedEquipment::create([
                         'item_name'       => $ticket->title,
@@ -281,12 +265,8 @@ class TicketController extends Controller
             ? ($validated['assigned_to'] ?? null)
             : $ticket->assigned_to;
 
-        $dateFinished = null;
-        if (in_array($validated['status'], ['Closed', 'Condemned'])) {
-            $dateFinished = Carbon::now('Asia/Manila');
-        }
+        $dateFinished = in_array($validated['status'], ['Closed', 'Condemned']) ? Carbon::now('Asia/Manila') : null;
 
-        // SAVE DATABASE FIRST
         $ticket->update([
             'title'           => $validated['title'],
             'description'     => $validated['description'],
@@ -306,13 +286,11 @@ class TicketController extends Controller
 
         ActivityLogger::log('updated', $ticket, 'Updated Ticket: "' . $ticket->title . '"');
 
-        // ✅ NOTIFICATIONS WITH SAFETY NET
         if ($oldStatus !== $validated['status']) {
-            ActivityLogger::log('status_changed', $ticket, "Changed status from {$oldStatus} to {$validated['status']}");
             try {
                 $ticket->notify(new TicketStatusChanged($validated['status']));
             } catch (\Exception $e) {
-                Log::error("Status Change Notification Failed for {$ticket->ticket_number}: " . $e->getMessage());
+                Log::error("Status Change Notification Failed: " . $e->getMessage());
             }
         }
 
@@ -323,7 +301,6 @@ class TicketController extends Controller
                 } catch (\Exception $e) {
                     Log::error("Assignment Notification Failed: " . $e->getMessage());
                 }
-                ActivityLogger::log('assigned', $ticket, 'Reassigned Ticket to ' . $it->name);
             }
         }
 
@@ -337,7 +314,6 @@ class TicketController extends Controller
     {
         ActivityLogger::log('deleted', $ticket, 'Deleted Ticket: "' . $ticket->title . '"');
         $ticket->delete();
-
         return redirect()->route('tickets.index')->with('success', 'Ticket deleted successfully ❌');
     }
 
@@ -382,7 +358,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 🏢 Tickets by Department
+     * 🏢 Tickets by Department (Search restricted to specific fields)
      */
     public function byDepartment(Request $request)
     {
@@ -391,15 +367,11 @@ class TicketController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('ticket_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('serial_no', 'like', "%{$search}%")
                   ->orWhere('department', 'like', "%{$search}%")
-                  ->orWhere('client_name', 'like', "%{$search}%")
-                  ->orWhere('priority', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhere('equipment_type', 'like', "%{$search}%")
-                  ->orWhere('brand_model', 'like', "%{$search}%")
-                  ->orWhere('serial_no', 'like', "%{$search}%");
+                  ->orWhereHas('category', function($catQuery) use ($search) {
+                      $catQuery->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
