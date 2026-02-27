@@ -20,17 +20,16 @@ class QueueController extends Controller
      * Dashboard: The Operator View
      * This fixes the "Call to undefined method... operator()" error
      */
-    public function operator()
-    {
-        // Fetch tickets with active or recently closed statuses from the main table
-        $queues = Ticket::whereIn('status', ['Open', 'In Progress', 'Closed'])
-            ->orderByRaw("FIELD(status, 'In Progress', 'Open', 'Closed') ASC")
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+   public function operator()
+{
+    // This pulls from the 'tickets' table we just saw in your terminal
+    $queues = \App\Models\Ticket::whereIn('status', ['Open', 'In Progress', 'Closed'])
+        ->orderByRaw("FIELD(status, 'In Progress', 'Open', 'Closed') ASC")
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
 
-        // If your blade file is named operator.blade.php, change 'queues.index' to 'queues.operator'
-        return view('queues.index', compact('queues')); 
-    }
+    return view('queues.index', compact('queues')); 
+}
 
     /**
      * Live TV Monitor
