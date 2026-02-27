@@ -2,145 +2,85 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ticket;
 use Illuminate\Http\Request;
-use App\Models\Queue;
-use PDF; // Make sure barryvdh/laravel-dompdf is installed
+use Carbon\Carbon;
 
 class QueueController extends Controller
 {
-    /* =========================
-     * OPERATOR DASHBOARD
-     * ========================= */
+    /**
+     * If your route points to index()
+     */
+    public function index()
+    {
+        return $this->operator();
+    }
+
+    /**
+     * Dashboard: The Operator View
+     * This fixes the "Call to undefined method... operator()" error
+     */
     public function operator()
-{
-    // Latest queues on top, paginate 10 per page
-    $queues = Queue::orderBy('id', 'desc')->paginate(10);
-
-    // Get currently serving queues for counters
-    $servingJhune = $queues->where('status', 'serving')->where('served_by', 'Jhune')->first();
-    $servingReymar = $queues->where('status', 'serving')->where('served_by', 'Reymar')->first();
-
-    // Check if new queue can be added (max 5)
-    $canAddQueue = Queue::whereIn('status', ['waiting', 'serving'])->count() < 5;
-
-    return view('queues.operator', compact(
-        'queues',
-        'servingJhune',
-        'servingReymar',
-        'canAddQueue'
-    ));
-}
-
-
-    /* =========================
-     * ADD QUEUE NUMBER
-     * ========================= */
-    public function add()
     {
-        $queuesCount = Queue::whereIn('status', ['waiting', 'serving'])->count();
-        if ($queuesCount >= 5) {
-            return back()->with('error', 'Maximum 5 queues allowed.');
-        }
+        // Fetch tickets with active or recently closed statuses from the main table
+        $queues = Ticket::whereIn('status', ['Open', 'In Progress', 'Closed'])
+            ->orderByRaw("FIELD(status, 'In Progress', 'Open', 'Closed') ASC")
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-        $lastQueue = Queue::orderBy('id', 'desc')->first();
-        $nextNumber = $lastQueue ? (int) substr($lastQueue->queue_number, 4) + 1 : 1;
-
-        $queueNumber = 'MIS-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-
-        Queue::create([
-            'queue_number' => $queueNumber,
-            'status'       => 'waiting',
-        ]);
-
-        return back()->with('success', "Queue {$queueNumber} added");
+        // If your blade file is named operator.blade.php, change 'queues.index' to 'queues.operator'
+        return view('queues.index', compact('queues')); 
     }
 
-    /* =========================
-     * SERVE QUEUE
-     * ========================= */
-    public function serve(Request $request, Queue $queue)
-    {
-        $request->validate([
-            'counter' => 'required|in:Jhune,Reymar',
-        ]);
-
-        // Complete currently serving queue for this counter
-        Queue::where('served_by', $request->counter)
-             ->where('status', 'serving')
-             ->update([
-                 'status'    => 'served',
-                 'served_by' => null
-             ]);
-
-        // Assign this queue
-        $queue->update([
-            'status'    => 'serving',
-            'served_by' => $request->counter,
-        ]);
-
-        return back();
-    }
-
-    /* =========================
-     * COMPLETE QUEUE
-     * ========================= */
-    public function complete(Queue $queue)
-    {
-        $queue->update([
-            'status'    => 'served',
-            'served_by' => null,
-        ]);
-
-        return back();
-    }
-
-    /* =========================
-     * CLEAR / RESET QUEUES
-     * ========================= */
-    public function clear()
-    {
-        Queue::truncate();
-        return back()->with('success', 'All queues have been cleared.');
-    }
-
-    /* =========================
-     * LIVE TV
-     * ========================= */
+    /**
+     * Live TV Monitor
+     */
     public function liveTV()
     {
-        $servingJhune = Queue::where('status', 'serving')
-            ->where('served_by', 'Jhune')
-            ->latest('updated_at')
-            ->first();
+        // Identify which ticket is 'In Progress' for each specific staff member
+        $servingJhune  = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Jhune%')->first();
+        $servingReymar = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Reymar%')->first();
+        $servingBryan  = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Bryan%')->first();
+        $servingWalid  = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Walid%')->first();
 
-        $servingReymar = Queue::where('status', 'serving')
-            ->where('served_by', 'Reymar')
-            ->latest('updated_at')
-            ->first();
-
-        $nextQueues = Queue::where('status', 'waiting')
-            ->orderBy('id')
-            ->take(3)
+        // Footer: Show the next 5 oldest 'Open' tickets
+        $nextQueues = Ticket::where('status', 'Open')
+            ->orderBy('created_at', 'asc')
+            ->take(5)
             ->get();
 
-        return view('queues.live-tv', compact(
-            'servingJhune',
-            'servingReymar',
-            'nextQueues'
-        ));
+        return view('queues.live-tv', compact('servingJhune', 'servingReymar', 'servingBryan', 'servingWalid', 'nextQueues'));
     }
 
-    /* =========================
-     * PDF REPORT
-     * ========================= */
-    public function pdfReport()
+    /**
+     * Action: Serve a ticket
+     */
+    public function serve(Request $request, $id)
     {
-        $queues = Queue::orderBy('id', 'asc')->get();
-        $timestamp = now('Asia/Manila')->format('F d, Y | h:i A');
+        $ticket = Ticket::findOrFail($id);
+        
+        // Update status and tag the personnel in remarks for the Live TV Monitor
+        $ticket->update([
+            'status' => 'In Progress',
+            'remarks' => 'Serving at Counter: ' . $request->counter,
+            'updated_at' => Carbon::now('Asia/Manila'),
+        ]);
 
-        $pdf = PDF::loadView('queues.pdf', compact('queues', 'timestamp'))
-                  ->setPaper('A4', 'landscape'); // Landscape for wide table
+        return redirect()->back()->with('success', "Ticket {$ticket->ticket_number} called to {$request->counter}");
+    }
 
-        return $pdf->download('ICTO-MIS_Queue_Report_' . now('Asia/Manila')->format('Ymd_His') . '.pdf');
+    /**
+     * Action: Complete a ticket
+     */
+    public function complete($id)
+    {
+        $ticket = Ticket::findOrFail($id);
+        
+        $ticket->update([
+            'status' => 'Closed',
+            'date_finished' => Carbon::now('Asia/Manila'),
+        ]);
+
+        return redirect()->back()->with('success', 'Ticket resolved.');
     }
 }

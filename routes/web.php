@@ -32,9 +32,9 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-/* PUBLIC LIVE TV */
+/* 📺 PUBLIC LIVE TV MONITOR */
+// These routes are outside the 'auth' middleware so they can be displayed on a public TV/Monitor
 Route::get('/mis-queue/live-tv', [QueueController::class, 'liveTV'])->name('queues.live-tv');
-Route::get('/mis-queue/live-tv-data', [QueueController::class, 'liveTVData'])->name('queues.live-tv-data');
 
 /*
 |--------------------------------------------------------------------------
@@ -66,13 +66,16 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /* MIS QUEUING */
+    /* 🎫 MIS QUEUING SYSTEM (4-COUNTER LOGIC) */
     Route::prefix('mis-queue')->group(function () {
+        // Main Operator Dashboard (View all status)
         Route::get('/', [QueueController::class, 'operator'])->name('queues.index');
         Route::get('/operator', [QueueController::class, 'operator'])->name('queues.operator');
-        Route::get('/pdf/detailed', [QueueController::class, 'pdfDetailed'])->name('queues.pdf.detailed');
-        Route::get('/pdf/summary', [QueueController::class, 'pdfSummary'])->name('queues.pdf.summary');
+        
+        // Report Generation (PDF)
+        Route::get('/pdf/report', [QueueController::class, 'pdfReport'])->name('queues.pdf.report');
 
+        // Management Actions (Restricted to Admin/IT Staff)
         Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
             Route::post('/add', [QueueController::class, 'add'])->name('queues.add');
             Route::patch('/serve/{queue}', [QueueController::class, 'serve'])->name('queues.serve');
@@ -111,18 +114,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     Route::resource('meetings', MeetingController::class);
 
-    /*
-    |--------------------------------------------------------------------------
-    | PREVENTIVE MAINTENANCE (PMS)
-    |--------------------------------------------------------------------------
-    */
-    // ✅ View-only routes accessible by all authenticated users
+    /* PREVENTIVE MAINTENANCE (PMS) */
     Route::get('maintenance', [MaintenanceScheduleController::class, 'index'])->name('maintenance.index');
     Route::get('maintenance/export/pdf', [MaintenanceScheduleController::class, 'exportPdf'])->name('maintenance.pdf');
     Route::get('maintenance/{id}/job-order', [MaintenanceScheduleController::class, 'downloadJobOrder'])->name('maintenance.job_order');
     Route::get('maintenance/{maintenance}', [MaintenanceScheduleController::class, 'show'])->name('maintenance.show');
 
-    // ✅ Modification routes restricted to admin & IT staff
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('maintenance/create', [MaintenanceScheduleController::class, 'create'])->name('maintenance.create');
         Route::post('maintenance', [MaintenanceScheduleController::class, 'store'])->name('maintenance.store');
@@ -132,31 +129,19 @@ Route::middleware('auth')->group(function () {
         Route::delete('maintenance/{maintenance}', [MaintenanceScheduleController::class, 'destroy'])->name('maintenance.destroy');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | ASSETS
-    |--------------------------------------------------------------------------
-    */
-    // ✅ View-only routes accessible by all authenticated users (including clients)
+    /* ASSETS */
     Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
     Route::get('/assets/print', [AssetController::class, 'print'])->name('assets.print');
     Route::resource('assets', AssetController::class)->only(['index', 'show']);
 
-    // ✅ Modification routes restricted to admin & IT staff
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('assets', AssetController::class)->except(['index', 'show']);
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | CONDEMNED EQUIPMENT
-    |--------------------------------------------------------------------------
-    */
-    // ✅ View-only routes accessible by all authenticated users
+    /* CONDEMNED EQUIPMENT */
     Route::get('/condemned-equipment', [CondemnedEquipmentController::class, 'index'])->name('condemned-equipment.index');
     Route::get('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
 
-    // ✅ Modification routes restricted to admin & IT staff
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/condemned-equipment/export/pdf', [CondemnedEquipmentController::class, 'exportPdf'])->name('condemned-equipment.export.pdf');
         Route::get('/condemned-equipment/export/excel', [CondemnedEquipmentController::class, 'exportExcel'])->name('condemned-equipment.export.excel');
@@ -170,11 +155,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/condemned-equipment/{condemnedEquipment}', [CondemnedEquipmentController::class, 'destroy'])->name('condemned-equipment.destroy');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | COMMENTS, ATTACHMENTS, FEEDBACK, NOTIFICATIONS
-    |--------------------------------------------------------------------------
-    */
+    /* COMMENTS, FEEDBACK, NOTIFICATIONS */
     Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
@@ -201,38 +182,17 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| TEMPORARY TESTING ROUTES
+| DEBUG & TESTING
 |--------------------------------------------------------------------------
 */
-
-// TEST 1: Direct Email Connection (Debug SMTP)
 Route::get('/test-email-direct', function () {
     try {
-        Mail::raw('This is a direct SMTP test from KSU ICT Helpdesk.', function ($msg) {
-            $msg->to('doctor.rogeliojr@gmail.com') 
-                ->subject('KSU ICT Helpdesk - Direct SMTP Connection Test');
+        Mail::raw('Direct SMTP test from KSU ICT Helpdesk.', function ($msg) {
+            $msg->to('doctor.rogeliojr@gmail.com')->subject('SMTP Test');
         });
-        return '✅ SUCCESS: Direct Email Sent! Check your inbox (doctor.rogeliojr@gmail.com) and Spam folder.';
+        return '✅ SUCCESS: Check doctor.rogeliojr@gmail.com inbox.';
     } catch (\Exception $e) {
         return '❌ FAILED: ' . $e->getMessage();
-    }
-});
-
-// TEST 2: Full Notification System (SMS + Email)
-Route::get('/test-sms-ticket', function () {
-    $ticket = \App\Models\Ticket::latest()->first();
-
-    if (!$ticket) {
-        return "No tickets found in the database to test with.";
-    }
-
-    $ticket->contact_number = '09171234567'; 
-
-    try {
-        $ticket->notify(new \App\Notifications\TicketStatusChanged('COMPLETED'));
-        return "✅ Notification Triggered! <br> 1. Check your Email Inbox. <br> 2. Check laravel.log for SMS status.";
-    } catch (\Exception $e) {
-        return "❌ Error: " . $e->getMessage();
     }
 });
 
