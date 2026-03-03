@@ -8,33 +8,44 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('maintenance_schedules', function (Blueprint $table) {
-            $table->id();
-            
-            // Core Details
-            $table->string('title'); // e.g., "Monthly Server Checkup"
-            $table->string('office_college'); // New: e.g., "College of Engineering"
-            $table->text('description'); // e.g., "Check disk space, updates, and cabling."
-            
-            // Scheduling
-            $table->string('frequency'); // daily, weekly, monthly, quarterly, yearly
-            $table->date('next_run_date'); // When should the next ticket be generated?
-            
-            // Assignment & Priority
-            $table->unsignedBigInteger('assigned_to')->nullable(); // Which IT Staff handles this?
-            $table->string('priority')->default('Normal');
-            
-            // Asset / Device Details (New)
-            $table->string('device_model')->nullable();    // e.g., Dell Inspiron 15
-            $table->string('property_number')->nullable(); // e.g., KSU-ICT-2023-001
-            $table->string('serial_number')->nullable();   // e.g., SN123456789
-            
-            $table->string('category')->default('Maintenance'); // Ensure 'Maintenance' is in your categories
-            $table->timestamps();
+        // 1. Check if the table exists first
+        if (!Schema::hasTable('maintenance_schedules')) {
+            Schema::create('maintenance_schedules', function (Blueprint $table) {
+                $table->id();
+                $table->string('title'); 
+                $table->string('office_college'); 
+                $table->text('description'); 
+                $table->string('frequency'); 
+                $table->date('next_run_date'); 
+                $table->unsignedBigInteger('assigned_to')->nullable(); 
+                $table->string('priority')->default('Normal');
+                $table->string('device_model')->nullable();    
+                $table->string('property_number')->nullable(); 
+                $table->string('serial_number')->nullable();   
+                $table->string('category')->default('Maintenance'); 
+                $table->timestamps();
 
-            // Foreign key for assignee
-            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('set null');
-        });
+                $table->foreign('assigned_to')->references('id')->on('users')->onDelete('set null');
+            });
+        } else {
+            // 2. If table exists, check for the missing 'office_college' column specifically
+            Schema::table('maintenance_schedules', function (Blueprint $table) {
+                if (!Schema::hasColumn('maintenance_schedules', 'office_college')) {
+                    $table->string('office_college')->after('title')->nullable();
+                }
+                
+                // Add checks for other newer columns if needed
+                if (!Schema::hasColumn('maintenance_schedules', 'device_model')) {
+                    $table->string('device_model')->nullable();
+                }
+                if (!Schema::hasColumn('maintenance_schedules', 'property_number')) {
+                    $table->string('property_number')->nullable();
+                }
+                if (!Schema::hasColumn('maintenance_schedules', 'serial_number')) {
+                    $table->string('serial_number')->nullable();
+                }
+            });
+        }
     }
 
     public function down()

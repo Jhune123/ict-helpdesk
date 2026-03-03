@@ -8,6 +8,9 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class CondemnedEquipmentExport implements FromCollection, WithHeadings
 {
+    /**
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         return CondemnedEquipment::select(
@@ -24,13 +27,16 @@ class CondemnedEquipmentExport implements FromCollection, WithHeadings
             'it_personnel',
             'client_name',
             'priority',
-            'contact Number / E-mail Address',
+            'contact', // Corrected: Using the 'contact' column from your migration
             'status',
             'date_submitted',
-            'date_condemned' // Fixed: Matches your database column
+            'date_condemned' 
         )->get();
     }
 
+    /**
+     * Define the spreadsheet headers.
+     */
     public function headings(): array
     {
         return [
@@ -47,10 +53,10 @@ class CondemnedEquipmentExport implements FromCollection, WithHeadings
             'IT Personnel',
             'Client Name',
             'Priority',
-            'Contact',
+            'Contact Info',
             'Status',
             'Date Submitted',
-            'Date Condemned', // Fixed: Header label
+            'Date Condemned',
         ];
     }
 }

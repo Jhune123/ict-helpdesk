@@ -3,25 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\CondemnedEquipment;
+use App\Models\Department; // Added to fetch department lists
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\CondemnedEquipmentExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str; 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // Added for file deletion
+use Illuminate\Support\Facades\Storage;
 
 class CondemnedEquipmentController extends Controller
 {
-    // Helper to protect Edit/Delete actions
+    /**
+     * Helper to protect Edit/Delete/Store actions.
+     */
     private function authorizeAdminOrStaff()
     {
-        // Checks if user has EITHER 'admin' OR 'it_staff' role
-        if (!Auth::user()->hasRole(['admin', 'it_staff'])) {
-            abort(403, 'Unauthorized action. View only.');
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized action. You do not have permission to manage condemned equipment.');
         }
     }
 
+    /**
+     * Display a listing of the condemned equipment.
+     */
     public function index(Request $request)
     {
         $query = CondemnedEquipment::query();
@@ -33,7 +38,8 @@ class CondemnedEquipmentController extends Controller
                   ->orWhere('property_no', 'like', "%{$search}%")
                   ->orWhere('item_name', 'like', "%{$search}%")
                   ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('serial_no', 'like', "%{$search}%");
+                  ->orWhere('serial_no', 'like', "%{$search}%")
+                  ->orWhere('client_name', 'like', "%{$search}%");
             });
         }
 
@@ -43,15 +49,18 @@ class CondemnedEquipmentController extends Controller
 
     public function create()
     {
-        $this->authorizeAdminOrStaff(); // Locked
-        return view('condemned.create');
+        $this->authorizeAdminOrStaff();
+        
+        // Fetch departments from database to match Ticket system
+        $departments = Department::orderBy('name', 'asc')->pluck('name');
+        
+        return view('condemned.create', compact('departments'));
     }
 
     public function store(Request $request)
     {
-        $this->authorizeAdminOrStaff(); // Locked
+        $this->authorizeAdminOrStaff();
 
-        // 1. Validation
         $validated = $request->validate([
             'property_no'    => 'required|string|max:255',
             'item_name'      => 'required|string|max:255',
@@ -69,34 +78,18 @@ class CondemnedEquipmentController extends Controller
             'status'         => 'required|in:Open,In Progress,Finished,Closed,Condemned',
             'date_submitted' => 'nullable|date',
             'date_condemned' => 'nullable|date',
-            // File Validation
             'attachment'     => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120', 
         ]);
 
-        // 2. Generate Auto Number (COND-YYYY-XXXXX)
         $year = now()->format('Y');
-
-        // Find the last ticket created specifically in this year
         $lastTicket = CondemnedEquipment::where('ticket_number', 'like', "COND-$year-%")
             ->orderBy('id', 'desc')
             ->first();
 
-        if ($lastTicket) {
-            // Extract the last 5 digits (e.g., from COND-2026-00045, get 45)
-            $lastNumber = intval(substr($lastTicket->ticket_number, -5));
-            $newNumber = $lastNumber + 1;
-        } else {
-            // Start at 1 if no records exist for this year
-            $newNumber = 1;
-        }
-
-        // Pad with zeros to ensure 5 digits (e.g., 1 -> 00001)
+        $newNumber = $lastTicket ? (intval(substr($lastTicket->ticket_number, -5)) + 1) : 1;
         $sequence = str_pad($newNumber, 5, '0', STR_PAD_LEFT);
-        
-        // Assign the formatted ticket number
         $validated['ticket_number'] = "COND-$year-$sequence";
 
-        // 3. Handle File Upload
         if ($request->hasFile('attachment')) {
             $validated['attachment_path'] = $request->file('attachment')->store('condemned_proofs', 'public');
         }
@@ -104,27 +97,28 @@ class CondemnedEquipmentController extends Controller
         CondemnedEquipment::create($validated);
 
         return redirect()->route('condemned-equipment.index')
-                         ->with('success', 'Condemned equipment added successfully. Ticket: ' . $validated['ticket_number']);
+                         ->with('success', 'Condemned equipment archived. Ticket: ' . $validated['ticket_number']);
     }
 
     public function show($id)
     {
-        // Visible to Everyone (including 'user')
-        $condemnedEquipment = CondemnedEquipment::findOrFail($id);
-        return view('condemned.show', compact('condemnedEquipment'));
+        $equipment = CondemnedEquipment::findOrFail($id);
+        return view('condemned.show', compact('equipment'));
     }
 
     public function edit($id)
     {
-        $this->authorizeAdminOrStaff(); // Locked
-        $condemnedEquipment = CondemnedEquipment::findOrFail($id);
-        return view('condemned.edit', compact('condemnedEquipment'));
+        $this->authorizeAdminOrStaff();
+        $equipment = CondemnedEquipment::findOrFail($id);
+        $departments = Department::orderBy('name', 'asc')->pluck('name');
+
+        return view('condemned.edit', compact('equipment', 'departments'));
     }
 
     public function update(Request $request, $id)
     {
-        $this->authorizeAdminOrStaff(); // Locked
-        $condemnedEquipment = CondemnedEquipment::findOrFail($id);
+        $this->authorizeAdminOrStaff();
+        $equipment = CondemnedEquipment::findOrFail($id);
 
         $validated = $request->validate([
             'property_no'    => 'required|string|max:255',
@@ -143,21 +137,17 @@ class CondemnedEquipmentController extends Controller
             'status'         => 'required|in:Open,In Progress,Finished,Closed,Condemned',
             'date_submitted' => 'nullable|date',
             'date_condemned' => 'nullable|date',
-            // File Validation
             'attachment'     => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
         ]);
 
-        // Handle File Update
         if ($request->hasFile('attachment')) {
-            // Optional: Delete old file if exists to save space
-            if ($condemnedEquipment->attachment_path) {
-                Storage::disk('public')->delete($condemnedEquipment->attachment_path);
+            if ($equipment->attachment_path) {
+                Storage::disk('public')->delete($equipment->attachment_path);
             }
-            // Store new file
             $validated['attachment_path'] = $request->file('attachment')->store('condemned_proofs', 'public');
         }
 
-        $condemnedEquipment->update($validated);
+        $equipment->update($validated);
 
         return redirect()->route('condemned-equipment.index')
                          ->with('success', 'Record updated successfully.');
@@ -165,15 +155,14 @@ class CondemnedEquipmentController extends Controller
 
     public function destroy($id)
     {
-        $this->authorizeAdminOrStaff(); // Locked
-        $condemnedEquipment = CondemnedEquipment::findOrFail($id);
+        $this->authorizeAdminOrStaff();
+        $equipment = CondemnedEquipment::findOrFail($id);
         
-        // Optional: Delete attached file when record is deleted
-        if ($condemnedEquipment->attachment_path) {
-            Storage::disk('public')->delete($condemnedEquipment->attachment_path);
+        if ($equipment->attachment_path) {
+            Storage::disk('public')->delete($equipment->attachment_path);
         }
 
-        $condemnedEquipment->delete();
+        $equipment->delete();
         return redirect()->route('condemned-equipment.index')
                          ->with('success', 'Record deleted successfully.');
     }
@@ -181,17 +170,18 @@ class CondemnedEquipmentController extends Controller
     public function exportPdf()
     {
         $equipments = CondemnedEquipment::all();
-        $pdf = Pdf::loadView('condemned.pdf', compact('equipments'))->setPaper('a4', 'landscape');
-        return $pdf->download('condemned_equipment_report.pdf');
+        $pdf = Pdf::loadView('condemned.pdf', compact('equipments'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('condemned_equipment_report_' . now()->format('Ymd') . '.pdf');
     }
 
     public function exportExcel()
     {
-        return Excel::download(new CondemnedEquipmentExport, 'condemned_equipment.xlsx');
+        return Excel::download(new CondemnedEquipmentExport, 'condemned_equipment_' . now()->format('Ymd') . '.xlsx');
     }
 
     public function exportCsv()
     {
-        return Excel::download(new CondemnedEquipmentExport, 'condemned_equipment.csv');
+        return Excel::download(new CondemnedEquipmentExport, 'condemned_equipment_' . now()->format('Ymd') . '.csv');
     }
 }

@@ -1,14 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Condemned Equipment Report</title>
     <style>
-        body { font-family: sans-serif; }
-        /* Reduced font size to 8px to fit 17 columns on one page */
-        table { width: 100%; border-collapse: collapse; font-size: 8px; table-layout: fixed; }
-        th, td { border: 1px solid #000; padding: 2px; text-align: left; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        h2 { text-align: center; margin-bottom: 15px; font-size: 14px; }
+        @page { margin: 10px; }
+        body { font-family: sans-serif; margin: 0; padding: 0; }
+        
+        /* Font size 8px to handle 17 columns in Landscape */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 8px; 
+            table-layout: fixed; 
+        }
+        
+        th, td { 
+            border: 1px solid #000; 
+            padding: 2px; 
+            text-align: left; 
+            vertical-align: top; 
+            word-wrap: break-word; 
+            overflow-wrap: break-word; 
+        }
+        
+        th { 
+            background-color: #f2f2f2; 
+            font-weight: bold; 
+        }
+        
+        h2 { 
+            text-align: center; 
+            margin-bottom: 10px; 
+            font-size: 14px; 
+        }
     </style>
 </head>
 <body>
@@ -32,7 +57,7 @@
                 <th>Contact</th>
                 <th>Status</th>
                 <th>Submitted</th>
-                <th>Condemned</th> {{-- Renamed Header --}}
+                <th>Condemned</th>
             </tr>
         </thead>
         <tbody>
@@ -42,7 +67,7 @@
                 <td>{{ $e->property_no }}</td>
                 <td>{{ $e->item_name }}</td>
                 <td>{{ $e->title }}</td>
-                <td>{{Str::limit($e->description, 50) }}</td> {{-- Limit long text --}}
+                <td>{{ \Illuminate\Support\Str::limit($e->description, 40) }}</td>
                 <td>{{ $e->equipment_type }}</td>
                 <td>{{ $e->brand_model }}</td>
                 <td>{{ $e->serial_no }}</td>
@@ -53,8 +78,8 @@
                 <td>{{ $e->priority }}</td>
                 <td>{{ $e->contact }}</td>
                 <td>{{ $e->status }}</td>
-                <td>{{ $e->date_submitted?->format('M d, Y') }}</td>
-                <td>{{ $e->date_condemned?->format('M d, Y') }}</td> {{-- Fixed Variable --}}
+                <td>{{ $e->date_submitted ? \Carbon\Carbon::parse($e->date_submitted)->format('M d, Y') : 'N/A' }}</td>
+                <td>{{ $e->date_condemned ? \Carbon\Carbon::parse($e->date_condemned)->format('M d, Y') : 'N/A' }}</td>
             </tr>
             @endforeach
         </tbody>
