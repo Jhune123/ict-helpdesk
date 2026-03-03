@@ -6,21 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up()
+    public function up(): void
     {
         Schema::table('assets', function (Blueprint $table) {
-            // Adds the column. Placing it after ID for high visibility.
-            $table->string('unit_status')->default('Active')->after('id'); 
+            // Check if column doesn't exist before adding to prevent errors
+            if (!Schema::hasColumn('assets', 'unit_status')) {
+                $table->string('unit_status')->default('Active')->after('description');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down()
+    public function down(): void
     {
         Schema::table('assets', function (Blueprint $table) {
             $table->dropColumn('unit_status');

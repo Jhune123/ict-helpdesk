@@ -39,7 +39,9 @@ return new class extends Migration
             $table->string('supplier')->nullable();
 
             // Status and assignment
-            $table->string('status')->default('Available');
+            // Changed 'status' to 'unit_status' to match your Controller and Form
+            $table->string('unit_status')->default('Active'); 
+            $table->string('status')->nullable(); // Kept for backward compatibility
             $table->string('assigned_to')->nullable();
 
             // Purpose and approval
