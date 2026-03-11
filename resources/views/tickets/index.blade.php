@@ -121,18 +121,23 @@
                     }}
                 ">
                     <td class="px-3 py-2 font-bold">{{ $ticket->ticket_number }}</td>
-                    {{-- Displays Title (which is Requestor Name for Generic Form) --}}
                     <td class="px-3 py-2 font-medium">{{ $ticket->title }}</td>
                     <td class="px-3 py-2" title="{{ $ticket->description }}">{{ Str::limit($ticket->description, 30) }}</td>
                     <td class="px-3 py-2">{{ $ticket->brand_model ?? '-' }}</td>
                     <td class="px-3 py-2 font-mono text-xs">{{ $ticket->serial_no ?? '-' }}</td>
                     <td class="px-3 py-2">
-                        {{ $ticket->category->name ?? ucfirst(str_replace('_', ' ', $ticket->form_type)) }}
+                        {{-- ✅ FIX: Added null check for category route --}}
+                        @if($ticket->category)
+                             <a href="{{ route('categories.show', $ticket->category->id) }}" class="text-blue-600 hover:underline">
+                                {{ $ticket->category->name }}
+                             </a>
+                        @else
+                            {{ ucfirst(str_replace('_', ' ', $ticket->form_type)) }}
+                        @endif
                     </td>
                     <td class="px-3 py-2">{{ $ticket->department ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->assignee?->name ?? '-' }}</td>
                     
-                    {{-- Handles the Client/Contact display based on form type --}}
                     <td class="px-3 py-2">
                         @if($ticket->form_type === 'generic')
                             <span class="text-xs text-gray-600">{{ $ticket->contact_info }}</span>
