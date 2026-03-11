@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-green-800 border-b border-green-700">
+<nav x-data="{ open: false, notifyOpen: false }" class="bg-green-800 border-b border-green-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
@@ -23,12 +23,9 @@
                         Meeting Schedules
                     </x-nav-link>
 
-                    {{-- ✅ Role Restriction: Only IT Personnel can control Assets --}}
-                    @role('admin|it_staff')
-                        <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')" class="text-green-100 hover:text-white">
-                            💼 KSU Assets & Equipment
-                        </x-nav-link>
-                    @endrole
+                    <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')" class="text-green-100 hover:text-white">
+                        💼 KSU Assets & Equipment
+                    </x-nav-link>
 
                     <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')" class="text-green-100 hover:text-white">
                         🎫 ICTO Queuing System
@@ -43,8 +40,7 @@
             </div>
 
             <div class="flex items-center space-x-6">
-                {{-- Notification Dropdown --}}
-                <div class="relative" x-data="{ notifyOpen: false }" @click.outside="notifyOpen = false">
+                <div class="relative">
                     <button @click="notifyOpen = !notifyOpen" class="relative focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="h-6 w-6 text-yellow-400 hover:text-yellow-300 transition"
@@ -68,7 +64,7 @@
                         @endif
                     </button>
 
-                    <div x-show="notifyOpen" x-transition style="display: none;"
+                    <div x-show="notifyOpen" x-transition @click.away="notifyOpen = false"
                         class="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg z-50">
                         <div class="p-3 font-bold border-b">Notifications</div>
 
@@ -96,7 +92,6 @@
                     </div>
                 </div>
 
-                {{-- User Dropdown --}}
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button
@@ -131,3 +126,5 @@
         </div>
     </div>
 </nav>
+
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
