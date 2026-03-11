@@ -148,6 +148,11 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => 'Equipment Repair'])->id;
         }
 
+        // ✅ Fallback safety: If no category is found, use "General Support" to prevent URL errors
+        if (!$categoryId) {
+            $categoryId = Category::firstOrCreate(['name' => 'General Support'])->id;
+        }
+
         $deptInput = $validated['department'] ?? null;
         $department = $deptInput ? Department::firstOrCreate(['name' => $deptInput])->name : null;
 
@@ -158,7 +163,6 @@ class TicketController extends Controller
             $formDataToSave = array_merge($formDataToSave, $validated['meta']);
         }
 
-        // Inject original form type metadata
         if ($request->input('form_type') === 'multimedia_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-03';
         } elseif ($request->input('form_type') === 'information_system_request') {
@@ -205,7 +209,6 @@ class TicketController extends Controller
 
         ActivityLogger::log('created', $ticket, 'Created Ticket: "' . $ticket->title . '"');
 
-        // Notification for initial assignment
         if ($assignedTo && ($it = User::find($assignedTo))) {
             try { $it->notify(new TicketAssignedNotification($ticket)); } catch (\Exception $e) {}
         }
@@ -265,13 +268,17 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-        // Check if assignment has changed
+        // ✅ Fallback safety for update
+        if (!$categoryId) {
+            $categoryId = Category::firstOrCreate(['name' => 'General Support'])->id;
+        }
+
         $oldAssignee = $ticket->assigned_to;
         $newAssignee = $validated['assigned_to'] ?? null;
 
         if ($validated['status'] === 'Condemned' && $ticket->status !== 'Condemned') {
             try {
-                $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
+                $categoryName = optional(Category::find($categoryId))->name ?? 'Uncategorized';
                 CondemnedEquipment::create([
                     'item_name'      => $validated['title'],
                     'property_no'    => $ticket->form_data['property_no'] ?? 'PENDING', 
@@ -327,7 +334,6 @@ class TicketController extends Controller
 
         ActivityLogger::log('updated', $ticket, "Updated Ticket: #{$ticket->ticket_number}");
 
-        // 🔔 NEW: Trigger Assignment Notification if personnel changed
         if ($newAssignee && $newAssignee != $oldAssignee) {
             $it = User::find($newAssignee);
             if ($it) {
@@ -335,7 +341,6 @@ class TicketController extends Controller
             }
         }
 
-        // Trigger Status Change Notification
         if ($oldStatus !== $validated['status']) {
             try { $ticket->notify(new TicketStatusChanged($validated['status'])); } catch (\Exception $e) {}
         }
@@ -350,7 +355,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 📄 Generate specialized Job Order PDF based on Category
+     * 📄 Generate Job Order PDF
      */
     public function jobOrderPdf(Ticket $ticket)
     {
@@ -360,14 +365,11 @@ class TicketController extends Controller
 
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
-        } 
-        elseif (Str::contains($categoryLower, 'multimedia')) {
+        } elseif (Str::contains($categoryLower, 'multimedia')) {
             $view = 'tickets.print-multimedia';
-        } 
-        elseif (Str::contains($categoryLower, 'network') || Str::contains($categoryLower, 'internet')) {
+        } elseif (Str::contains($categoryLower, 'network') || Str::contains($categoryLower, 'internet')) {
             $view = 'tickets.print-network';
-        } 
-        elseif (
+        } elseif (
             Str::contains($categoryLower, 'equipment') || 
             Str::contains($categoryLower, 'hardware') || 
             Str::contains($categoryLower, 'repair') || 
