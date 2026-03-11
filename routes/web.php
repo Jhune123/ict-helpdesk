@@ -100,14 +100,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('feedbacks', FeedbackController::class)->except(['create', 'store']);
 
     /* CATEGORIES & DEPARTMENTS */
-    // Everyone can view categories
-    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
-    
+    // ✅ FIX: Admin routes (create/store/edit/update/destroy) MUST come BEFORE public routes
+    // This prevents the /{category} wildcard from swallowing the /create URL.
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        // Only Admins & IT Staff can create, edit, delete categories
         Route::resource('categories', CategoryController::class)->except(['index', 'show']);
         Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit']);
     });
+
+    // Everyone can view categories
+    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
 
     /* PREVENTIVE MAINTENANCE (PMS) */
     Route::prefix('maintenance')->group(function () {
