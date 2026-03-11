@@ -126,13 +126,13 @@
                     <td class="px-3 py-2">{{ $ticket->brand_model ?? '-' }}</td>
                     <td class="px-3 py-2 font-mono text-xs">{{ $ticket->serial_no ?? '-' }}</td>
                     <td class="px-3 py-2">
-                        {{-- ✅ FIX: Added null check for category route --}}
-                        @if($ticket->category)
-                             <a href="{{ route('categories.show', $ticket->category->id) }}" class="text-blue-600 hover:underline">
+                        {{-- ✅ FINAL FIX: Use a safe fallback for the route parameter --}}
+                        @if($ticket->category && isset($ticket->category->id))
+                             <a href="{{ url('categories/' . $ticket->category->id) }}" class="text-blue-600 hover:underline">
                                 {{ $ticket->category->name }}
                              </a>
                         @else
-                            {{ ucfirst(str_replace('_', ' ', $ticket->form_type)) }}
+                            {{ $ticket->category->name ?? ucfirst(str_replace('_', ' ', $ticket->form_type)) }}
                         @endif
                     </td>
                     <td class="px-3 py-2">{{ $ticket->department ?? '-' }}</td>
