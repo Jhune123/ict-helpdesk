@@ -85,7 +85,7 @@
         <div class="mt-4">
             <label class="block font-medium text-gray-700">IT Personnel Attendees</label>
             <select name="it_personnels[]" multiple
-                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 min-h-[120px]">
                 @foreach($itPersonnels as $personnel)
                     <option value="{{ $personnel->id }}"
                         {{ collect(old('it_personnels'))->contains($personnel->id) ? 'selected' : '' }}>
@@ -103,7 +103,7 @@
         <div class="flex justify-end space-x-2 mt-6">
             <a href="{{ route('meetings.index') }}"
                class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
-               ⬅ Cancel
+                ⬅ Cancel
             </a>
             <button type="submit"
                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">

@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Mail\TicketNotificationMail;
 
 class CommentController extends Controller
@@ -46,7 +47,7 @@ class CommentController extends Controller
                 Mail::to($assignedEmail)->send(new TicketNotificationMail($ticket, $subject, $messageBody));
             }
         } catch (\Exception $e) {
-            \Log::error('Email notification failed: ' . $e->getMessage());
+            Log::error('Email notification failed: ' . $e->getMessage());
         }
 
         return redirect()
@@ -59,6 +60,7 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
+        // Allow deletion if owner of comment OR admin
         if (Auth::id() === $comment->user_id || Auth::user()->hasRole('admin')) {
             $comment->delete();
             return back()->with('success', '🗑 Comment deleted successfully!');

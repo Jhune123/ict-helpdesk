@@ -5,15 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\MaintenanceSchedule;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MaintenanceScheduleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $schedules = MaintenanceSchedule::with('assignees')
@@ -23,130 +19,38 @@ class MaintenanceScheduleController extends Controller
         return view('maintenance.index', compact('schedules'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        $staff = User::whereHas('roles', function($q){
-            $q->whereIn('name', ['admin', 'it_staff']); 
-        })->orWhereIn('role', ['admin', 'it_staff'])->get();
-
-        return view('maintenance.create', compact('staff'));
+        $staff = User::whereIn('role', ['admin', 'it_staff'])->get();
+        // Load the checklist categories for the form
+        $categories = $this->getChecklistCategories();
+        
+        return view('maintenance.create', compact('staff', 'categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title'           => 'required|string|max:255',
-            'office_college'  => 'required|string|max:255',
-            'device_model'    => 'nullable|string|max:255',
-            'property_number' => 'nullable|string|max:255',
-            'serial_number'   => 'nullable|string|max:255',
-            'description'     => 'required|string',
-            'frequency'       => 'required|in:daily,weekly,monthly,quarterly,semi-annual,yearly',
-            'last_run_date'   => 'required|date',
-            'assigned_to'     => 'required|array', 
-            'assigned_to.*'   => 'exists:users,id',
-            'priority'        => 'required|in:Low,Normal,High,Critical',
-            'category'        => 'nullable|string',
+        $request->validate([
+            'office_college' => 'required',
+            'frequency' => 'required',
+            'title' => 'required',
+            'last_run_date' => 'required|date',
+            'assigned_to' => 'required|array'
         ]);
 
-        $validated['next_run_date'] = $this->calculateNextRun($request->last_run_date, $request->frequency);
+        $descriptionData = [
+            'tasks' => $request->input('checklist', []),
+            'remarks' => $request->input('remarks', '')
+        ];
 
-        $staffIds = $validated['assigned_to'];
-        unset($validated['assigned_to']);
+        $schedule = new MaintenanceSchedule($request->all());
+        $schedule->description = json_encode($descriptionData);
+        $schedule->next_run_date = $this->calculateNextRun($request->last_run_date, $request->frequency);
+        $schedule->save();
 
-        $schedule = MaintenanceSchedule::create($validated);
+        $schedule->assignees()->sync($request->assigned_to);
 
-        // Save multiple staff to the pivot table
-        $schedule->assignees()->sync($staffIds);
-
-        return redirect()->route('maintenance.index')
-            ->with('success', 'Maintenance Schedule created successfully.');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        $maintenance = MaintenanceSchedule::findOrFail($id);
-
-        $validated = $request->validate([
-            'title'           => 'required|string|max:255',
-            'office_college'  => 'required|string|max:255',
-            'device_model'    => 'nullable|string|max:255',
-            'property_number' => 'nullable|string|max:255',
-            'serial_number'   => 'nullable|string|max:255',
-            'description'     => 'required|string',
-            'frequency'       => 'required|in:daily,weekly,monthly,quarterly,semi-annual,yearly',
-            'last_run_date'   => 'required|date',
-            'assigned_to'     => 'required|array', 
-            'assigned_to.*'   => 'exists:users,id',
-            'priority'        => 'required',
-            'category'        => 'nullable|string',
-        ]);
-
-        $validated['next_run_date'] = $this->calculateNextRun($request->last_run_date, $request->frequency);
-
-        $staffIds = $validated['assigned_to'];
-        unset($validated['assigned_to']);
-
-        $maintenance->update($validated);
-        $maintenance->assignees()->sync($staffIds);
-
-        return redirect()->route('maintenance.index')
-            ->with('success', 'Schedule updated successfully.');
-    }
-
-    /**
-     * Mark a task as completed and automatically schedule the next one.
-     */
-    public function completeTask($id)
-    {
-        $schedule = MaintenanceSchedule::findOrFail($id);
-        $today = Carbon::now();
-
-        // Ensure we update using the existing frequency logic
-        $schedule->update([
-            'last_run_date' => $today->toDateString(),
-            'next_run_date' => $this->calculateNextRun($today, $schedule->frequency)
-        ]);
-
-        return redirect()->route('maintenance.index')
-            ->with('success', "Maintenance marked as completed and rescheduled.");
-    }
-
-    /**
-     * Download a detailed Job Order for a specific task.
-     */
-    public function downloadJobOrder($id)
-    {
-        $schedule = MaintenanceSchedule::with('assignees')->findOrFail($id);
-        
-        $pdf = Pdf::loadView('maintenance.job_order_pdf', compact('schedule'))
-                  ->setPaper('a4', 'portrait');
-        
-        return $pdf->download('JobOrder_PMS_' . str_pad($schedule->id, 5, '0', STR_PAD_LEFT) . '.pdf');
-    }
-
-    private function calculateNextRun($lastRunDate, $frequency)
-    {
-        $date = Carbon::parse($lastRunDate);
-
-        switch ($frequency) {
-            case 'daily':       return $date->addDay();
-            case 'weekly':      return $date->addWeek();
-            case 'monthly':     return $date->addMonth();
-            case 'quarterly':   return $date->addMonths(3);
-            case 'semi-annual': return $date->addMonths(6);
-            case 'yearly':      return $date->addYear();
-            default:            return $date;
-        }
+        return redirect()->route('maintenance.index')->with('success', 'Schedule created successfully.');
     }
 
     public function show($id)
@@ -158,33 +62,117 @@ class MaintenanceScheduleController extends Controller
     public function edit($id)
     {
         $maintenance = MaintenanceSchedule::findOrFail($id);
+        $staff = User::whereIn('role', ['admin', 'it_staff'])->get();
         
-        $staff = User::whereHas('roles', function($q){
-            $q->whereIn('name', ['admin', 'it_staff']); 
-        })->orWhereIn('role', ['admin', 'it_staff'])->get();
+        // Load the checklist categories for the form
+        $categories = $this->getChecklistCategories();
 
-        $selectedStaff = $maintenance->assignees->pluck('id')->toArray();
+        return view('maintenance.edit', compact('maintenance', 'staff', 'categories'));
+    }
 
-        return view('maintenance.edit', compact('maintenance', 'staff', 'selectedStaff'));
+    public function update(Request $request, $id)
+    {
+        $maintenance = MaintenanceSchedule::findOrFail($id);
+
+        $descriptionData = [
+            'tasks' => $request->input('checklist', []),
+            'remarks' => $request->input('remarks', '')
+        ];
+
+        $maintenance->fill($request->all());
+        $maintenance->description = json_encode($descriptionData);
+        $maintenance->next_run_date = $this->calculateNextRun($request->last_run_date, $request->frequency);
+        $maintenance->save();
+
+        $maintenance->assignees()->sync($request->assigned_to);
+
+        return redirect()->route('maintenance.index')->with('success', 'Schedule updated.');
+    }
+
+    /**
+     * Matches route: maintenance.complete (POST /{id}/complete)
+     */
+    public function completeTask($id)
+    {
+        $schedule = MaintenanceSchedule::findOrFail($id);
+        $newLastRun = Carbon::now();
+        $newNextRun = $this->calculateNextRun($newLastRun, $schedule->frequency);
+
+        $schedule->update([
+            'last_run_date' => $newLastRun,
+            'next_run_date' => $newNextRun
+        ]);
+
+        return back()->with('success', 'Task completed and rescheduled.');
+    }
+
+    /**
+     * Matches route: maintenance.pdf (GET /export/pdf)
+     */
+    public function exportPdf()
+    {
+        $schedules = MaintenanceSchedule::with('assignees')->get();
+        $pdf = Pdf::loadView('maintenance.pdf_view', compact('schedules'))
+                  ->setPaper('a4', 'landscape');
+        
+        return $pdf->download('KSU-Maintenance-Summary-' . date('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Matches route: maintenance.job_order (GET /{id}/job-order)
+     */
+    public function downloadJobOrder($id)
+    {
+        $maintenance = MaintenanceSchedule::with('assignees')->findOrFail($id);
+        $pdf = Pdf::loadView('maintenance.job_order_pdf', compact('maintenance'))
+                  ->setPaper('a4', 'portrait');
+
+        return $pdf->download('KSU-Job-Order-PMS-'.$maintenance->id.'.pdf');
     }
 
     public function destroy($id)
     {
         $maintenance = MaintenanceSchedule::findOrFail($id);
         $maintenance->delete();
-        return redirect()->route('maintenance.index')
-            ->with('success', 'Schedule deleted successfully.');
+
+        return redirect()->route('maintenance.index')->with('success', 'Record deleted.');
     }
 
-    public function exportPdf()
+    /**
+     * Helper to calculate the next scheduled maintenance date
+     */
+    private function calculateNextRun($date, $frequency)
     {
-        $schedules = MaintenanceSchedule::with('assignees')
-            ->orderBy('next_run_date', 'asc')
-            ->get();
+        $lastRun = Carbon::parse($date);
+        return match(strtolower($frequency)) {
+            'daily' => $lastRun->addDay(),
+            'weekly' => $lastRun->addWeek(),
+            'monthly' => $lastRun->addMonth(),
+            'quarterly' => $lastRun->addMonths(3),
+            'semi-annual' => $lastRun->addMonths(6),
+            'yearly' => $lastRun->addYear(),
+            default => $lastRun,
+        };
+    }
 
-        $pdf = Pdf::loadView('maintenance.pdf_view', compact('schedules'))
-                  ->setPaper('a4', 'landscape'); 
-        
-        return $pdf->download('KSU_Preventive_Maintenance_Schedule_' . date('Y-m-d') . '.pdf');
+    /**
+     * Helper to define the predefined maintenance tasks/checklists
+     */
+    private function getChecklistCategories()
+    {
+        return [
+            'hardware' => [
+                'label' => 'Hardware Maintenance',
+                'tasks' => ['Physical Cleaning', 'Cable Management', 'Port Inspection', 'Fan Dusting']
+            ],
+            'software' => [
+                'label' => 'Software & OS',
+                'tasks' => ['OS Updates', 'Antivirus Scan', 'Registry Cleanup', 'Driver Updates']
+            ],
+            'performance' => [
+                'label' => 'Performance Check',
+                'tasks' => ['Disk Defrag', 'Startup Optimization', 'Temp File Deletion', 'Stress Testing']
+            ]
+        ];
     }
 }

@@ -7,30 +7,41 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    // Show all notifications
+    /**
+     * Show all notifications for the authenticated user.
+     */
     public function index()
     {
         $notifications = Auth::user()->notifications()->latest()->paginate(10);
+        
         return view('notifications.index', compact('notifications'));
     }
 
-    // Mark as read
+    /**
+     * Mark a specific notification as read.
+     */
     public function markAsRead($id)
     {
         $notification = Auth::user()->notifications()->where('id', $id)->first();
+        
         if ($notification) {
             $notification->markAsRead();
         }
-        return back();
+        
+        return back()->with('success', 'Notification marked as read.');
     }
 
-    // Mark as unread
+    /**
+     * Mark a specific notification as unread.
+     */
     public function markAsUnread($id)
     {
         $notification = Auth::user()->notifications()->where('id', $id)->first();
+        
         if ($notification) {
-            $notification->update(['read_at' => null]);
+            $notification->markAsUnread(); // Using Laravel's native method for consistency
         }
-        return back();
+        
+        return back()->with('success', 'Notification marked as unread.');
     }
 }

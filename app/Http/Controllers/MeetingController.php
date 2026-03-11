@@ -9,7 +9,9 @@ use Carbon\Carbon;
 
 class MeetingController extends Controller
 {
-    // 🗂 Meetings Table
+    /**
+     * 🗂 Meetings Table Listing
+     */
     public function index()
     {
         $meetings = Meeting::with('itPersonnel')
@@ -20,17 +22,21 @@ class MeetingController extends Controller
         return view('meetings.index', compact('meetings'));
     }
 
-    // 📆 FullCalendar View
+    /**
+     * 📆 FullCalendar View
+     * Map meetings to FullCalendar event format.
+     */
     public function calendar()
     {
         $meetings = Meeting::with('itPersonnel')->get();
 
         $events = $meetings->map(function ($meeting) {
+            // Safety check for required fields
             if (!$meeting->date || !$meeting->start_time) return null;
 
             $title = $meeting->title ?? 'No Title';
 
-            // Append IT personnel names if assigned
+            // Append IT personnel names to the title for calendar visibility
             if ($meeting->itPersonnel->count() > 0) {
                 $title .= ' (IT: ' . $meeting->itPersonnel->pluck('name')->join(', ') . ')';
             }
@@ -43,6 +49,7 @@ class MeetingController extends Controller
                             ? Carbon::parse($meeting->date . ' ' . $meeting->end_time)->toIso8601String()
                             : null,
                 'url'   => route('meetings.show', $meeting->id),
+                // Green for future/today, Red for past meetings
                 'color' => Carbon::parse($meeting->date)->gte(Carbon::today()) ? '#16A34A' : '#DC2626',
             ];
         })->filter()->values()->toArray();
@@ -50,14 +57,19 @@ class MeetingController extends Controller
         return view('meetings.calendar', compact('events'));
     }
 
-    // ➕ Create Meeting
+    /**
+     * ➕ Create Meeting Form
+     */
     public function create()
     {
-        $itPersonnels = User::role('it_staff')->orderBy('name')->get();
+        // ✅ FETCH FIX: Get both admin and it_staff roles to populate the dropdown
+        $itPersonnels = User::role(['admin', 'it_staff'])->orderBy('name')->get();
         return view('meetings.create', compact('itPersonnels'));
     }
 
-    // 💾 Store Meeting
+    /**
+     * 💾 Store Meeting
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -72,28 +84,40 @@ class MeetingController extends Controller
         ]);
 
         $meeting = Meeting::create($validated);
-        $meeting->itPersonnel()->sync(array_filter((array) $request->input('it_personnels')));
+        
+        // Sync the IT personnel many-to-many relationship
+        if ($request->has('it_personnels')) {
+            $meeting->itPersonnel()->sync(array_filter((array) $request->input('it_personnels')));
+        }
 
-        return redirect()->route('meetings.index')->with('success', 'Meeting created successfully ✅');
+        return redirect()->route('meetings.index')
+            ->with('success', 'Meeting created successfully ✅');
     }
 
-    // 👁 Show Meeting
+    /**
+     * 👁 Show Meeting Details
+     */
     public function show(Meeting $meeting)
     {
         $meeting->load('itPersonnel');
         return view('meetings.show', compact('meeting'));
     }
 
-    // ✏ Edit Meeting
+    /**
+     * ✏ Edit Meeting Form
+     */
     public function edit(Meeting $meeting)
     {
-        $itPersonnels = User::role('it_staff')->orderBy('name')->get();
+        // ✅ FETCH FIX: Ensure list includes all relevant staff for selection
+        $itPersonnels = User::role(['admin', 'it_staff'])->orderBy('name')->get();
         $meeting->load('itPersonnel');
 
         return view('meetings.edit', compact('meeting', 'itPersonnels'));
     }
 
-    // 🔄 Update Meeting
+    /**
+     * 🔄 Update Meeting
+     */
     public function update(Request $request, Meeting $meeting)
     {
         $validated = $request->validate([
@@ -108,15 +132,25 @@ class MeetingController extends Controller
         ]);
 
         $meeting->update($validated);
-        $meeting->itPersonnel()->sync(array_filter((array) $request->input('it_personnels')));
+        
+        // Sync personnel (clears existing if none selected, or updates to new list)
+        if ($request->has('it_personnels')) {
+            $meeting->itPersonnel()->sync(array_filter((array) $request->input('it_personnels')));
+        } else {
+            $meeting->itPersonnel()->detach();
+        }
 
-        return redirect()->route('meetings.index')->with('success', 'Meeting updated successfully ✅');
+        return redirect()->route('meetings.index')
+            ->with('success', 'Meeting updated successfully ✅');
     }
 
-    // 🗑 Delete Meeting
+    /**
+     * 🗑 Delete Meeting
+     */
     public function destroy(Meeting $meeting)
     {
         $meeting->delete();
-        return redirect()->route('meetings.index')->with('success', 'Meeting deleted successfully ❌');
+        return redirect()->route('meetings.index')
+            ->with('success', 'Meeting deleted successfully ❌');
     }
 }

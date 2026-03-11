@@ -20,8 +20,8 @@
     <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
         <form method="GET" class="flex flex-wrap items-end gap-4 w-full md:flex-nowrap">
 
-            {{-- SEARCH - Updated Placeholder to reflect restricted fields --}}
-            <div class="w-[500px]">
+            {{-- SEARCH --}}
+            <div class="w-full md:w-[500px]">
                 <label class="text-sm font-semibold text-gray-600">Search Tickets</label>
                 <div class="relative">
                     <input type="text" name="search" value="{{ request('search') }}"
@@ -114,28 +114,48 @@
                 @forelse($tickets as $ticket)
                 <tr class="
                     {{ $ticket->status === 'Closed' 
-                        ? 'bg-green-500 text-white [&_a]:text-white [&_button]:text-white hover:bg-green-600' 
+                        ? 'bg-green-50 hover:bg-green-100' 
                         : ($ticket->status === 'Condemned' 
-                            ? 'bg-red-100 text-red-900 hover:bg-red-200' 
+                            ? 'bg-red-50 text-red-900 hover:bg-red-100' 
                             : 'hover:bg-gray-50') 
                     }}
                 ">
                     <td class="px-3 py-2 font-bold">{{ $ticket->ticket_number }}</td>
-                    <td class="px-3 py-2">{{ $ticket->title }}</td>
+                    {{-- Displays Title (which is Requestor Name for Generic Form) --}}
+                    <td class="px-3 py-2 font-medium">{{ $ticket->title }}</td>
                     <td class="px-3 py-2" title="{{ $ticket->description }}">{{ Str::limit($ticket->description, 30) }}</td>
                     <td class="px-3 py-2">{{ $ticket->brand_model ?? '-' }}</td>
                     <td class="px-3 py-2 font-mono text-xs">{{ $ticket->serial_no ?? '-' }}</td>
-                    <td class="px-3 py-2">{{ $ticket->category->name ?? '-' }}</td>
+                    <td class="px-3 py-2">
+                        {{ $ticket->category->name ?? ucfirst(str_replace('_', ' ', $ticket->form_type)) }}
+                    </td>
                     <td class="px-3 py-2">{{ $ticket->department ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->assignee?->name ?? '-' }}</td>
-                    <td class="px-3 py-2">{{ $ticket->client_name }}</td>
+                    
+                    {{-- Handles the Client/Contact display based on form type --}}
+                    <td class="px-3 py-2">
+                        @if($ticket->form_type === 'generic')
+                            <span class="text-xs text-gray-600">{{ $ticket->contact_info }}</span>
+                        @else
+                            <div class="font-semibold">{{ $ticket->client_name }}</div>
+                            <div class="text-[10px] text-gray-500">{{ $ticket->contact_number }}</div>
+                        @endif
+                    </td>
+
                     <td class="px-3 py-2">
                         <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold 
                             {{ $ticket->priority === 'High' ? 'bg-red-200 text-red-800' : 'bg-blue-100 text-blue-800' }}">
                             {{ $ticket->priority ?? 'Normal' }}
                         </span>
                     </td>
-                    <td class="px-3 py-2 font-semibold">{{ $ticket->status }}</td>
+                    <td class="px-3 py-2 font-semibold">
+                        <span class="
+                            {{ $ticket->status === 'Closed' ? 'text-green-700' : '' }}
+                            {{ $ticket->status === 'Condemned' ? 'text-red-700' : '' }}
+                        ">
+                            {{ $ticket->status }}
+                        </span>
+                    </td>
 
                     {{-- ACTIONS --}}
                     <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
@@ -145,9 +165,13 @@
                         <a href="{{ route('tickets.jobOrderPdf', $ticket) }}" target="_blank"
                            class="bg-indigo-500 text-white px-2 py-1 rounded text-[10px] font-bold uppercase shadow-sm">Job Order</a>
 
-                        @if($ticket->status === 'Closed')
-                            <a href="{{ route('feedbacks.create', $ticket) }}"
-                               class="bg-teal-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase shadow-sm">Feedback</a>
+                        @if(in_array($ticket->status, ['Closed', 'Condemned']))
+                            @if(!$ticket->feedback)
+                                <a href="{{ route('feedbacks.create', $ticket->id) }}"
+                                   class="bg-pink-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase shadow-sm">Feedback</a>
+                            @else
+                                <span class="text-green-600 font-bold text-[10px] uppercase">Rated ✅</span>
+                            @endif
                         @endif
 
                         @role('admin|it_staff')

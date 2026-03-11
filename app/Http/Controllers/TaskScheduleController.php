@@ -10,35 +10,33 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class TaskScheduleController extends Controller
 {
     /**
-     * Display a listing of tasks with search + pagination.
-     * Latest tasks appear on TOP.
+     * 📋 Display a listing of tasks.
+     * Latest tasks appear on TOP for better visibility.
      */
     public function index(Request $request)
-{
-    $search = $request->input('search');
+    {
+        $search = $request->input('search');
 
-    $tasks = Task::with('department')
-        ->when($search, function ($query, $search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('requested_by', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%")
-                  ->orWhere('remarks', 'like', "%{$search}%")
-                  ->orWhereHas('department', function ($dq) use ($search) {
-                      $dq->where('name', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->orderBy('created_at', 'desc') // ✅ REAL FIX: latest ADDED first
-        ->get();                         // ✅ REQUIRED for DataTables
+        $tasks = Task::with('department')
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%")
+                      ->orWhere('requested_by', 'like', "%{$search}%")
+                      ->orWhere('location', 'like', "%{$search}%")
+                      ->orWhere('remarks', 'like', "%{$search}%")
+                      ->orWhereHas('department', function ($dq) use ($search) {
+                          $dq->where('name', 'like', "%{$search}%");
+                      });
+                });
+            })
+            ->orderBy('created_at', 'desc') // ✅ FIXED: latest ADDED first
+            ->get();                         // ✅ REQUIRED for DataTables integration
 
-    return view('tasks.index', compact('tasks', 'search'));
-}
-
-
+        return view('tasks.index', compact('tasks', 'search'));
+    }
 
     /**
-     * Show the form for creating a new task.
+     * ➕ Show the form for creating a new task.
      */
     public function create()
     {
@@ -52,7 +50,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Store a newly created task.
+     * 💾 Store a newly created task.
      */
     public function store(Request $request)
     {
@@ -60,7 +58,7 @@ class TaskScheduleController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Normalize time format (ensure seconds)
+        // Normalize time format (ensure H:i:s for database)
         $request->merge([
             'start_time' => strlen($request->start_time) === 5 ? $request->start_time . ':00' : $request->start_time,
             'end_time'   => strlen($request->end_time) === 5 ? $request->end_time . ':00' : $request->end_time,
@@ -85,7 +83,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Display the specified task.
+     * 🔍 Display the specified task.
      */
     public function show(Task $task)
     {
@@ -95,7 +93,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Show the form for editing the specified task.
+     * ✏️ Show the form for editing.
      */
     public function edit(Task $task)
     {
@@ -109,7 +107,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Update the specified task.
+     * 🆙 Update the specified task.
      */
     public function update(Request $request, Task $task)
     {
@@ -141,7 +139,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Remove the specified task.
+     * 🗑️ Remove the specified task.
      */
     public function destroy(Task $task)
     {
@@ -156,7 +154,7 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * Export all tasks to PDF (A4 Landscape).
+     * 📄 Export all tasks to PDF (A4 Landscape).
      */
     public function exportPdf()
     {

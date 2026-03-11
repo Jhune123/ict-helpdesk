@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class FeedbackController extends Controller
 {
     /**
-     * Display a list of all feedbacks (Admin / ICT Personnel)
+     * 📊 Display a list of all feedbacks (Admin / ICT Personnel)
      */
     public function index()
     {
@@ -21,31 +21,49 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Show the feedback form for a completed ticket (Client view)
-     * Route: tickets/{ticket}/feedback
+     * 📝 Show the feedback form
+     * Handled by GET: /feedbacks/create/{ticket}
      */
     public function create(Ticket $ticket)
     {
-        // Allow feedback ONLY for closed/completed tickets
-        if ($ticket->status !== 'Closed') {
+        // ✅ Allow feedback for BOTH Closed and Condemned tickets
+        $completedStatuses = ['Closed', 'Condemned'];
+        
+        if (!in_array($ticket->status, $completedStatuses)) {
             return redirect()
-                ->route('tickets.show', $ticket)
-                ->with('error', 'Feedback can only be submitted for completed tickets.');
+                ->route('tickets.show', $ticket->id)
+                ->with('error', 'Feedback can only be submitted for completed or archived tickets.');
+        }
+
+        // ✅ Prevent duplicate feedback
+        if ($ticket->feedback) {
+            return redirect()
+                ->route('tickets.show', $ticket->id)
+                ->with('info', 'Feedback has already been submitted for this ticket.');
         }
 
         return view('feedbacks.create', compact('ticket'));
     }
 
     /**
-     * Store the submitted feedback
+     * 💾 Store the submitted feedback
+     * Handled by POST: /feedbacks/store/{ticket}
      */
     public function store(Request $request, Ticket $ticket)
     {
-        // Safety check (in case someone bypasses UI)
-        if ($ticket->status !== 'Closed') {
+        $completedStatuses = ['Closed', 'Condemned'];
+
+        // Safety check for status and duplicates
+        if (!in_array($ticket->status, $completedStatuses)) {
             return redirect()
-                ->route('tickets.show', $ticket)
+                ->route('tickets.show', $ticket->id)
                 ->with('error', 'Feedback can only be submitted for completed tickets.');
+        }
+
+        if ($ticket->feedback) {
+            return redirect()
+                ->route('tickets.show', $ticket->id)
+                ->with('error', 'Feedback already exists.');
         }
 
         $validated = $request->validate([
@@ -61,28 +79,27 @@ class FeedbackController extends Controller
             'comments'    => $validated['comments'] ?? null,
         ]);
 
+        // ✅ Redirect using $ticket->id to satisfy the tickets.show route parameter
         return redirect()
-            ->route('tickets.show', $ticket)
-            ->with('success', 'Thank you! Your feedback has been submitted.');
+            ->route('tickets.show', $ticket->id)
+            ->with('success', 'Thank you! Your feedback has been submitted successfully ✅');
     }
 
     /**
-     * Show a single feedback (Admin view)
+     * 👁 Show a single feedback (Admin view)
      */
     public function show(Feedback $feedback)
     {
         $feedback->load('ticket');
-
         return view('feedbacks.show', compact('feedback'));
     }
 
     /**
-     * Delete a feedback (Admin only)
+     * 🗑 Delete a feedback (Admin only)
      */
     public function destroy(Feedback $feedback)
     {
         $feedback->delete();
-
         return redirect()
             ->route('feedbacks.index')
             ->with('success', 'Feedback deleted successfully.');

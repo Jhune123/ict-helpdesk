@@ -1,38 +1,41 @@
-<nav x-data="{ open: false, notifyOpen: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-green-800 border-b border-green-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <a href="{{ route('dashboard') }}">
-                    <x-application-logo class="block h-10 w-auto fill-current text-gray-600" />
+                    <x-application-logo class="block h-10 w-auto fill-current text-green-50" />
                 </a>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-green-100 hover:text-white">
                         Dashboard
                     </x-nav-link>
 
-                    <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.*')">
+                    <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.*')" class="text-green-100 hover:text-white">
                         Tickets
                     </x-nav-link>
 
-                    <x-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.*')">
+                    <x-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.*')" class="text-green-100 hover:text-white">
                         Task Schedule
                     </x-nav-link>
 
-                    <x-nav-link :href="route('meetings.index')" :active="request()->routeIs('meetings.*')">
+                    <x-nav-link :href="route('meetings.index')" :active="request()->routeIs('meetings.*')" class="text-green-100 hover:text-white">
                         Meeting Schedules
                     </x-nav-link>
 
-                    <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')">
-                        💼 KSU Assets & Equipment
-                    </x-nav-link>
+                    {{-- ✅ Role Restriction: Only IT Personnel can control Assets --}}
+                    @role('admin|it_staff')
+                        <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')" class="text-green-100 hover:text-white">
+                            💼 KSU Assets & Equipment
+                        </x-nav-link>
+                    @endrole
 
-                    <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
+                    <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')" class="text-green-100 hover:text-white">
                         🎫 ICTO Queuing System
                     </x-nav-link>
 
                     @role('admin|it_staff')
-                        <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
+                        <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')" class="text-green-100 hover:text-white">
                             📜 Activity Logs
                         </x-nav-link>
                     @endrole
@@ -40,10 +43,11 @@
             </div>
 
             <div class="flex items-center space-x-6">
-                <div class="relative">
+                {{-- Notification Dropdown --}}
+                <div class="relative" x-data="{ notifyOpen: false }" @click.outside="notifyOpen = false">
                     <button @click="notifyOpen = !notifyOpen" class="relative focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 text-yellow-500 hover:text-yellow-600 transition"
+                            class="h-6 w-6 text-yellow-400 hover:text-yellow-300 transition"
                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 17h5l-1.405-1.405A2.032 2.032 0
@@ -64,13 +68,13 @@
                         @endif
                     </button>
 
-                    <div x-show="notifyOpen" x-transition @click.away="notifyOpen = false"
+                    <div x-show="notifyOpen" x-transition style="display: none;"
                         class="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg z-50">
                         <div class="p-3 font-bold border-b">Notifications</div>
 
                         @forelse(auth()->user()->unreadNotifications->take(5) as $notification)
-                            <div class="px-4 py-3 border-b hover:bg-gray-100 cursor-pointer">
-                                <a href="{{ route('tickets.show', $notification->data['ticket_id'] ?? '#') }}">
+                            <div class="px-4 py-3 border-b hover:bg-green-50 cursor-pointer">
+                                <a href="{{ route('tickets.show', $notification->data['ticket_id'] ?? '#') }}" class="text-green-800 hover:text-green-600">
                                     {{ $notification->data['message'] ?? 'New Notification' }}
                                 </a>
                                 <p class="text-xs text-gray-500 mt-1">
@@ -85,18 +89,19 @@
 
                         <div class="text-center p-2">
                             <a href="{{ route('notifications.index') }}"
-                               class="text-blue-600 hover:underline text-sm">
+                               class="text-green-700 hover:underline text-sm font-medium">
                                 View All
                             </a>
                         </div>
                     </div>
                 </div>
 
+                {{-- User Dropdown --}}
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button
-                            class="flex items-center text-sm font-medium text-gray-500
-                                   hover:text-gray-700 focus:outline-none">
+                            class="flex items-center text-sm font-medium text-green-100
+                                   hover:text-white focus:outline-none transition-colors duration-200">
                             <div>{{ Auth::user()->name }}</div>
                             <div class="ml-1">
                                 <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
@@ -126,5 +131,3 @@
         </div>
     </div>
 </nav>
-
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

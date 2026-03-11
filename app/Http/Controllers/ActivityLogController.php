@@ -5,54 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel; // For Excel export
-use App\Exports\ActivityLogsExport;    // Custom Excel export class
-use PDF;                               // For PDF export (barryvdh/laravel-dompdf)
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ActivityLogsExport;
+// Using the modern Facade alias for barryvdh/laravel-dompdf
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ActivityLogController extends Controller
 {
     /**
      * Display filtered activity logs
-     * Accessible to Admin & IT Staff only
+     * Accessible to Admin & IT Staff only via middleware in web.php
      */
     public function index(Request $request)
     {
-        $query = ActivityLog::with(['user', 'subject'])->latest();
-
-        // 🔍 Filter by User
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        // 🔍 Filter by Action
-        if ($request->filled('action')) {
-            $query->where('action', 'like', "%{$request->action}%");
-        }
-
-        // 🔍 Filter by Description / Subject
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                  ->orWhereHas('subject', function ($q2) use ($search) {
-                      $q2->where('title', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        // 🔍 Filter by Date Range
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [
-                $request->from . ' 00:00:00',
-                $request->to . ' 23:59:59',
-            ]);
-        }
-
-        // 🔍 Pagination
-        $logs = $query->paginate(20)->withQueryString();
-
-        // 🔍 Users for dropdown filter
         $users = User::orderBy('name')->get();
+        $logs = $this->applyFilters($request)->paginate(20)->withQueryString();
 
         return view('activity_logs.index', compact('logs', 'users'));
     }
@@ -63,36 +30,61 @@ class ActivityLogController extends Controller
      */
     public function export($type, Request $request)
     {
+        $logs = $this->applyFilters($request)->get();
+
+        if ($type === 'excel') {
+            return Excel::download(new ActivityLogsExport($logs), 'activity_logs_' . now()->format('Ymd') . '.xlsx');
+        } 
+        
+        if ($type === 'pdf') {
+            // Ensure this matches the name of your blade file in resources/views/activity_logs/
+            $pdf = Pdf::loadView('activity_logs.export_pdf', compact('logs'))
+                      ->setPaper('a4', 'landscape'); // Landscape is better for log tables
+            
+            return $pdf->download('activity_logs_' . now()->format('Ymd') . '.pdf');
+        }
+
+        return redirect()->back()->with('error', 'Invalid export type.');
+    }
+
+    /**
+     * Private helper to keep filtering logic DRY (Don't Repeat Yourself)
+     * used by both index() and export()
+     */
+    private function applyFilters(Request $request)
+    {
         $query = ActivityLog::with(['user', 'subject'])->latest();
 
-        // Apply same filters as index
-        if ($request->filled('user_id')) $query->where('user_id', $request->user_id);
-        if ($request->filled('action')) $query->where('action', 'like', "%{$request->action}%");
+        // 🔍 Filter by User
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // 🔍 Filter by Action (Exact match usually better for dropdowns, like for search)
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        // 🔍 Search Description or Subject Title
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhereHas('subject', function ($q2) use ($search) {
+                  ->orWhereHasMorph('subject', ['App\Models\Ticket'], function ($q2) use ($search) {
                       $q2->where('title', 'like', "%{$search}%");
                   });
             });
         }
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [
-                $request->from . ' 00:00:00',
-                $request->to . ' 23:59:59',
-            ]);
+
+        // 🔍 Filter by Date Range
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
+        }
+        
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
         }
 
-        $logs = $query->get();
-
-        if ($type === 'excel') {
-            return Excel::download(new ActivityLogsExport($logs), 'activity_logs.xlsx');
-        } elseif ($type === 'pdf') {
-            $pdf = PDF::loadView('activity_logs.export_pdf', compact('logs'));
-            return $pdf->download('activity_logs.pdf');
-        }
-
-        return redirect()->back()->with('error', 'Invalid export type.');
+        return $query;
     }
 }

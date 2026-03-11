@@ -4,14 +4,13 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\DatabaseMessage;
 use App\Models\Ticket;
 
 class TicketAssignedNotification extends Notification
 {
     use Queueable;
 
-    protected $ticket;
+    public $ticket;
 
     public function __construct(Ticket $ticket)
     {
@@ -20,11 +19,12 @@ class TicketAssignedNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // storing in database
+        return ['database']; // Storing in the database
     }
 
-    public function toArray($notifiable)
+    public function toDatabase($notifiable)
     {
+        // These keys map directly to $notification->data['...'] in your Blade nav
         return [
             'ticket_id' => $this->ticket->id,
             'title' => 'Ticket Assigned',

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen flex flex-col items-center justify-start"
+<div class="min-h-screen flex flex-col items-center justify-start relative"
      style="
         background-image: url('{{ asset('image/school-logo.jpg') }}');
         background-size: 70%;
@@ -9,8 +9,11 @@
         background-position: center;
      ">
 
-    <div class="text-center mt-10 mb-8">
-        <img src="{{ asset('image/icto-logo.png') }}" alt="ICTO Logo" class="mx-auto w-32 h-32 drop-shadow-lg">
+    <div class="absolute top-6 left-6">
+        <img src="{{ asset('image/icto-logo.png') }}" alt="ICTO Logo" class="w-32 h-32 drop-shadow-lg">
+    </div>
+
+    <div class="text-center mt-40 mb-12">
         <h1 class="text-4xl font-bold text-white mt-4 drop-shadow-md">
             KSU ICTO-HELPDESK Management System
         </h1>
@@ -33,12 +36,14 @@
             My Tickets
         </a>
 
+        {{-- ✅ FIXED: Categories Route --}}
         <a href="{{ route('categories.index') }}"
            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             Categories
         </a>
 
-        <a href="{{ route('tickets.departments') }}"
+        {{-- ✅ FIXED: Changed tickets.departments to departments.index --}}
+        <a href="{{ route('departments.index') }}"
            class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             Departments
         </a>
@@ -53,7 +58,6 @@
             Analytics Dashboard
         </a>
 
-        {{-- Now Visible to Everyone (Read Only for Clients) --}}
         <a href="{{ route('condemned-equipment.index') }}"
            class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
             🗑 Condemned Equipment
@@ -67,7 +71,7 @@
 
     @auth
     <div class="absolute top-6 right-6">
-        <a href="#" class="relative inline-block">
+        <a href="{{ route('notifications.index') }}" class="relative inline-block text-2xl">
             🔔
             @if(auth()->user()->unreadNotifications->count() > 0)
                 <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">

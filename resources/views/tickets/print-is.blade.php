@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <style>
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            font-size: 13px;
+            color: #000;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .header-table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+        .header-logo { width: 20%; vertical-align: middle; }
+        .header-title { width: 50%; font-weight: bold; vertical-align: middle; }
+        .header-meta { 
+            width: 30%; 
+            text-align: left; 
+            font-size: 11px; 
+            vertical-align: middle; 
+            padding-left: 10px; 
+        }
+        .form-section { margin-top: 20px; }
+        .form-section h3 { 
+            margin-bottom: 5px; 
+            font-size: 14px; 
+            font-weight: bold; 
+        }
+        .field-row { margin-bottom: 8px; }
+        .underline-value {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            padding: 0 5px;
+            font-weight: bold;
+        }
+        .checklist-container { margin-left: 40px; margin-top: 10px; }
+        .checklist-table td { padding: 4px 0; vertical-align: middle; }
+        .check-box-cell {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #000;
+            text-align: center;
+            display: inline-block;
+            line-height: 18px;
+            font-size: 14px;
+        }
+        .check-label-cell { padding-left: 10px !important; }
+        .footer-note {
+            margin-top: 30px;
+            text-align: justify;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <table class="header-table">
+        <tr>
+            <td rowspan="4" class="header-logo">
+                <img src="{{ public_path('image/school-logo.jpg') }}" width="80">
+            </td>
+            <td rowspan="2" class="header-title">
+                <div style="font-size: 16px;">Kalinga State University</div>
+                <div style="font-size: 14px;">Quality Management System</div>
+            </td>
+            <td class="header-meta">Doc. Ref No.: <strong>KSU-ICTO-QF-02</strong></td>
+        </tr>
+        <tr>
+            <td class="header-meta">Effectivity Date: October 14, 2025</td>
+        </tr>
+        <tr>
+            <td rowspan="2" class="header-title" style="font-size: 14px;">Information System Request Form</td>
+            <td class="header-meta">Revision No.: 2.0</td>
+        </tr>
+        <tr>
+            <td class="header-meta">Page No.: 1</td>
+        </tr>
+    </table>
+
+    <div class="field-row">
+        Request No.: <span class="underline-value" style="min-width: 250px;">{{ $ticket->ticket_number }}</span><br>
+        <small><em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;To be filled by KSU ICT User</em></small>
+    </div>
+
+    <div class="form-section">
+        <h3>1. REQUESTOR INFORMATION</h3>
+        <div class="field-row">User’s Full Name: <span class="underline-value" style="width: 70%;">{{ $ticket->client_name }}</span></div>
+        <div class="field-row">User’s Office Name & Address: <span class="underline-value" style="width: 58%;">{{ $ticket->department }}</span></div>
+        <div class="field-row">User’s Contact Number: <span class="underline-value" style="width: 65%;">{{ $ticket->contact_number }}</span></div>
+        <div class="field-row">Email Address: <span class="underline-value" style="width: 75%;">{{ data_get($ticket, 'form_data.email', $ticket->user->email ?? '') }}</span></div>
+    </div>
+
+    @php
+        /** * Safely get request types for the Information System Form */
+        $reqTypes = data_get($ticket, 'form_data.request_type', []);
+        $reqTypes = is_array($reqTypes) ? $reqTypes : explode(',', (string)$reqTypes);
+        $check = '&#10004;'; 
+    @endphp
+
+    <div class="form-section">
+        <h3>2. REQUEST DETAILS</h3>
+        <div class="field-row">I.S. Name: <span class="underline-value" style="width: 80%;">{{ $ticket->title }}</span></div>
+        <div class="field-row" style="margin-top: 10px;">Type of Request/Purpose:</div>
+        
+        <div class="checklist-container">
+            <table class="checklist-table">
+                <tr>
+                    <td><div class="check-box-cell">{!! in_array('Account Management', $reqTypes) ? $check : '' !!}</div></td>
+                    <td class="check-label-cell">Account Management</td>
+                </tr>
+                <tr>
+                    <td><div class="check-box-cell">{!! in_array('Bug Report', $reqTypes) ? $check : '' !!}</div></td>
+                    <td class="check-label-cell">Bug Report</td>
+                </tr>
+                <tr>
+                    <td><div class="check-box-cell">{!! in_array('System Installation/Repair', $reqTypes) ? $check : '' !!}</div></td>
+                    <td class="check-label-cell">System Installation/Repair</td>
+                </tr>
+                <tr>
+                    <td><div class="check-box-cell">{!! in_array('Technical Support/Assistance', $reqTypes) ? $check : '' !!}</div></td>
+                    <td class="check-label-cell">Technical Support/Assistance</td>
+                </tr>
+                <tr>
+                    <td><div class="check-box-cell">{!! in_array('Others', $reqTypes) ? $check : '' !!}</div></td>
+                    <td class="check-label-cell">Others: <span class="underline-value" style="min-width: 300px;">{{ data_get($ticket, 'form_data.other_request_type', '') }}</span></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3>3. PROJECT REQUEST TIMELINE</h3>
+        <div class="field-row">Start Date: <span class="underline-value" style="width: 80%;">{{ data_get($ticket, 'form_data.start_date', '') }}</span></div>
+        <div class="field-row">Completion Date: <span class="underline-value" style="width: 72%;">{{ data_get($ticket, 'form_data.completion_date', '') }}</span></div>
+        <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 75%;">{{ $ticket->remarks ?? 'None' }}</span></div>
+    </div>
+
+    <div class="footer-note">
+        By submitting this form, you acknowledge that the information provided is accurate and complete. The approval of this request is subject to the approval of the Information and Communications Technology Office.
+    </div>
+
+</body>
+</html>

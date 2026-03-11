@@ -4,32 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Notifications\Notifiable; // ✅ REQUIRED for sending Emails/SMS
+use Illuminate\Notifications\Notifiable; 
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Attachment;
 use App\Models\Feedback;
+use App\Models\NetworkRequest; 
 
 class Ticket extends Model
 {
-    use HasFactory, Notifiable; // ✅ REQUIRED
+    use HasFactory, Notifiable;
 
     /**
-     * =======================
-     * MASS ASSIGNABLE FIELDS
-     * =======================
+     * ✅ Mass-assignable fields.
      */
     protected $fillable = [
         'ticket_number',
         'title',
         'description',
-
-        // Equipment Fields
         'equipment_type',
         'brand_model',
         'serial_no',
-
         'status',
         'priority',
         'category_id',
@@ -37,22 +33,23 @@ class Ticket extends Model
         'department',
         'date_submitted',
         'date_finished',
-        'contact_number', // Acts as Phone OR Email
+        'contact_number', 
         'assigned_to',
         'created_by',
         'remarks',
+        'form_data', 
     ];
 
     /**
-     * =======================
-     * CASTS
-     * =======================
+     * ✅ Automatic casting. 
+     * The 'array' cast is vital for the dynamic form fields in your create/edit views.
      */
     protected $casts = [
         'created_at'     => 'datetime',
         'updated_at'     => 'datetime',
         'date_submitted' => 'datetime',
         'date_finished'  => 'datetime',
+        'form_data'      => 'array', 
     ];
 
     /**
@@ -90,11 +87,18 @@ class Ticket extends Model
         return $this->hasOne(Feedback::class);
     }
 
+    public function networkRequest()
+    {
+        return $this->hasOne(NetworkRequest::class);
+    }
+
     /**
      * =======================
      * ACCESSORS / HELPERS
      * =======================
      */
+    
+    // Virtual attributes for cleaner blade syntax
     public function getAssigneeNameAttribute(): string
     {
         return $this->assignee?->name ?? 'Unassigned';
@@ -105,66 +109,45 @@ class Ticket extends Model
         return $this->category?->name ?? 'N/A';
     }
 
-    public function getContactNumberAttribute($value): string
-    {
-        return $value ?: 'N/A';
-    }
-
-    public function getDepartmentAttribute($value): string
-    {
-        return $value ?: 'N/A';
-    }
-
-    public function getEquipmentTypeAttribute($value): string
-    {
-        return $value ?: 'N/A';
-    }
-
-    public function getBrandModelAttribute($value): string
-    {
-        return $value ?: 'N/A';
-    }
-
-    public function getSerialNoAttribute($value): string
-    {
-        return $value ?: 'N/A';
-    }
+    /**
+     * ✅ UI Fallback Accessors
+     * These ensure that if a field is null, it displays "N/A" in your tables/views.
+     */
+    public function getContactNumberAttribute($value): string { return $value ?: 'N/A'; }
+    public function getDepartmentAttribute($value): string    { return $value ?: 'N/A'; }
+    public function getEquipmentTypeAttribute($value): string { return $value ?: 'N/A'; }
+    public function getBrandModelAttribute($value): string    { return $value ?: 'N/A'; }
+    public function getSerialNoAttribute($value): string      { return $value ?: 'N/A'; }
 
     /**
      * =======================
-     * 🧠 SMART NOTIFICATION ROUTING
+     * SMART NOTIFICATION ROUTING
      * =======================
      */
 
     /**
-     * 📧 Route for Email:
-     * Only returns the address if it looks like a valid email.
+     * Route for Email Notifications.
+     * Checks if contact_number contains a valid email address.
      */
     public function routeNotificationForMail($notification)
     {
-        // Get the raw value (ignoring the "N/A" accessor)
         $contact = $this->getRawOriginal('contact_number');
-
         if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
             return $contact;
         }
-
-        return null; // Not an email? Don't send email.
+        return null;
     }
 
     /**
-     * 📱 Route for Semaphore (SMS):
-     * Only returns the number if it is NOT an email.
+     * Route for SMS Notifications (Semaphore API).
+     * If contact is a phone number, it returns the string for the SMS driver.
      */
     public function routeNotificationForSemaphore()
     {
         $contact = $this->getRawOriginal('contact_number');
-
-        // If it's an email or empty, don't send SMS
         if (empty($contact) || filter_var($contact, FILTER_VALIDATE_EMAIL)) {
             return null;
         }
-
         return $contact;
     }
 }

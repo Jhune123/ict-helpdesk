@@ -1,101 +1,146 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow-sm sm:rounded-lg p-6">
-        <h2 class="text-2xl font-bold mb-6 text-gray-800">Edit Maintenance Schedule</h2>
+@php
+    $stored = json_decode($maintenance->description, true);
+    $activeTasks = $stored['tasks'] ?? [];
+    $remarks = $stored['remarks'] ?? '';
+@endphp
 
-        {{-- Form action uses $maintenance->id to match the controller update($id) --}}
-        <form action="{{ route('maintenance.update', $maintenance->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+<div class="min-h-screen bg-slate-50 py-12 px-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
+            
+            {{-- Header --}}
+            <div class="bg-slate-800 px-8 py-6 text-white flex justify-between items-center">
+                <h2 class="text-2xl font-bold flex items-center">
+                    <svg class="w-6 h-6 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Edit Schedule: PMS-{{ str_pad($maintenance->id, 5, '0', STR_PAD_LEFT) }}
+                </h2>
+                <a href="{{ route('maintenance.show', $maintenance->id) }}" class="text-slate-400 hover:text-white text-sm transition">Cancel</a>
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form action="{{ route('maintenance.update', $maintenance->id) }}" method="POST" class="p-8">
+                @csrf @method('PUT')
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Maintenance Title</label>
-                    <input type="text" name="title" value="{{ old('title', $maintenance->title) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                {{-- Office & Frequency --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Office/College:</label>
+                        <input type="text" name="office_college" value="{{ $maintenance->office_college }}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Frequency:</label>
+                        <select name="frequency" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            @foreach(['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'semi-annual' => 'Semi-Annual', 'yearly' => 'Yearly'] as $value => $label)
+                                <option value="{{ $value }}" {{ strtolower($maintenance->frequency) == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Office / College</label>
-                    <input type="text" name="office_college" value="{{ old('office_college', $maintenance->office_college) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Device / Model</label>
-                    <input type="text" name="device_model" value="{{ old('device_model', $maintenance->device_model) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Property Number</label>
-                    <input type="text" name="property_number" value="{{ old('property_number', $maintenance->property_number) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Serial Number</label>
-                    <input type="text" name="serial_number" value="{{ old('serial_number', $maintenance->serial_number) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Frequency</label>
-                    <select name="frequency" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        @foreach(['daily', 'weekly', 'monthly', 'quarterly', 'semi-annual', 'yearly'] as $freq)
-                            <option value="{{ $freq }}" {{ $maintenance->frequency == $freq ? 'selected' : '' }}>
-                                {{ $freq === 'semi-annual' ? 'Semi-Annual (6 Months)' : ucfirst($freq) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Last Run (Date Performed)</label>
-                    <input type="date" name="last_run_date" value="{{ old('last_run_date', $maintenance->last_run_date ? $maintenance->last_run_date->format('Y-m-d') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                    <p class="text-xs text-gray-500 mt-1">Changing this will automatically update the Next Run date.</p>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 text-gray-400">Next Run (Calculated)</label>
-                    <input type="date" value="{{ $maintenance->next_run_date ? $maintenance->next_run_date->format('Y-m-d') : '' }}" class="mt-1 block w-full rounded-md border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed shadow-sm" disabled>
-                    <p class="text-xs text-blue-500 mt-1 italic">Calculated automatically by the system.</p>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Priority</label>
-                    <select name="priority" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        @foreach(['Low', 'Normal', 'High', 'Critical'] as $priority)
-                            <option value="{{ $priority }}" {{ $maintenance->priority == $priority ? 'selected' : '' }}>{{ $priority }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Assigned Staff (Select multiple if needed)</label>
-                    <select name="assigned_to[]" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-[100px]">
+                {{-- ICT In Charge --}}
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-blue-700 mb-1">ICT In Charge (Select Multiple):</label>
+                    <select name="assigned_to[]" multiple class="w-full rounded-xl border-slate-300 shadow-sm min-h-[100px] focus:border-blue-500 focus:ring-blue-500" required>
                         @foreach($staff as $user)
-                            <option value="{{ $user->id }}" 
-                                @if(in_array($user->id, old('assigned_to', $selectedStaff ?? []))) selected @endif>
+                            <option value="{{ $user->id }}" class="p-2 hover:bg-slate-100 rounded"
+                                {{ in_array($user->id, $maintenance->assignees->pluck('id')->toArray()) ? 'selected' : '' }}>
                                 {{ $user->name }}
                             </option>
                         @endforeach
                     </select>
-                    <p class="text-xs text-gray-400 mt-1 italic">Hold Ctrl (Win) or Cmd (Mac) to select multiple staff.</p>
+                    <small class="text-slate-400 mt-1 block">Hold Ctrl (Windows) or Cmd (Mac) to select multiple staff members.</small>
                 </div>
 
-            </div>
+                {{-- Device Details --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-xl border border-slate-200 mb-6 shadow-inner">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Brand / Title</label>
+                        <input type="text" name="title" value="{{ $maintenance->title }}" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Model</label>
+                        <input type="text" name="device_model" value="{{ $maintenance->device_model }}" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Property No.</label>
+                        <input type="text" name="property_number" value="{{ $maintenance->property_number }}" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Serial No.</label>
+                        <input type="text" name="serial_number" value="{{ $maintenance->serial_number }}" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
 
-            <div class="mt-6">
-                <label class="block text-sm font-medium text-gray-700">Description / Checklist</label>
-                <textarea name="description" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>{{ old('description', $maintenance->description) }}</textarea>
-            </div>
+                {{-- Date Performed --}}
+                <div class="mb-8 w-full md:w-1/2">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Date Performed / Scheduled:</label>
+                    <input type="date" name="last_run_date" value="{{ $maintenance->last_run_date->format('Y-m-d') }}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
 
-            <div class="mt-6 flex justify-end space-x-3">
-                <a href="{{ route('maintenance.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
-                <button type="submit" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 shadow-sm transition">
-                    Update Schedule
-                </button>
-            </div>
-        </form>
+                {{-- Checklist Header --}}
+                <h3 class="text-sm font-black text-slate-800 uppercase mb-4 border-b pb-2 tracking-widest flex items-center">
+                    <span class="bg-blue-600 w-2 h-5 rounded mr-2 block"></span>
+                    Task Checklist
+                </h3>
+                
+                @php
+                // Exact matching KSU-ICTO task list from create.blade.php
+                $categories = [
+                    'sw' => ['label' => 'SOFTWARE APPLICATION', 'tasks' => ['Empty the Recycle Bin', 'Delete .temp files', 'Delete the files that begin with a tilde', 'Delete the .check files, and switch the file', 'Run Scandisk and defrag the drive as needed', 'Check browser history and cache files', 'Clean out Windows temporary Internet files', 'Confirm that backups are already done', 'Update drivers as needed', 'Check the Operating system and Applications', 'Update the anti-virus software if needed']],
+                    'hw' => ['label' => 'HARDWARE', 'tasks' => ['Check cable connections', 'Check the power sources', 'Clean the Mouse', 'Clean the Keyboard', 'Clean the Screen/ Monitor', 'Clean the CD/DVD -ROM Drive', 'Check the Fan', 'Check the Network Hardware']],
+                    'ot' => ['label' => 'OTHER DEVICES', 'tasks' => ['Check Nozzle', 'Check Head Cleaning', 'Check Power Flush Ink', 'Check ink waste pad', 'Check ink level/ toner', 'Clean Projector headlamp', 'Check projector power sources and cable', 'Check projector fan', 'Check network switches cable port', 'Check network cable crimp head (rj45 etc.)', 'Check network switches fan', 'Check network switches power sources', 'Check access point (AP) port connection', 'Check access point (AP) cable crimp head', 'Check the router cable port', 'Check router crimp head (rj45 and etc.)', 'Check network radio antenna UTP cable', 'Check network radio antenna alignment']]
+                ];
+                @endphp
+
+                {{-- Checklist Iteration --}}
+                @foreach($categories as $id => $cat)
+                <div class="mb-6 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-50 px-4 py-3 flex justify-between items-center border-b border-slate-200">
+                        <span class="text-[11px] font-bold text-blue-600 uppercase tracking-wider">{{ $cat['label'] }}</span>
+                        <button type="button" onclick="toggleCat('{{$id}}')" class="text-[10px] font-bold bg-white border border-slate-300 px-3 py-1.5 rounded shadow-sm hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors">
+                            SELECT ALL
+                        </button>
+                    </div>
+                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 bg-white">
+                        @foreach($cat['tasks'] as $task)
+                        <label class="flex items-start space-x-3 text-sm text-slate-600 cursor-pointer hover:bg-slate-50 p-1.5 rounded transition">
+                            <input type="checkbox" name="checklist[]" value="{{ $task }}" 
+                                {{ in_array($task, $activeTasks) ? 'checked' : '' }}
+                                class="check-{{$id}} mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 shadow-sm">
+                            <span class="leading-tight">{{ $task }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
+                @endforeach
+
+                {{-- Remarks Section --}}
+                <div class="mt-8 border-t pt-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Remarks / Findings:</label>
+                    <textarea name="remarks" rows="3" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter any findings, issues, or specific notes here...">{{ $remarks }}</textarea>
+                </div>
+
+                {{-- Submit Buttons --}}
+                <div class="mt-8 flex items-center justify-end gap-4">
+                    <a href="{{ route('maintenance.show', $maintenance->id) }}" class="px-6 py-2 text-slate-500 font-bold hover:text-slate-800 transition">Cancel</a>
+                    <button type="submit" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all transform active:scale-95">
+                        Update Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+function toggleCat(id) {
+    const boxes = document.querySelectorAll('.check-' + id);
+    const allSet = Array.from(boxes).every(b => b.checked);
+    boxes.forEach(b => b.checked = !allSet);
+}
+</script>
 @endsection
