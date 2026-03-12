@@ -25,8 +25,9 @@
         {{-- Basic Information --}}
         <div class="mb-6">
             <label class="block text-gray-700 font-bold mb-1">Issue Title</label>
+            {{-- UPDATED: Strips out the word " Request" so it loads as "Equipment Borrowing" --}}
             <input type="text" name="title"
-                   value="{{ old('title', $ticket->title) }}"
+                   value="{{ old('title', str_replace(' Request', '', $ticket->title)) }}"
                    class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" required>
         </div>
 

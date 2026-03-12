@@ -2,164 +2,218 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Equipment Repair Form - {{ $ticket->ticket_number }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Borrower's Form - {{ $ticket->ticket_id ?? 'KSU-ICTO-QF-09' }}</title>
     <style>
-        @page { margin: 40px 50px; }
-        body { font-family: Arial, sans-serif; font-size: 12px; color: #000; line-height: 1.4; }
+        /* =========================================
+           PURE CSS LAYOUT (No Tailwind Needed)
+           Guarantees perfect layout for Print & PDF
+           ========================================= */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #000;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 40px 20px;
+        }
         
-        /* ---------------- Header Table ---------------- */
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 2px solid #000; }
-        .header-table th, .header-table td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle; }
+        /* Container */
+        .document-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
         
-        .logo-cell { width: 18%; }
-        .logo-img { width: 75px; height: auto; display: block; margin: 0 auto; }
-        
-        .title-cell { width: 52%; }
-        .inst-name { font-size: 16px; font-weight: bold; }
-        .qms-text { font-size: 14px; margin-bottom: 15px; }
-        .doc-title { font-size: 16px; font-weight: bold; }
-        
-        .info-cell { width: 30%; text-align: left; font-size: 10px; padding-left: 10px; }
-        
-        /* ---------------- Document Body ---------------- */
-        .req-no-container { margin-bottom: 20px; font-size: 14px; }
-        .req-wrapper { display: inline-block; text-align: center; vertical-align: bottom; }
-        .req-no-line { border-bottom: 1px solid #000; width: 250px; display: block; font-weight: bold; font-family: 'Courier New', Courier, monospace; font-size: 13px; padding-bottom: 2px;}
-        .sub-header { font-style: italic; font-size: 10px; margin-top: 2px; }
-        
-        .section-container { position: relative; margin-top: 15px; margin-bottom: 8px; }
-        .section-number { position: absolute; left: 0; font-size: 13px; top: 0; }
-        .section-title { padding-left: 20px; font-size: 13px; text-transform: uppercase; }
-        
-        /* ---------------- Form Rows & Lines ---------------- */
-        .form-table { width: 95%; margin-left: 20px; border-collapse: collapse; margin-bottom: 15px; }
-        .form-table td { padding: 4px 0; vertical-align: bottom; }
-        .label-cell { white-space: nowrap; padding-right: 5px; font-size: 12px; width: 25%; }
-        .line-cell { border-bottom: 1px solid #000; width: 75%; text-align: left; padding-left: 5px; font-family: 'Courier New', Courier, monospace; font-size: 13px; }
-        
-        /* Two Column Layout for Request Details */
-        .two-col-table { width: 95%; margin-left: 20px; border-collapse: collapse; margin-bottom: 15px; }
-        .two-col-table td { padding: 5px 0; vertical-align: bottom; font-size: 12px; }
-        .col-left-label { width: 18%; white-space: nowrap; }
-        .col-left-line { width: 30%; border-bottom: 1px solid #000; padding-left: 5px; font-family: 'Courier New', Courier, monospace; font-size: 12px; }
-        .col-right-label { width: 20%; white-space: nowrap; padding-left: 10px; }
-        .col-right-line { width: 32%; border-bottom: 1px solid #000; padding-left: 5px; font-family: 'Courier New', Courier, monospace; font-size: 12px; }
+        /* Print Button */
+        .print-header { text-align: right; margin-bottom: 20px; }
+        .btn-print {
+            background-color: #2563eb; color: #fff;
+            border: none; padding: 10px 20px; font-size: 14px;
+            font-weight: bold; border-radius: 5px; cursor: pointer;
+        }
+        .btn-print:hover { background-color: #1d4ed8; }
 
-        /* Problem Description Lines */
-        .problem-table { width: 95%; margin-left: 20px; border-collapse: collapse; margin-top: 5px; }
-        .problem-table td { border-bottom: 1px solid #000; height: 22px; vertical-align: bottom; font-family: 'Courier New', Courier, monospace; font-size: 12px; padding-left: 5px; }
+        /* General Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th, td { border: 1px solid #000; padding: 0; }
         
-        /* ---------------- Footer Disclaimer ---------------- */
-        .disclaimer-note { margin-top: 30px; text-align: justify; font-size: 10px; font-style: italic; line-height: 1.2; padding: 0 10px; }
+        /* 1. Header Section */
+        .header-table td { text-align: center; vertical-align: middle; }
+        .header-logo { width: 20%; padding: 10px; }
+        .header-logo img { width: 90px; height: 90px; object-fit: contain; }
+        
+        .header-title { width: 50%; padding: 10px; line-height: 1.3; }
+        .header-title h1 { font-size: 18px; margin: 0; font-weight: bold; }
+        .header-title h2 { font-size: 16px; margin: 5px 0 0; font-weight: bold; }
+        .header-title h3 { font-size: 14px; margin: 5px 0 0; font-weight: normal; }
+        
+        .header-meta { width: 30%; vertical-align: top !important; }
+        .meta-table { width: 100%; height: 100%; border: none; }
+        .meta-table td { 
+            border: none; border-bottom: 1px solid #000; border-left: 1px solid #000; 
+            padding: 6px 8px; text-align: left; font-size: 12px; 
+        }
+        .meta-table tr:last-child td { border-bottom: none; }
+        .meta-table td:first-child { width: 45%; white-space: nowrap; }
+
+        /* 2. Main Content Section */
+        .main-table th { padding: 10px; font-size: 14px; text-transform: uppercase; font-weight: bold; text-align: center; }
+        
+        .info-table { border: none; width: 100%; height: 100%; }
+        .info-table td { border: none; border-bottom: 1px solid #000; padding: 8px 10px; vertical-align: top; }
+        .info-table tr:last-child td { border-bottom: none; }
+        .info-table td:first-child { border-right: 1px solid #000; width: 35%; }
+        .info-table td:last-child { font-weight: bold; }
+
+        /* 3. Terms & Conditions */
+        .terms-box { padding: 12px 15px; vertical-align: top; }
+        .terms-box p { margin: 0 0 5px 0; font-weight: normal; text-transform: uppercase; }
+        .terms-box ul { margin: 0; padding-left: 25px; font-size: 13px; line-height: 1.4; }
+
+        /* 4. Signatures */
+        .signature-box { padding: 12px 15px; vertical-align: top; height: 110px; }
+        .signature-area { width: 80%; margin: 40px auto 0; text-align: center; }
+        .signature-line { 
+            border-bottom: 1px solid #000; font-weight: bold; 
+            text-transform: uppercase; font-size: 13px; padding-bottom: 3px; 
+        }
+        .signature-label { font-size: 12px; margin-top: 4px; }
+
+        /* 5. Print Adjustments */
+        @media print {
+            body { background-color: #fff; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .document-container { padding: 0; box-shadow: none; max-width: 100%; border: none; }
+            .print-header { display: none; }
+        }
     </style>
 </head>
 <body>
 
-    <table class="header-table">
-        <tr>
-            <td rowspan="4" class="logo-cell">
-                <img src="{{ public_path('image/school-logo.jpg') }}" class="logo-img" alt="KSU Logo">
-            </td>
-            <td rowspan="2" class="title-cell">
-                <div class="inst-name">Kalinga State University</div>
-                <div class="qms-text">Quality Management System</div>
-            </td>
-            <td class="info-cell">Doc. Ref No.:<br><strong>KSU-ICTO-QF-01</strong></td>
-        </tr>
-        <tr>
-            <td class="info-cell">Effectivity Date:<br><strong>October 14, 2025</strong></td>
-        </tr>
-        <tr>
-            <td rowspan="2" class="title-cell">
-                <div class="doc-title">Equipment Repair Form</div>
-            </td>
-            <td class="info-cell">Revision No.:<br><strong>2.0</strong></td>
-        </tr>
-        <tr>
-            <td class="info-cell">Page No.:<br><strong>1</strong></td>
-        </tr>
-    </table>
-
-    <div class="req-no-container">
-        Request No.: 
-        <div class="req-wrapper">
-            <span class="req-no-line">{{ $ticket->ticket_number }}</span>
-            <div class="sub-header">To be filled by KSU ICT User</div>
+    <div class="document-container">
+        
+        {{-- Print Button (Hidden on actual print) --}}
+        <div class="print-header">
+            <button onclick="window.print()" class="btn-print">🖨️ Print / Save as PDF</button>
         </div>
-    </div>
 
-    <div class="section-container">
-        <span class="section-number">1.</span>
-        <div class="section-title">REQUESTOR INFORMATION</div>
-    </div>
-    <table class="form-table">
-        <tr>
-            <td class="label-cell">Date Requested:</td>
-            <td class="line-cell">{{ $ticket->created_at ? \Carbon\Carbon::parse($ticket->created_at)->format('F d, Y') : '' }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">User's Full Name:</td>
-            <td class="line-cell">{{ $ticket->client_name }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">User's Office Name & Address:</td>
-            <td class="line-cell">{{ $ticket->department }} {{ isset($ticket->form_data['office_address']) && $ticket->form_data['office_address'] ? '- ' . $ticket->form_data['office_address'] : '' }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">User's Contact Number:</td>
-            <td class="line-cell">{{ $ticket->contact_number }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">Email Address:</td>
-            <td class="line-cell"></td>
-        </tr>
-    </table>
+        {{-- Formal Header Table --}}
+        <table class="header-table">
+            <tr>
+                <td class="header-logo">
+                    {{-- Updated path with an onerror fallback just in case Laragon's routing acts up --}}
+                    <img src="{{ asset('image/school-logo.jpg') }}" onerror="this.src='/image/school-logo.jpg'" alt="KSU Logo">
+                </td>
+                <td class="header-title">
+                    <h1>Kalinga State University</h1>
+                    <h2>Quality Management System</h2>
+                    <h3>Equipment Borrower's Form</h3>
+                </td>
+                <td class="header-meta">
+                    <table class="meta-table">
+                        <tr>
+                            <td>Doc. Ref No.:</td>
+                            <td>KSU-ICTO-QF-09</td>
+                        </tr>
+                        <tr>
+                            <td>Effectivity Date:</td>
+                            <td>October 14, 2025</td>
+                        </tr>
+                        <tr>
+                            <td>Revision No.:</td>
+                            <td>2.0</td>
+                        </tr>
+                        <tr>
+                            <td>Page No.:</td>
+                            <td>1</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-    <div class="section-container">
-        <span class="section-number">2.</span>
-        <div class="section-title">REQUEST DETAILS</div>
-    </div>
-    <table class="two-col-table">
-        <tr>
-            <td class="col-left-label">Equipment Type:</td>
-            <td class="col-left-line">{{ $ticket->equipment_type ?? '' }}</td>
-            <td class="col-right-label">Brand & Model No:</td>
-            <td class="col-right-line">{{ $ticket->brand_model ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="col-left-label">Serial No:</td>
-            <td class="col-left-line">{{ $ticket->serial_no ?? '' }}</td>
-            <td class="col-right-label">Property No.:</td>
-            <td class="col-right-line">{{ $ticket->form_data['property_no'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="col-left-label">Acquisition Date:</td>
-            <td class="col-left-line">{{ $ticket->form_data['acquisition_date'] ?? '' }}</td>
-            <td class="col-right-label">Acquisition Cost:</td>
-            <td class="col-right-line">{{ $ticket->form_data['acquisition_cost'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="col-left-label">Date of Last Repair:</td>
-            <td class="col-left-line">{{ $ticket->form_data['date_last_repair'] ?? '' }}</td>
-            <td class="col-right-label">Nature of Last Repair :</td>
-            <td class="col-right-line">{{ $ticket->form_data['nature_last_repair'] ?? '' }}</td>
-        </tr>
-    </table>
+        {{-- Main Body Table --}}
+        <table class="main-table">
+            <tr>
+                <th style="width: 50%;">BORROWER'S INFORMATION</th>
+                <th style="width: 50%;">EQUIPMENT DETAILS</th>
+            </tr>
+            
+            <tr>
+                {{-- Left Side Info --}}
+                <td style="vertical-align: top;">
+                    <table class="info-table">
+                        <tr><td>Full Name</td><td>{{ $ticket->meta['full_name'] ?? '' }}</td></tr>
+                        <tr><td>Office Name</td><td>{{ $ticket->meta['office_name'] ?? '' }}</td></tr>
+                        <tr><td>Contact Number</td><td>{{ $ticket->contact_number ?? '' }}</td></tr>
+                        <tr>
+                            {{-- This cell stretches naturally to match the right side height --}}
+                            <td style="height: 100%;">Email Address</td>
+                            <td style="height: 100%;">{{ $ticket->meta['email_address'] ?? '' }}</td>
+                        </tr>
+                    </table>
+                </td>
 
-    <div class="section-container">
-        <span class="section-number">3.</span>
-        <div class="section-title">PROBLEM DESCRIPTION</div>
-    </div>
-    <table class="problem-table">
-        <tr><td>{{ $ticket->description }}</td></tr>
-        <tr><td></td></tr>
-        <tr><td></td></tr>
-        <tr><td></td></tr>
-        <tr><td></td></tr>
-    </table>
+                {{-- Right Side Info --}}
+                <td style="vertical-align: top;">
+                    <table class="info-table">
+                        <tr><td>Equipment Name/Type</td><td>{{ $ticket->meta['equipment_type'] ?? '' }}</td></tr>
+                        <tr><td>Quantity</td><td>{{ $ticket->meta['quantity'] ?? '' }}</td></tr>
+                        <tr><td>Serial Number</td><td>{{ $ticket->meta['serial_no'] ?? '' }}</td></tr>
+                        <tr><td>Date Borrowed</td><td>{{ $ticket->meta['date_borrowed'] ?? '' }}</td></tr>
+                        <tr><td>Expected Return Date</td><td>{{ $ticket->meta['expected_return_date'] ?? '' }}</td></tr>
+                    </table>
+                </td>
+            </tr>
 
-    <div class="disclaimer-note">
-        <strong>Must Read:</strong> I now authorize the KSU ICT Office to perform maintenance service to my ICT equipment. I understand that KSU ICT Office is not in any way responsible for any data loss or damage to my equipment. I know that if the equipment was not working correctly at the time of the release, I release KSU ICT Office from any liability as a result of further damages in the event of any equipment-related failure due to hardware wear and tear, application conflicts, faulty applications, virus/malware infections, incompatible third-party devices, or system/operating system bugs. During the servicing, KSU ICT Office may need certain media to continue the repair process. If I do not have the media for the installation on my equipment, KSU ICT Office is not required to make available those applications that require physical media, serial numbers, or product keys free of charge, and not having the media may slow or halt the servicing of the equipment until the correct media or information is obtained. Any equipment left behind for over 30 days will be delivered to the supply office. I agree that any hardware I leave behind may be delivered to the supply office for proper action. All personal data will be irrevocably destroyed to protect my privacy. KSU ICT Office will make every effort to contact me, but if they cannot reach me within the timeline, regardless of the reason, KSU ICT Office assumes that I do not want whatever equipment I have left behind in the KSU ICT Office.
+            {{-- Terms & Conditions Row --}}
+            <tr>
+                <td colspan="2" class="terms-box">
+                    <p>TERMS AND CONDITIONS:</p>
+                    <ul>
+                        <li>I am responsible for properly handling and caring for the borrowed ICT equipment.</li>
+                        <li>I will return the equipment with all accompanying accessories in the same condition as received.</li>
+                        <li>I will be held liable for any damage, loss, or theft of the equipment while it is in my possession.</li>
+                        <li>I will notify the ICT department immediately in case of any issues or concerns with the equipment.</li>
+                        <li>I understand that failure to return the equipment on the agreed return date may result in penalties or restrictions on future borrowing privileges.</li>
+                    </ul>
+                </td>
+            </tr>
+
+            {{-- Signatures Row 1 --}}
+            <tr>
+                <td class="signature-box">
+                    Borrower:
+                    <div class="signature-area">
+                        <div class="signature-line">
+                            {{ $ticket->meta['full_name'] ?? '&nbsp;' }}
+                        </div>
+                        <div class="signature-label">Signature over printed name</div>
+                    </div>
+                </td>
+                <td class="signature-box">
+                    Staff-in-charge:
+                    <div class="signature-area">
+                        <div class="signature-line" style="color: transparent;">&nbsp;</div>
+                        <div class="signature-label">Signature over printed name</div>
+                    </div>
+                </td>
+            </tr>
+
+            {{-- Signatures Row 2 --}}
+            <tr>
+                <td colspan="2" class="signature-box">
+                    Received By:
+                    <div class="signature-area" style="width: 40%; margin-left: auto; margin-right: auto;">
+                        <div class="signature-line" style="color: transparent;">&nbsp;</div>
+                        <div class="signature-label">Staff-in-charge / Date</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
     </div>
 
 </body>

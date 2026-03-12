@@ -4,6 +4,7 @@
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
         
+        {{-- Header Section --}}
         <div class="flex items-center mb-6 border-b pb-4">
             <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -11,6 +12,7 @@
             <h2 class="text-2xl font-bold text-gray-800">Create New Ticket</h2>
         </div>
 
+        {{-- Category Selector --}}
         <div class="mb-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
             <label class="block text-blue-800 font-semibold mb-2 text-lg">Step 1: Select Service Category</label>
             <select id="category_selector" class="w-full border-gray-300 rounded-md p-3 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-700" onchange="toggleForm()">
@@ -19,12 +21,13 @@
                 <option value="information-system">Information System Request Form (KSU-ICTO-QF-02)</option>
                 <option value="multimedia">Multimedia Request Form (KSU-ICTO-QF-03)</option>
                 <option value="network">Network Request Form (KSU-ICTO-QF-04)</option>
+                <option value="equipment-borrower">Equipment Borrower's Form (KSU-ICTO-QF-09)</option>
                 <option value="generic">Standard / General Ticket</option>
             </select>
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 🛠️ 1. EQUIPMENT REPAIR FORM (KSU-ICTO-QF-01) --}}
+        {{-- 🛠️ 1. EQUIPMENT REPAIR FORM (KSU-ICTO-QF-01)                 --}}
         {{-- ========================================================== --}}
         <div id="form-equipment-repair" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-blue-50 p-3 rounded border border-blue-200 text-sm text-blue-800 flex items-center gap-2">
@@ -59,7 +62,7 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 💻 2. INFORMATION SYSTEM REQUEST FORM (KSU-ICTO-QF-02) --}}
+        {{-- 💻 2. INFORMATION SYSTEM REQUEST FORM (KSU-ICTO-QF-02)       --}}
         {{-- ========================================================== --}}
         <div id="form-information-system" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-teal-50 p-3 rounded border border-teal-200 text-sm text-teal-800 flex items-center justify-between">
@@ -69,6 +72,7 @@
                 </div>
                 <div class="text-xs font-mono bg-white px-2 py-1 rounded border">Request No.: ________________</div>
             </div>
+            
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
                 @csrf
                 <input type="hidden" name="form_type" value="information_system_request">
@@ -107,7 +111,7 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 🎥 3. MULTIMEDIA REQUEST FORM (KSU-ICTO-QF-03) --}}
+        {{-- 🎥 3. MULTIMEDIA REQUEST FORM (KSU-ICTO-QF-03)               --}}
         {{-- ========================================================== --}}
         <div id="form-multimedia" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-purple-50 p-3 rounded border border-purple-200 text-sm text-purple-800 flex items-center justify-between">
@@ -117,6 +121,7 @@
                 </div>
                 <div class="text-xs font-mono bg-white px-2 py-1 rounded border">Request No.: ________________</div>
             </div>
+            
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
                 @csrf
                 <input type="hidden" name="form_type" value="multimedia_request">
@@ -160,7 +165,7 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 🌐 4. NETWORK REQUEST FORM (KSU-ICTO-QF-04) --}}
+        {{-- 🌐 4. NETWORK REQUEST FORM (KSU-ICTO-QF-04)                  --}}
         {{-- ========================================================== --}}
         <div id="form-network" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-green-50 p-3 rounded border border-green-200 text-sm text-green-800 flex items-center justify-between">
@@ -170,6 +175,7 @@
                 </div>
                 <div class="text-xs font-mono bg-white px-2 py-1 rounded border">Request No.: ________________</div>
             </div>
+            
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
                 @csrf
                 <input type="hidden" name="form_type" value="network_request">
@@ -243,7 +249,73 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 📝 5. GENERIC / STANDARD FORM (ONLY THIS FORM UPDATED) --}}
+        {{-- 📦 5. EQUIPMENT BORROWER'S FORM (KSU-ICTO-QF-09)             --}}
+        {{-- ========================================================== --}}
+        <div id="form-equipment-borrower" class="form-section hidden border-t border-gray-200 pt-6">
+            <div class="mb-6 bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    <strong>Official Form:</strong> Equipment Borrower's Form (KSU-ICTO-QF-09)
+                </div>
+            </div>
+            
+            <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
+                @csrf
+                <input type="hidden" name="form_type" value="equipment_borrower">
+                {{-- Providing a default title so the generic store request doesn't fail if it requires one --}}
+                <input type="hidden" name="title" value="Equipment Borrowing Request">
+                <textarea name="description" class="hidden">Requesting to borrow equipment per Form KSU-ICTO-QF-09</textarea>
+                
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
+                    
+                    {{-- BORROWER'S INFORMATION --}}
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">1. BORROWER'S INFORMATION</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2"><label class="block font-semibold text-gray-600 text-sm mb-1">Full Name:</label><input type="text" name="meta[full_name]" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div class="md:col-span-2"><label class="block font-semibold text-gray-600 text-sm mb-1">Office Name:</label><input type="text" name="meta[office_name]" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Contact Number:</label><input type="text" name="contact_number" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Email Address:</label><input type="email" name="meta[email_address]" class="w-full border border-gray-300 rounded-md p-2"></div>
+                        </div>
+                    </div>
+                    
+                    {{-- EQUIPMENT DETAILS --}}
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. EQUIPMENT DETAILS</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2"><label class="block font-semibold text-gray-600 text-sm mb-1">Equipment Name/Type:</label><input type="text" name="meta[equipment_type]" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Quantity:</label><input type="number" name="meta[quantity]" class="w-full border border-gray-300 rounded-md p-2" min="1" value="1" required></div>
+                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Serial Number:</label><input type="text" name="meta[serial_no]" class="w-full border border-gray-300 rounded-md p-2"></div>
+                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Date Borrowed:</label><input type="date" name="meta[date_borrowed]" value="{{ date('Y-m-d') }}" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Expected Return Date:</label><input type="date" name="meta[expected_return_date]" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                        </div>
+                    </div>
+                    
+                    {{-- TERMS AND CONDITIONS --}}
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">3. TERMS AND CONDITIONS</h3>
+                        <div class="bg-white p-4 border border-gray-300 rounded-md text-sm text-gray-700 mb-4">
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>I am responsible for properly handling and caring for the borrowed ICT equipment.</li>
+                                <li>I will return the equipment with all accompanying accessories in the same condition as received.</li>
+                                <li>I will be held liable for any damage, loss, or theft of the equipment while it is in my possession.</li>
+                                <li>I will notify the ICT department immediately in case of any issues or concerns with the equipment.</li>
+                                <li>I understand that failure to return the equipment on the agreed return date may result in penalties or restrictions on future borrowing privileges.</li>
+                            </ul>
+                        </div>
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input type="checkbox" name="meta[agreed_to_terms]" value="Yes" class="mt-1 w-5 h-5 rounded text-orange-600 focus:ring-orange-500" required>
+                            <span class="text-sm font-semibold text-gray-700">I have read, understood, and agree to the terms and conditions stated above.</span>
+                        </label>
+                    </div>
+
+                </div>
+                @include('tickets.partials.inline-lower-fields', ['btnColor' => 'orange', 'btnText' => 'Submit Borrower Form'])
+            </form>
+        </div>
+
+        {{-- ========================================================== --}}
+        {{-- 📝 6. GENERIC / STANDARD FORM                              --}}
         {{-- ========================================================== --}}
         <div id="form-generic" class="form-section hidden border-t border-gray-200 pt-6">
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
@@ -251,7 +323,7 @@
                 <input type="hidden" name="form_type" value="generic">
                 
                 <div class="space-y-4">
-                    {{-- Updated Label to 'Title' only --}}
+                    {{-- Title --}}
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Title</label>
                         <input type="text" name="title" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="Subject">
@@ -282,13 +354,14 @@
                         </div>
                     </div>
 
+                    {{-- Message / Description --}}
                     <div class="pt-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Message / Description</label>
                         <textarea name="description" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="Describe your request or issue here..."></textarea>
                     </div>
                 </div>
 
-                @include('tickets.partials.inline-lower-fields', ['btnColor' => 'green', 'btnText' => 'Submit Ticket'])
+                @include('tickets.partials.inline-lower-fields', ['btnColor' => 'gray', 'btnText' => 'Submit Ticket'])
             </form>
         </div>
 
@@ -299,8 +372,11 @@
     function toggleForm() {
         const selector = document.getElementById('category_selector');
         const sections = document.querySelectorAll('.form-section');
+        
+        // Hide all sections first
         sections.forEach(s => s.classList.add('hidden'));
         
+        // Unhide the targeted section
         const target = document.getElementById('form-' + selector.value);
         if (target) { target.classList.remove('hidden'); }
     }
