@@ -80,7 +80,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/csv', [TicketController::class, 'exportCsv'])->name('tickets.export.csv');
     });
 
-    Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
+    // ✅ FIX: Define BOTH routes to ensure compatibility across all Blade views without modifying them!
+    Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrder');
+    Route::get('/tickets/{ticket}/job-order-pdf', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
     
     // Everyone can view and create tickets
     Route::resource('tickets', TicketController::class)->only(['index', 'show', 'create', 'store']);

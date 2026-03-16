@@ -144,7 +144,7 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => 'Multimedia Services'])->id;
         } elseif ($request->input('form_type') === 'information_system_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Information System'])->id;
-        } elseif (in_array($request->input('form_type'), ['equipment_request', 'equipment_repair']) && !$categoryId) {
+        } elseif (in_array($request->input('form_type'), ['equipment_request', 'equipment_repair', 'equipment_borrow']) && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Equipment Repair'])->id;
         }
 
@@ -165,6 +165,8 @@ class TicketController extends Controller
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-02';
         } elseif (in_array($request->input('form_type'), ['equipment_request', 'equipment_repair'])) {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-01';
+        } elseif ($request->input('form_type') === 'equipment_borrow') {
+            $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-09';
         }
 
         $ticket = Ticket::create([
@@ -344,7 +346,7 @@ class TicketController extends Controller
         $view = 'tickets.print-general'; // Default fallback
         $categoryLower = strtolower($categoryName);
 
-        // Routing logic based on Category name or Equipment attributes
+        // Routing logic based on Category name
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
         } 
@@ -353,8 +355,11 @@ class TicketController extends Controller
         } 
         elseif (Str::contains($categoryLower, 'network') || Str::contains($categoryLower, 'internet')) {
             $view = 'tickets.print-network';
-        } 
-        // 🔥 Deep check: Catch Equipment via Category name, OR if Equipment Type/Brand is explicitly filled
+        }
+        // 🔥 Map to your confirmed borrower form location
+        elseif (Str::contains($categoryLower, 'borrow')) {
+            $view = 'tickets.borrower-form';
+        }
         elseif (
             Str::contains($categoryLower, 'equipment') || 
             Str::contains($categoryLower, 'hardware') || 
@@ -366,7 +371,7 @@ class TicketController extends Controller
             $view = 'tickets.print-equipment';
         }
 
-        // Secondary bulletproof check for metadata flag
+        // Secondary check for metadata flag
         if (isset($ticket->form_data['original_form_type'])) {
             if ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-03') {
                 $view = 'tickets.print-multimedia'; 
@@ -374,6 +379,8 @@ class TicketController extends Controller
                 $view = 'tickets.print-is'; 
             } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-01') {
                 $view = 'tickets.print-equipment'; 
+            } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-09') {
+                $view = 'tickets.borrower-form'; 
             }
         }
 

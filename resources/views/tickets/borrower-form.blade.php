@@ -1,183 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equipment Borrower's Form - {{ $ticket->ticket_id ?? 'KSU-ICTO-QF-09' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @media print {
-            body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            @page {
-                size: letter portrait;
-                margin: 0.5in;
-            }
-            .no-print {
-                display: none;
-            }
-        }
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+        .table-container { width: 100%; border-collapse: collapse; }
+        .table-container th, .table-container td { border: 1px solid black; padding: 8px; vertical-align: top; }
+        .header-title { text-align: center; font-weight: bold; }
+        .section-header { text-align: center; font-weight: bold; background-color: #f2f2f2; text-transform: uppercase; }
+        .no-border-right { border-right: none !important; }
+        .no-border-left { border-left: none !important; }
+        .terms { padding: 10px; border: 1px solid black; border-top: none; }
+        .signature-section { width: 100%; border-collapse: collapse; margin-top: -1px; }
+        .signature-section td { border: 1px solid black; height: 80px; width: 50%; vertical-align: top; }
+        ul { margin: 5px 0; padding-left: 20px; }
+        li { margin-bottom: 3px; }
     </style>
 </head>
-<body class="bg-gray-100 py-8">
+<body>
 
-    {{-- Print Button (Hidden when printing) --}}
-    <div class="max-w-4xl mx-auto mb-4 flex justify-end no-print">
-        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
-            🖨️ Print / Save as PDF
-        </button>
-    </div>
+    <table class="table-container">
+        <tr>
+            <td style="width: 15%; text-align: center;">
+                @if(file_exists(public_path('image/KSU-logo.png')))
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('image/KSU-logo.png'))) }}" width="70">
+                @endif
+            </td>
+            <td style="width: 45%;" class="header-title">
+                <div style="font-size: 16px;">Kalinga State University</div>
+                <div style="font-size: 14px;">Quality Management System</div>
+                <div style="font-size: 13px; font-weight: normal;">Equipment Borrower's Form</div>
+            </td>
+            <td style="width: 40%; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; border: none;">
+                    <tr><td style="border: none; border-bottom: 1px solid black; border-right: 1px solid black;">Doc. Ref No.:</td><td style="border: none; border-bottom: 1px solid black;">KSU-ICTO-QF-09</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; border-right: 1px solid black;">Effectivity Date:</td><td style="border: none; border-bottom: 1px solid black;">October 14, 2025</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; border-right: 1px solid black;">Revision No.:</td><td style="border: none; border-bottom: 1px solid black;">2.0</td></tr>
+                    <tr><td style="border: none;">Page No.:</td><td style="border: none;">1</td></tr>
+                </table>
+            </td>
+        </tr>
 
-    {{-- Formal Document Container --}}
-    <div class="max-w-4xl mx-auto bg-white p-8 border border-gray-300 shadow-lg text-black text-sm">
-        
-        {{-- Header Table --}}
-        <table class="w-full border-collapse border border-black mb-2">
-            <tr>
-                <td class="w-1/4 border border-black p-2 text-center align-middle">
-                    {{-- Replace with actual KSU Logo path --}}
-                    <img src="{{ asset('images/ksu-logo.png') }}" alt="KSU Logo" class="w-24 h-24 mx-auto object-contain">
-                </td>
-                <td class="w-1/2 border border-black p-2 text-center align-middle leading-snug">
-                    <h1 class="font-bold text-lg">Kalinga State University</h1>
-                    <h2 class="font-bold text-base">Quality Management System</h2>
-                    <h3 class="text-base">Equipment Borrower's Form</h3>
-                </td>
-                <td class="w-1/4 border border-black p-0 align-top">
-                    <table class="w-full h-full text-xs text-left">
-                        <tr>
-                            <td class="border-b border-r border-black p-1.5 whitespace-nowrap">Doc. Ref No.:</td>
-                            <td class="border-b border-black p-1.5">KSU-ICTO-QF-09</td>
-                        </tr>
-                        <tr>
-                            <td class="border-b border-r border-black p-1.5 whitespace-nowrap">Effectivity Date:</td>
-                            <td class="border-b border-black p-1.5">October 14, 2025</td>
-                        </tr>
-                        <tr>
-                            <td class="border-b border-r border-black p-1.5 whitespace-nowrap">Revision No.:</td>
-                            <td class="border-b border-black p-1.5">2.0</td>
-                        </tr>
-                        <tr>
-                            <td class="border-r border-black p-1.5 whitespace-nowrap">Page No.:</td>
-                            <td class="p-1.5">1</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
+        <tr>
+            <td colspan="2" class="section-header">BORROWER'S INFORMATION</td>
+            <td class="section-header">EQUIPMENT DETAILS</td>
+        </tr>
 
-        {{-- Body Table --}}
-        <table class="w-full border-collapse border border-black text-sm">
-            {{-- Section Headers --}}
-            <tr>
-                <th class="w-1/2 border border-black p-2 text-center uppercase font-bold">BORROWER'S INFORMATION</th>
-                <th class="w-1/2 border border-black p-2 text-center uppercase font-bold">EQUIPMENT DETAILS</th>
-            </tr>
-            
-            {{-- Content Row --}}
-            <tr>
-                {{-- Left Column: Borrower Info --}}
-                <td class="w-1/2 border border-black p-0 align-top">
-                    <table class="w-full h-full">
-                        <tr>
-                            <td class="w-1/3 border-b border-r border-black p-2">Full Name</td>
-                            <td class="w-2/3 border-b border-black p-2 font-semibold">{{ $ticket->meta['full_name'] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-1/3 border-b border-r border-black p-2">Office Name</td>
-                            <td class="w-2/3 border-b border-black p-2 font-semibold">{{ $ticket->meta['office_name'] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-1/3 border-b border-r border-black p-2">Contact Number</td>
-                            <td class="w-2/3 border-b border-black p-2 font-semibold">{{ $ticket->contact_number ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            {{-- Increased height to match right side --}}
-                            <td class="w-1/3 border-r border-black p-2 align-top h-[72px]">Email Address</td>
-                            <td class="w-2/3 border-black p-2 font-semibold align-top">{{ $ticket->meta['email_address'] ?? '' }}</td>
-                        </tr>
-                    </table>
-                </td>
+        <tr>
+            <td colspan="2" style="padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; border: none;">
+                    <tr><td style="border: none; border-bottom: 1px solid black; width: 35%;">Full Name</td><td style="border: none; border-bottom: 1px solid black;">{{ $ticket->client_name }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black;">Office Name</td><td style="border: none; border-bottom: 1px solid black;">{{ $ticket->department ?? 'N/A' }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black;">Contact Number</td><td style="border: none; border-bottom: 1px solid black;">{{ $ticket->contact_number ?? 'N/A' }}</td></tr>
+                    <tr><td style="border: none; height: 40px;">Email Address</td><td style="border: none;">{{ $ticket->client_email ?? 'N/A' }}</td></tr>
+                </table>
+            </td>
+            <td style="padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; border: none;">
+                    <tr><td style="border: none; border-bottom: 1px solid black; width: 50%;">Equipment Name/Type</td><td style="border: none; border-bottom: 1px solid black;">{{ $ticket->equipment_type }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black;">Quantity</td><td style="border: none; border-bottom: 1px solid black;">1</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black;">Serial Number</td><td style="border: none; border-bottom: 1px solid black;">{{ $ticket->serial_no ?? 'N/A' }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black;">Date Borrowed</td><td style="border: none; border-bottom: 1px solid black;">{{ now()->format('F d, Y') }}</td></tr>
+                    <tr><td style="border: none;">Expected Return Date</td><td style="border: none;"></td></tr>
+                </table>
+            </td>
+        </tr>
 
-                {{-- Right Column: Equipment Details --}}
-                <td class="w-1/2 border border-black p-0 align-top">
-                    <table class="w-full h-full">
-                        <tr>
-                            <td class="w-1/2 border-b border-r border-black p-2">Equipment Name/Type</td>
-                            <td class="w-1/2 border-b border-black p-2 font-semibold">{{ $ticket->meta['equipment_type'] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-1/2 border-b border-r border-black p-2">Quantity</td>
-                            <td class="w-1/2 border-b border-black p-2 font-semibold">{{ $ticket->meta['quantity'] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-1/2 border-b border-r border-black p-2">Serial Number</td>
-                            <td class="w-1/2 border-b border-black p-2 font-semibold">{{ $ticket->meta['serial_no'] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-1/2 border-b border-r border-black p-2">Date Borrowed</td>
-                            <td class="w-1/2 border-b border-black p-2 font-semibold">{{ $ticket->meta['date_borrowed'] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-1/2 border-r border-black p-2">Expected Return Date</td>
-                            <td class="w-1/2 border-black p-2 font-semibold">{{ $ticket->meta['expected_return_date'] ?? '' }}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+        <tr>
+            <td colspan="3" style="font-size: 11px;">
+                <strong>TERMS AND CONDITIONS:</strong>
+                <ul>
+                    <li>I am responsible for properly handling and caring for the borrowed ICT equipment.</li>
+                    <li>I will return the equipment with all accompanying accessories in the same condition as received.</li>
+                    <li>I will be held liable for any damage, loss, or theft of the equipment while it is in my possession.</li>
+                    <li>I will notify the ICT department immediately in case of any issues or concerns with the equipment.</li>
+                    <li>I understand that failure to return the equipment on the agreed return date may result in penalties or restrictions on future borrowing privileges.</li>
+                </ul>
+            </td>
+        </tr>
 
-            {{-- Terms and Conditions --}}
-            <tr>
-                <td colspan="2" class="border border-black p-3 align-top">
-                    <p class="font-medium mb-1">TERMS AND CONDITIONS:</p>
-                    <ul class="list-disc pl-8 space-y-0.5 text-[13px] leading-tight">
-                        <li>I am responsible for properly handling and caring for the borrowed ICT equipment.</li>
-                        <li>I will return the equipment with all accompanying accessories in the same condition as received.</li>
-                        <li>I will be held liable for any damage, loss, or theft of the equipment while it is in my possession.</li>
-                        <li>I will notify the ICT department immediately in case of any issues or concerns with the equipment.</li>
-                        <li>I understand that failure to return the equipment on the agreed return date may result in penalties or restrictions on future borrowing privileges.</li>
-                    </ul>
-                </td>
-            </tr>
+        <tr>
+            <td colspan="2">
+                Borrower:
+                <div style="margin-top: 30px; text-align: center;">
+                    <span style="border-top: 1px solid black; padding: 0 40px;">Signature over printed name</span>
+                </div>
+            </td>
+            <td>
+                Staff-in-charge:
+                <div style="margin-top: 30px; text-align: center;">
+                    <span style="border-top: 1px solid black; padding: 0 40px;">Signature over printed name</span>
+                </div>
+            </td>
+        </tr>
 
-            {{-- First Signature Row --}}
-            <tr>
-                <td class="w-1/2 border border-black p-3 h-28 align-top relative">
-                    <p class="mb-6">Borrower:</p>
-                    <div class="text-center w-[80%] mx-auto mt-6">
-                        <div class="border-b border-black font-semibold uppercase text-sm pb-1">
-                            {{ $ticket->meta['full_name'] ?? '__________________________________' }}
-                        </div>
-                        <p class="text-xs mt-1">Signature over printed name</p>
-                    </div>
-                </td>
-                <td class="w-1/2 border border-black p-3 h-28 align-top relative">
-                    <p class="mb-6">Staff-in-charge:</p>
-                    <div class="text-center w-[80%] mx-auto mt-6">
-                        <div class="border-b border-black font-semibold uppercase text-sm pb-1 text-transparent">
-                            __________________________________
-                        </div>
-                        <p class="text-xs mt-1">Signature over printed name</p>
-                    </div>
-                </td>
-            </tr>
-
-            {{-- Second Signature Row --}}
-            <tr>
-                <td colspan="2" class="border border-black p-3 h-28 align-top relative">
-                    <p class="mb-6">Received By:</p>
-                    <div class="text-center w-[50%] mx-auto mt-6">
-                        <div class="border-b border-black font-semibold uppercase text-sm pb-1 text-transparent">
-                            ____________________________________________________
-                        </div>
-                        <p class="text-xs mt-1">Staff-in-charge / Date</p>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
+        <tr>
+            <td colspan="3">
+                Received By:
+                <div style="margin-top: 20px; text-align: center;">
+                    <span style="border-top: 1px solid black; padding: 0 60px;">Staff-in-charge / Date</span>
+                </div>
+            </td>
+        </tr>
+    </table>
 
 </body>
 </html>

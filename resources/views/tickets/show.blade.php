@@ -84,7 +84,7 @@
         </div>
         @endif
 
-        {{-- ✅ FEEDBACK SECTION (RE-ADDED) --}}
+        {{-- ✅ FEEDBACK SECTION --}}
         @if($ticket->feedback)
         <div class="mt-6 bg-pink-50 border border-pink-200 rounded-xl p-5">
             <h3 class="font-bold text-pink-900 flex items-center gap-2 mb-3">
@@ -127,8 +127,15 @@
             <a href="{{ route('tickets.index') }}" class="px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors rounded-lg border border-gray-300">⬅ Back to List</a>
             <div class="flex gap-3">
                 @role('admin|it_staff')
+                {{-- 🖨 ADDED PRINT BUTTON HERE --}}
+                <a href="{{ route('tickets.jobOrder', $ticket->id) }}" target="_blank" class="px-5 py-2.5 bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors rounded-lg shadow-sm flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print Job Order
+                </a>
+                
                 <a href="{{ route('tickets.edit', $ticket->id) }}" class="px-5 py-2.5 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors rounded-lg shadow-sm">✏ Edit Ticket</a>
                 @endrole
+
                 @if($ticket->status === 'Closed' && !$ticket->feedback)
                     <a href="{{ route('feedbacks.create', $ticket->id) }}" class="px-5 py-2.5 bg-pink-500 text-white font-semibold hover:bg-pink-600 transition-colors rounded-lg shadow-sm">📝 Submit Feedback</a>
                 @elseif($ticket->feedback)

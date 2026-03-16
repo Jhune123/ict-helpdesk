@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <title>Equipment Borrower's Form - {{ $ticket->ticket_id ?? 'KSU-ICTO-QF-09' }}</title>
     <style>
-        /* =========================================
-           FLAT PDF-SAFE CSS
-           ========================================= */
         body {
             font-family: Arial, sans-serif;
             font-size: 13px;
@@ -16,7 +13,6 @@
             padding: 20px;
         }
 
-        /* Print Button */
         .print-header { text-align: right; margin-bottom: 20px; }
         .btn-print {
             background-color: #2563eb; color: #fff;
@@ -25,7 +21,6 @@
         }
         @media print { .print-header { display: none; } }
 
-        /* Unified Table Style */
         .grid-table {
             width: 100%;
             border-collapse: collapse;
@@ -44,7 +39,6 @@
             padding: 10px;
         }
         
-        /* Typography overrides */
         .text-center { text-align: center; }
         .align-top { vertical-align: top !important; }
         .signature-line {
@@ -60,7 +54,6 @@
 <body>
 
     <div class="print-header">
-        {{-- Removed the emoji so it doesn't turn into ?? --}}
         <button onclick="window.print()" class="btn-print">Print / Save as PDF</button>
     </div>
 
@@ -68,8 +61,8 @@
     <table class="grid-table">
         <tr>
             <td rowspan="4" style="width: 15%; text-align: center; padding: 10px;">
-                {{-- Pointing directly to the Laragon public path and specific filename --}}
-                <img src="{{ public_path('image/KSU-logo.png') }}" alt="KSU Logo" style="max-width: 80px; max-height: 80px; object-fit: contain;">
+                {{-- Use asset() for browser preview, public_path() only for PDF generation engines --}}
+                <img src="{{ asset('image/KSU-logo.png') }}" alt="KSU Logo" style="max-width: 80px; max-height: 80px; object-fit: contain;">
             </td>
             <td rowspan="4" style="width: 45%; text-align: center; line-height: 1.4;">
                 <span style="font-size: 16px; font-weight: bold;">Kalinga State University</span><br>
@@ -102,31 +95,32 @@
         
         <tr>
             <td style="width: 15%;">Full Name</td>
-            <td style="width: 35%; font-weight: bold;">{{ $ticket->meta['full_name'] ?? '' }}</td>
+            {{-- data_get is safer than array access to prevent 500 errors --}}
+            <td style="width: 35%; font-weight: bold;">{{ data_get($ticket, 'meta.full_name', 'N/A') }}</td>
             <td style="width: 20%;">Equipment Name/Type</td>
-            <td style="width: 30%; font-weight: bold;">{{ $ticket->meta['equipment_type'] ?? '' }}</td>
+            <td style="width: 30%; font-weight: bold;">{{ data_get($ticket, 'meta.equipment_type', 'N/A') }}</td>
         </tr>
         <tr>
             <td>Office Name</td>
-            <td style="font-weight: bold;">{{ $ticket->meta['office_name'] ?? '' }}</td>
+            <td style="font-weight: bold;">{{ data_get($ticket, 'meta.office_name', 'N/A') }}</td>
             <td>Quantity</td>
-            <td style="font-weight: bold;">{{ $ticket->meta['quantity'] ?? '' }}</td>
+            <td style="font-weight: bold;">{{ data_get($ticket, 'meta.quantity', 'N/A') }}</td>
         </tr>
         <tr>
             <td>Contact Number</td>
-            <td style="font-weight: bold;">{{ $ticket->contact_number ?? '' }}</td>
+            <td style="font-weight: bold;">{{ $ticket->contact_number ?? 'N/A' }}</td>
             <td>Serial Number</td>
-            <td style="font-weight: bold;">{{ $ticket->meta['serial_no'] ?? '' }}</td>
+            <td style="font-weight: bold;">{{ data_get($ticket, 'meta.serial_no', 'N/A') }}</td>
         </tr>
         <tr>
             <td rowspan="2" class="align-top">Email Address</td>
-            <td rowspan="2" class="align-top" style="font-weight: bold;">{{ $ticket->meta['email_address'] ?? '' }}</td>
+            <td rowspan="2" class="align-top" style="font-weight: bold;">{{ data_get($ticket, 'meta.email_address', 'N/A') }}</td>
             <td>Date Borrowed</td>
-            <td style="font-weight: bold;">{{ $ticket->meta['date_borrowed'] ?? '' }}</td>
+            <td style="font-weight: bold;">{{ data_get($ticket, 'meta.date_borrowed', 'N/A') }}</td>
         </tr>
         <tr>
             <td>Expected Return Date</td>
-            <td style="font-weight: bold;">{{ $ticket->meta['expected_return_date'] ?? '' }}</td>
+            <td style="font-weight: bold;">{{ data_get($ticket, 'meta.expected_return_date', 'N/A') }}</td>
         </tr>
 
         <tr>
@@ -142,13 +136,12 @@
             </td>
         </tr>
 
-        {{-- Signatures Row 1 --}}
+        {{-- Signatures --}}
         <tr>
             <td colspan="2" class="align-top" style="height: 100px; padding: 10px;">
                 <p style="margin: 0 0 40px 0;">Borrower:</p>
                 <div class="text-center">
-                    {{-- Fixed: Using {!! !!} so Laravel doesn't escape the HTML space --}}
-                    <span class="signature-line">{!! $ticket->meta['full_name'] ?? '&nbsp;' !!}</span><br>
+                    <span class="signature-line">{{ data_get($ticket, 'meta.full_name', '') }}</span><br>
                     <span style="font-size: 11px;">Signature over printed name</span>
                 </div>
             </td>
@@ -161,7 +154,6 @@
             </td>
         </tr>
 
-        {{-- Signatures Row 2 --}}
         <tr>
             <td colspan="4" class="align-top" style="height: 90px; padding: 10px;">
                 <p style="margin: 0 0 40px 0;">Received By:</p>
@@ -172,6 +164,5 @@
             </td>
         </tr>
     </table>
-
 </body>
 </html>
