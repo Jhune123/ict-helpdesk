@@ -122,18 +122,12 @@
                             {{-- Visible to All --}}
                             <a href="{{ route('tasks.show', $task) }}" class="btn btn-sm bg-cyan-500 text-white px-2 py-1 rounded shadow hover:bg-cyan-600 transition">View</a>
 
-                            {{-- Ticket Buttons Logic --}}
+                            {{-- EXACTLY AS YOU REQUESTED: Only shows View Ticket if a ticket is linked --}}
                             @if($task->ticket_id)
                                 <a href="{{ route('tickets.show', $task->ticket_id) }}" 
                                    class="btn btn-sm bg-indigo-600 text-white px-2 py-1 rounded shadow hover:bg-indigo-700 transition" 
                                    title="View Linked Ticket">
                                     🎟️ View Ticket
-                                </a>
-                            @else
-                                <a href="{{ route('tickets.create', ['task_id' => $task->id]) }}" 
-                                   class="btn btn-sm bg-green-500 text-white px-2 py-1 rounded shadow hover:bg-green-600 transition" 
-                                   title="Create Ticket from Task">
-                                    ➕ Create Ticket
                                 </a>
                             @endif
 
