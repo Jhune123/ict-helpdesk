@@ -343,10 +343,12 @@ class TicketController extends Controller
     public function jobOrderPdf(Ticket $ticket)
     {
         $categoryName = $ticket->category ? $ticket->category->name : 'General';
-        $view = 'tickets.print-general'; // Default fallback
         $categoryLower = strtolower($categoryName);
 
-        // Routing logic based on Category name
+        // 🔥 DEFAULT: The generic Equipment Repair form is now used for ALL categories natively
+        $view = 'tickets.equipment-repair'; 
+
+        // 🛑 EXCEPTIONS: Only route to other specific formats for the 4 distinct categories
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
         } 
@@ -356,29 +358,16 @@ class TicketController extends Controller
         elseif (Str::contains($categoryLower, 'network') || Str::contains($categoryLower, 'internet')) {
             $view = 'tickets.print-network';
         }
-        // 🔥 Map to your confirmed borrower form location
         elseif (Str::contains($categoryLower, 'borrow')) {
             $view = 'tickets.borrower-form';
         }
-        elseif (
-            Str::contains($categoryLower, 'equipment') || 
-            Str::contains($categoryLower, 'hardware') || 
-            Str::contains($categoryLower, 'repair') || 
-            Str::contains($categoryLower, 'maintenance') ||
-            (!empty($ticket->equipment_type) && $ticket->equipment_type !== 'N/A') ||
-            (!empty($ticket->brand_model) && $ticket->brand_model !== 'N/A')
-        ) {
-            $view = 'tickets.print-equipment';
-        }
 
-        // Secondary check for metadata flag
+        // Secondary check for metadata flag (Overrides just in case categories were manually changed)
         if (isset($ticket->form_data['original_form_type'])) {
             if ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-03') {
                 $view = 'tickets.print-multimedia'; 
             } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-02') {
                 $view = 'tickets.print-is'; 
-            } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-01') {
-                $view = 'tickets.print-equipment'; 
             } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-09') {
                 $view = 'tickets.borrower-form'; 
             }
