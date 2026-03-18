@@ -45,20 +45,32 @@
         </div>
     </div>
 
-    <div class="flex justify-end mt-6 space-x-2">
-        <a href="{{ route('tasks.index') }}" class="px-4 py-2 bg-gray-300 rounded">Back</a>
+    <div class="flex justify-between items-center mt-8 pt-4 border-t border-gray-100">
+        <div>
+            {{-- ✅ This button will now appear if a ticket is linked --}}
+            @if($task->ticket_id)
+                <a href="{{ route('tickets.show', $task->ticket_id) }}" 
+                   class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 font-medium transition-colors">
+                    🎟️ View Linked Ticket
+                </a>
+            @endif
+        </div>
 
-        @role('admin|it_staff')
-            <a href="{{ route('tasks.edit', $task) }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</a>
-            <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
-                @csrf
-                @method('DELETE')
-                <button onclick="return confirm('Are you sure you want to delete this task?')" 
-                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                    Delete
-                </button>
-            </form>
-        @endrole
+        <div class="flex space-x-2">
+            <a href="{{ route('tasks.index') }}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">Back</a>
+
+            @role('admin|it_staff')
+                <a href="{{ route('tasks.edit', $task) }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Edit</a>
+                <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button onclick="return confirm('Are you sure you want to delete this task?')" 
+                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                        Delete
+                    </button>
+                </form>
+            @endrole
+        </div>
     </div>
 </div>
 @endsection

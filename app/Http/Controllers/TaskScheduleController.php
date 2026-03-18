@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class TaskScheduleController extends Controller
 {
@@ -29,8 +30,8 @@ class TaskScheduleController extends Controller
                       });
                 });
             })
-            ->orderBy('created_at', 'desc') // ✅ FIXED: latest ADDED first
-            ->get();                         // ✅ REQUIRED for DataTables integration
+            ->orderBy('created_at', 'desc') 
+            ->get(); 
 
         return view('tasks.index', compact('tasks', 'search'));
     }
@@ -40,7 +41,8 @@ class TaskScheduleController extends Controller
      */
     public function create()
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
+        // Allow Admin, IT Staff, and Clients to access the create form
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -54,7 +56,7 @@ class TaskScheduleController extends Controller
      */
     public function store(Request $request)
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff', 'client'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -76,6 +78,11 @@ class TaskScheduleController extends Controller
             'remarks'       => 'nullable|string|max:500',
         ]);
 
+        // Security: If user is a Client, force assigned_to to null regardless of input
+        if (Auth::user()->hasRole('client')) {
+            $validated['assigned_to'] = null;
+        }
+
         Task::create($validated);
 
         return redirect()->route('tasks.index')
@@ -93,12 +100,12 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * ✏️ Show the form for editing.
+     * 🔒 Security: Only Admin/IT Staff can Edit.
      */
     public function edit(Task $task)
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
-            abort(403, 'Unauthorized action.');
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized. Clients cannot edit scheduled tasks.');
         }
 
         $departments = Department::orderBy('name')->get();
@@ -107,11 +114,11 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * 🆙 Update the specified task.
+     * 🔒 Security: Only Admin/IT Staff can Update.
      */
     public function update(Request $request, Task $task)
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -139,11 +146,11 @@ class TaskScheduleController extends Controller
     }
 
     /**
-     * 🗑️ Remove the specified task.
+     * 🔒 Security: Only Admin/IT Staff can Delete.
      */
     public function destroy(Task $task)
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'it_staff'])) {
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
             abort(403, 'Unauthorized action.');
         }
 

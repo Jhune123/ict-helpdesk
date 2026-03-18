@@ -137,7 +137,7 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-        // Auto-assign category based on form type if not set
+        // Auto-assign category based on form type
         if ($request->input('form_type') === 'network_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Network / Internet'])->id;
         } elseif ($request->input('form_type') === 'multimedia_request' && !$categoryId) {
@@ -151,6 +151,7 @@ class TicketController extends Controller
         $deptInput = $validated['department'] ?? null;
         $department = $deptInput ? Department::firstOrCreate(['name' => $deptInput])->name : null;
 
+        // Security: Only IT/Admin can set an initial assignee
         $assignedTo = Auth::user()->hasAnyRole(['admin', 'it_staff']) ? ($validated['assigned_to'] ?? null) : null;
 
         $formDataToSave = $validated['form_data'] ?? [];
@@ -158,7 +159,7 @@ class TicketController extends Controller
             $formDataToSave = array_merge($formDataToSave, $validated['meta']);
         }
 
-        // Inject original form type metadata
+        // Inject original form type metadata for PDF routing later
         if ($request->input('form_type') === 'multimedia_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-03';
         } elseif ($request->input('form_type') === 'information_system_request') {
@@ -216,7 +217,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 👁 Show Ticket
+     * 👁 Show Ticket (Clients can see this)
      */
     public function show(Ticket $ticket)
     {
@@ -224,8 +225,15 @@ class TicketController extends Controller
         return view('tickets.show', compact('ticket'));
     }
 
+    /**
+     * 🔒 Security: Only IT/Admin can access Edit
+     */
     public function edit(Ticket $ticket)
     {
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized. Clients cannot edit tickets.');
+        }
+
         $categories = Category::orderBy('name')->get();
         $departments = Department::orderBy('name')->get();
         
@@ -238,10 +246,14 @@ class TicketController extends Controller
     }
 
     /**
-     * ✏ Update Ticket Logic
+     * 🔒 Security: Only IT/Admin can Update
      */
     public function update(Request $request, Ticket $ticket)
     {
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized.');
+        }
+
         $validated = $request->validate([
             'title'           => 'required|string|max:255',
             'description'     => 'required|string',
@@ -266,6 +278,7 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
+        // Condemned Logic
         if ($validated['status'] === 'Condemned' && $ticket->status !== 'Condemned') {
             try {
                 $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
@@ -331,24 +344,29 @@ class TicketController extends Controller
         return redirect()->route('tickets.show', $ticket->id)->with('success', 'Ticket updated successfully ✅');
     }
 
+    /**
+     * 🔒 Security: Only IT/Admin can Delete
+     */
     public function destroy(Ticket $ticket)
     {
+        if (!Auth::user()->hasAnyRole(['admin', 'it_staff'])) {
+            abort(403, 'Unauthorized.');
+        }
+
         $ticket->delete();
         return redirect()->route('tickets.index')->with('success', 'Ticket deleted ❌');
     }
 
     /**
-     * 📄 Generate specialized Job Order PDF based on Category
+     * 📄 Generate Job Order PDF (Clients are ALLOWED to view this)
      */
     public function jobOrderPdf(Ticket $ticket)
     {
         $categoryName = $ticket->category ? $ticket->category->name : 'General';
         $categoryLower = strtolower($categoryName);
 
-        // 🔥 DEFAULT: The generic Equipment Repair form is now used for ALL categories natively
         $view = 'tickets.equipment-repair'; 
 
-        // 🛑 EXCEPTIONS: Only route to other specific formats for the 4 distinct categories
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
         } 
@@ -362,7 +380,7 @@ class TicketController extends Controller
             $view = 'tickets.borrower-form';
         }
 
-        // Secondary check for metadata flag (Overrides just in case categories were manually changed)
+        // Flag Overrides
         if (isset($ticket->form_data['original_form_type'])) {
             if ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-03') {
                 $view = 'tickets.print-multimedia'; 

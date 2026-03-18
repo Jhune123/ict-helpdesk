@@ -3,9 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use App\Models\Ticket;
-use App\Observers\TicketObserver;
+use App\Models\Task;
+use App\Observers\TaskObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,19 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        /**
-         * ✅ Morph Map for Activity Logs
-         * This ensures "Ticket" stored in subject_type
-         * correctly resolves to App\Models\Ticket
-         */
-        Relation::morphMap([
-            'Ticket' => Ticket::class,
-        ]);
-
-        /**
-         * ✅ Register Ticket Observer
-         * Automatically logs create, update, delete actions
-         */
-        Ticket::observe(TicketObserver::class);
+        // Tell Laravel to observe the Task model
+        Task::observe(TaskObserver::class);
     }
 }

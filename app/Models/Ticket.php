@@ -11,13 +11,14 @@ use App\Models\Comment;
 use App\Models\Attachment;
 use App\Models\Feedback;
 use App\Models\NetworkRequest; 
+use App\Models\Task;
 
 class Ticket extends Model
 {
     use HasFactory, Notifiable;
 
     /**
-     * ✅ Mass-assignable fields.
+     * Mass-assignable fields.
      */
     protected $fillable = [
         'ticket_number',
@@ -41,8 +42,7 @@ class Ticket extends Model
     ];
 
     /**
-     * ✅ Automatic casting. 
-     * The 'array' cast is vital for the dynamic form fields in your create/edit views.
+     * Automatic casting.
      */
     protected $casts = [
         'created_at'     => 'datetime',
@@ -52,11 +52,8 @@ class Ticket extends Model
         'form_data'      => 'array', 
     ];
 
-    /**
-     * =======================
-     * RELATIONSHIPS
-     * =======================
-     */
+    /* --- RELATIONSHIPS --- */
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -93,12 +90,15 @@ class Ticket extends Model
     }
 
     /**
-     * =======================
-     * ACCESSORS / HELPERS
-     * =======================
+     * Relationship: Get the scheduled task associated with this ticket.
      */
+    public function task()
+    {
+        return $this->hasOne(Task::class, 'ticket_id');
+    }
+
+    /* --- ACCESSORS / HELPERS --- */
     
-    // Virtual attributes for cleaner blade syntax
     public function getAssigneeNameAttribute(): string
     {
         return $this->assignee?->name ?? 'Unassigned';
@@ -109,26 +109,14 @@ class Ticket extends Model
         return $this->category?->name ?? 'N/A';
     }
 
-    /**
-     * ✅ UI Fallback Accessors
-     * These ensure that if a field is null, it displays "N/A" in your tables/views.
-     */
     public function getContactNumberAttribute($value): string { return $value ?: 'N/A'; }
     public function getDepartmentAttribute($value): string    { return $value ?: 'N/A'; }
     public function getEquipmentTypeAttribute($value): string { return $value ?: 'N/A'; }
     public function getBrandModelAttribute($value): string    { return $value ?: 'N/A'; }
     public function getSerialNoAttribute($value): string      { return $value ?: 'N/A'; }
 
-    /**
-     * =======================
-     * SMART NOTIFICATION ROUTING
-     * =======================
-     */
+    /* --- NOTIFICATION ROUTING --- */
 
-    /**
-     * Route for Email Notifications.
-     * Checks if contact_number contains a valid email address.
-     */
     public function routeNotificationForMail($notification)
     {
         $contact = $this->getRawOriginal('contact_number');
@@ -138,10 +126,6 @@ class Ticket extends Model
         return null;
     }
 
-    /**
-     * Route for SMS Notifications (Semaphore API).
-     * If contact is a phone number, it returns the string for the SMS driver.
-     */
     public function routeNotificationForSemaphore()
     {
         $contact = $this->getRawOriginal('contact_number');

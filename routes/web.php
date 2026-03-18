@@ -149,15 +149,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks/export/pdf', [TaskScheduleController::class, 'exportPdf'])->name('tasks.export.pdf');
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     
-    // Everyone can view tasks and meetings
-    Route::resource('tasks', TaskScheduleController::class)->only(['index', 'show']);
-    Route::resource('meetings', MeetingController::class)->only(['index', 'show']);
-    
+    // ✅ FIX: Moved the Admin routes BEFORE the public routes to prevent the wildcard error on tasks and meetings
     // Only Admins & IT Staff can modify tasks and meetings
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::resource('tasks', TaskScheduleController::class)->except(['index', 'show']);
         Route::resource('meetings', MeetingController::class)->except(['index', 'show']);
     });
+
+    // Everyone can view tasks and meetings
+    Route::resource('tasks', TaskScheduleController::class)->only(['index', 'show']);
+    Route::resource('meetings', MeetingController::class)->only(['index', 'show']);
 
     /* 🗑️ CONDEMNED EQUIPMENT */
     Route::prefix('condemned-equipment')->group(function () {

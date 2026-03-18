@@ -59,15 +59,16 @@
         <h2 class="text-2xl font-bold text-gray-700">🗓 Task Schedule</h2>
 
         <div class="flex gap-2">
+            {{-- 🔒 Only Admin/IT Staff can Add Tasks --}}
             @role('admin|it_staff')
             <a href="{{ route('tasks.create') }}"
-               class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700">
+               class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
                 + Add Task
             </a>
             @endrole
 
             <a href="{{ route('tasks.export.pdf') }}" target="_blank"
-               class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700">
+               class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700 transition">
                 Export PDF
             </a>
         </div>
@@ -101,7 +102,6 @@
                 @endphp
 
                 <tr class="{{ $rowClass }}">
-                    {{-- 🔥 IMPORTANT FIX: data-order --}}
                     <td data-order="{{ $taskDate->format('Y-m-d') }}">
                         {{ $taskDate->format('M d, Y') }}
                     </td>
@@ -118,20 +118,31 @@
                     <td>{{ $task->assigned_to ?? 'N/A' }}</td>
                     <td class="wrap-text">{{ $task->remarks ?? '—' }}</td>
                     <td>
-                        <a href="{{ route('tasks.show', $task) }}" class="btn btn-sm btn-info">View</a>
+                        <div class="flex flex-nowrap gap-1">
+                            {{-- Visible to All --}}
+                            <a href="{{ route('tasks.show', $task) }}" class="btn btn-sm bg-cyan-500 text-white px-2 py-1 rounded shadow hover:bg-cyan-600 transition">View</a>
 
-                        @role('admin|it_staff')
-                        <a href="{{ route('tasks.edit', $task) }}" class="btn btn-sm btn-warning">Edit</a>
+                            @if($task->ticket_id)
+                                <a href="{{ route('tickets.show', $task->ticket_id) }}" 
+                                   class="btn btn-sm bg-indigo-600 text-white px-2 py-1 rounded shadow hover:bg-indigo-700 transition" 
+                                   title="View Linked Ticket">
+                                    🎟️ Ticket
+                                </a>
+                            @endif
 
-                        <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('Delete this task?')"
-                                    class="btn btn-sm btn-danger">
-                                Delete
-                            </button>
-                        </form>
-                        @endrole
+                            {{-- 🔒 Visible Only to Admin/IT Staff --}}
+                            @role('admin|it_staff')
+                            <a href="{{ route('tasks.edit', $task) }}" class="btn btn-sm bg-yellow-500 text-white px-2 py-1 rounded shadow hover:bg-yellow-600 transition">Edit</a>
+
+                            <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline delete-form">
+                                @csrf
+                                @method('DELETE')
+                                <button type="button" class="btn btn-sm bg-red-500 text-white px-2 py-1 rounded shadow hover:bg-red-600 transition delete-btn">
+                                    Delete
+                                </button>
+                            </form>
+                            @endrole
+                        </div>
                     </td>
                 </tr>
                 @endforeach
@@ -154,12 +165,13 @@
 
 <script>
 $(document).ready(function () {
-    $('#tasksTable').DataTable({
+    // Initialize DataTable
+    var table = $('#tasksTable').DataTable({
         responsive: true,
         scrollX: true,
         pageLength: 15,
         lengthMenu: [5, 10, 15, 25, 50],
-        order: [[0, 'desc']], // ✅ Latest date FIRST
+        order: [[0, 'desc']], 
         autoWidth: false,
         dom: 'Bfrtip',
         buttons: [
@@ -175,6 +187,25 @@ $(document).ready(function () {
                 title: 'Task Schedule'
             }
         ]
+    });
+
+    /**
+     * ✅ FIX: SOLVING DOUBLE CLICK VIA EVENT DELEGATION
+     * We attach the listener to the document so it catches clicks 
+     * on the buttons even if DataTables re-renders them.
+     */
+    $(document).on('click', '.btn', function(e) {
+        if ($(this).is('a')) {
+            return true; // Handle links (View/Edit) normally on first click
+        }
+    });
+
+    // Handle Delete button specifically
+    $(document).on('click', '.delete-btn', function(e) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to delete this task?')) {
+            $(this).closest('form').submit();
+        }
     });
 });
 </script>

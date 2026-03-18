@@ -14,12 +14,13 @@ class Task extends Model
         'date',
         'description',
         'requested_by',
-        'department_id', // ✅ proper department relationship
+        'department_id',
         'location',
         'start_time',
         'end_time',
         'assigned_to',
         'remarks',
+        'ticket_id',
     ];
 
     /**
@@ -28,5 +29,13 @@ class Task extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Relationship: Get the ticket automatically generated for this task.
+     */
+    public function ticket()
+    {
+        return $this->belongsTo(Ticket::class, 'ticket_id');
     }
 }
