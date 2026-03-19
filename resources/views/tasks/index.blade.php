@@ -122,7 +122,7 @@
                             {{-- Visible to All --}}
                             <a href="{{ route('tasks.show', $task) }}" class="btn btn-sm bg-cyan-500 text-white px-2 py-1 rounded shadow hover:bg-cyan-600 transition">View</a>
 
-                            {{-- EXACTLY AS YOU REQUESTED: Only shows View Ticket if a ticket is linked --}}
+                            {{-- This shows the ticket button ONLY if a ticket exists in the live database --}}
                             @if($task->ticket_id)
                                 <a href="{{ route('tickets.show', $task->ticket_id) }}" 
                                    class="btn btn-sm bg-indigo-600 text-white px-2 py-1 rounded shadow hover:bg-indigo-700 transition" 
