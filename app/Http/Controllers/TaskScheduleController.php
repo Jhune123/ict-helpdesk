@@ -76,6 +76,7 @@ class TaskScheduleController extends Controller
             'end_time'      => 'required|date_format:H:i:s|after:start_time',
             'assigned_to'   => 'nullable|string|max:255',
             'remarks'       => 'nullable|string|max:500',
+            'ticket_id'     => 'nullable|exists:tickets,id', // ✅ ADDED THIS LINE
         ]);
 
         // Security: If user is a Client, force assigned_to to null regardless of input
@@ -137,6 +138,7 @@ class TaskScheduleController extends Controller
             'end_time'      => 'required|date_format:H:i:s|after:start_time',
             'assigned_to'   => 'nullable|string|max:255',
             'remarks'       => 'nullable|string|max:500',
+            'ticket_id'     => 'nullable|exists:tickets,id', // ✅ ADDED THIS LINE
         ]);
 
         $task->update($validated);
