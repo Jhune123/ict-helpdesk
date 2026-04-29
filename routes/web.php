@@ -21,6 +21,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\MaintenanceScheduleController;
+use App\Http\Controllers\UserController; // ✅ ADDED USER CONTROLLER
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+
+    /* 👥 USER MANAGEMENT */
+    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+        // This single line automatically generates routes for index, create, store, edit, update, and destroy!
+        Route::resource('users', UserController::class);
+    });
 
     /* PROFILE */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
