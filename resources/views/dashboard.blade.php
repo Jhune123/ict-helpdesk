@@ -50,7 +50,7 @@
 
         <a href="{{ route('feedbacks.index') }}"
            class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-6 px-4 rounded-lg shadow-lg text-center transition transform hover:scale-105">
-            Client Feedback
+            Client Satisfaction Survey
         </a>
 
         <a href="{{ route('analytics.index') }}"

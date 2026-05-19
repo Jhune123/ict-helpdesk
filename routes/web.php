@@ -106,7 +106,17 @@ Route::middleware('auth')->group(function () {
     /* 📝 FEEDBACK SYSTEM */
     Route::get('/feedbacks/create/{ticket}', [FeedbackController::class, 'create'])->name('feedbacks.create');
     Route::post('/feedbacks/store/{ticket}', [FeedbackController::class, 'store'])->name('feedbacks.store');
-    Route::resource('feedbacks', FeedbackController::class)->except(['create', 'store']);
+    
+    // ✅ ADDED: PDF Download Route for the CSM Feedbacks
+    Route::get('/feedbacks/{feedback}/download-pdf', [FeedbackController::class, 'downloadPdf'])->name('feedbacks.download-pdf');
+    
+    // Everyone can view lists and show items
+    Route::resource('feedbacks', FeedbackController::class)->only(['index', 'show']);
+
+    // 🔒 Only Admins & IT Staff can edit, update, or delete client feedbacks
+    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+        Route::resource('feedbacks', FeedbackController::class)->only(['edit', 'update', 'destroy']);
+    });
 
     /* CATEGORIES & DEPARTMENTS */
     // ✅ FIX: Admin routes (create/store/edit/update/destroy) MUST come BEFORE public routes
