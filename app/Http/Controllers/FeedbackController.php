@@ -176,7 +176,31 @@ class FeedbackController extends Controller
             'suggestions'       => 'nullable|string'
         ]);
 
-        $feedback->update($validated);
+        // ✅ FIX: Bypasses Mass-Assignment restrictions to guarantee production security/compatibility
+        $feedback->client_name       = $validated['client_name'];
+        $feedback->office_visited    = $validated['office_visited'];
+        $feedback->services_received = $validated['services_received'];
+        $feedback->staff_assisted    = $validated['staff_assisted'];
+        $feedback->other_staff       = $validated['other_staff'];
+        $feedback->client_type       = $validated['client_type'];
+        $feedback->agency_name       = $validated['agency_name'];
+        $feedback->sex               = $validated['sex'];
+        $feedback->age               = $validated['age'];
+        $feedback->cc1               = $validated['cc1'];
+        $feedback->cc2               = $validated['cc2'];
+        $feedback->cc3               = $validated['cc3'];
+        $feedback->sqd0              = $validated['sqd0'];
+        $feedback->sqd1              = $validated['sqd1'];
+        $feedback->sqd2              = $validated['sqd2'];
+        $feedback->sqd3              = $validated['sqd3'];
+        $feedback->sqd4              = $validated['sqd4'];
+        $feedback->sqd5              = $validated['sqd5'];
+        $feedback->sqd6              = $validated['sqd6'];
+        $feedback->sqd7              = $validated['sqd7'];
+        $feedback->sqd8              = $validated['sqd8'];
+        $feedback->suggestions       = $validated['suggestions'];
+        
+        $feedback->save();
 
         return redirect()
             ->route('feedbacks.index')

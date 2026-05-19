@@ -21,7 +21,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\MaintenanceScheduleController;
-use App\Http\Controllers\UserController; // ✅ ADDED USER CONTROLLER
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,7 +55,6 @@ Route::middleware('auth')->group(function () {
 
     /* 👥 USER MANAGEMENT */
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        // This single line automatically generates routes for index, create, store, edit, update, and destroy!
         Route::resource('users', UserController::class);
     });
 
@@ -78,7 +77,7 @@ Route::middleware('auth')->group(function () {
         });
     });
 
-    /* TICKETS, COMMENTS & EXPORTS */
+    /* 🎫 TICKETS, COMMENTS & EXPORTS */
     Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
     
     Route::prefix('tickets/export')->group(function () {
@@ -87,16 +86,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/csv', [TicketController::class, 'exportCsv'])->name('tickets.export.csv');
     });
 
-    // ✅ FIX: Define BOTH routes to ensure compatibility across all Blade views without modifying them!
     Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrder');
     Route::get('/tickets/{ticket}/job-order-pdf', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
     
-    // Everyone can view and create tickets
-    Route::resource('tickets', TicketController::class)->only(['index', 'show', 'create', 'store']);
+    // Explicit production-safe ticket routes
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     
-    // Only Admins & IT Staff can edit or delete tickets
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::resource('tickets', TicketController::class)->only(['edit', 'update', 'destroy']);
+        Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit');
+        Route::put('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+        Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
     });
     
     // Comment Routes
@@ -106,30 +108,33 @@ Route::middleware('auth')->group(function () {
     /* 📝 FEEDBACK SYSTEM */
     Route::get('/feedbacks/create/{ticket}', [FeedbackController::class, 'create'])->name('feedbacks.create');
     Route::post('/feedbacks/store/{ticket}', [FeedbackController::class, 'store'])->name('feedbacks.store');
-    
-    // ✅ ADDED: PDF Download Route for the CSM Feedbacks
     Route::get('/feedbacks/{feedback}/download-pdf', [FeedbackController::class, 'downloadPdf'])->name('feedbacks.download-pdf');
     
-    // Everyone can view lists and show items
-    Route::resource('feedbacks', FeedbackController::class)->only(['index', 'show']);
+    // Explicit production-safe feedback routes
+    Route::get('/feedbacks', [FeedbackController::class, 'index'])->name('feedbacks.index');
+    Route::get('/feedbacks/{feedback}', [FeedbackController::class, 'show'])->name('feedbacks.show');
 
-    // 🔒 Only Admins & IT Staff can edit, update, or delete client feedbacks
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::resource('feedbacks', FeedbackController::class)->only(['edit', 'update', 'destroy']);
+        Route::get('/feedbacks/{feedback}/edit', [FeedbackController::class, 'edit'])->name('feedbacks.edit');
+        Route::put('/feedbacks/{feedback}', [FeedbackController::class, 'update'])->name('feedbacks.update');
+        Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->name('feedbacks.destroy');
     });
 
-    /* CATEGORIES & DEPARTMENTS */
-    // ✅ FIX: Admin routes (create/store/edit/update/destroy) MUST come BEFORE public routes
-    // This prevents the /{category} wildcard from swallowing the /create URL.
+    /* 🗂️ CATEGORIES & DEPARTMENTS */
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::resource('categories', CategoryController::class)->except(['index', 'show']);
+        Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+        Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        
         Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit']);
     });
 
-    // Everyone can view categories
-    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
-
-    /* PREVENTIVE MAINTENANCE (PMS) */
+    /* 🛠️ PREVENTIVE MAINTENANCE (PMS) */
     Route::prefix('maintenance')->group(function () {
         Route::get('/', [MaintenanceScheduleController::class, 'index'])->name('maintenance.index');
         Route::get('/export/pdf', [MaintenanceScheduleController::class, 'exportPdf'])->name('maintenance.pdf');
@@ -147,7 +152,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{maintenance}', [MaintenanceScheduleController::class, 'show'])->name('maintenance.show');
     });
 
-    /* ASSETS */
+    /* 🖥️ ASSETS */
     Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
     Route::get('/assets/print', [AssetController::class, 'print'])->name('assets.print');
     
@@ -162,20 +167,29 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
     Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 
-    /* OTHER TOOLS (TASKS & MEETINGS) */
+    /* 📅 OTHER TOOLS (TASKS & MEETINGS) */
     Route::get('/tasks/export/pdf', [TaskScheduleController::class, 'exportPdf'])->name('tasks.export.pdf');
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     
-    // ✅ FIX: Moved the Admin routes BEFORE the public routes to prevent the wildcard error on tasks and meetings
-    // Only Admins & IT Staff can modify tasks and meetings
-    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
-        Route::resource('tasks', TaskScheduleController::class)->except(['index', 'show']);
-        Route::resource('meetings', MeetingController::class)->except(['index', 'show']);
-    });
+    Route::get('/tasks', [TaskScheduleController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/{task}', [TaskScheduleController::class, 'show'])->name('tasks.show');
+    
+    Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
+    Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])->name('meetings.show');
 
-    // Everyone can view tasks and meetings
-    Route::resource('tasks', TaskScheduleController::class)->only(['index', 'show']);
-    Route::resource('meetings', MeetingController::class)->only(['index', 'show']);
+    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+        Route::get('/tasks/create', [TaskScheduleController::class, 'create'])->name('tasks.create');
+        Route::post('/tasks', [TaskScheduleController::class, 'store'])->name('tasks.store');
+        Route::get('/tasks/{task}/edit', [TaskScheduleController::class, 'edit'])->name('tasks.edit');
+        Route::put('/tasks/{task}', [TaskScheduleController::class, 'update'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [TaskScheduleController::class, 'destroy'])->name('tasks.destroy');
+
+        Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');
+        Route::post('/meetings', [MeetingController::class, 'store'])->name('meetings.store');
+        Route::get('/meetings/{meeting}/edit', [MeetingController::class, 'edit'])->name('meetings.edit');
+        Route::put('/meetings/{meeting}', [MeetingController::class, 'update'])->name('meetings.update');
+        Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy'])->name('meetings.destroy');
+    });
 
     /* 🗑️ CONDEMNED EQUIPMENT */
     Route::prefix('condemned-equipment')->group(function () {
@@ -195,7 +209,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
     });
 
-    /* SYSTEM LOGS & NOTIFICATIONS */
+    /* 🔔 SYSTEM LOGS & NOTIFICATIONS */
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/{id}/unread', [NotificationController::class, 'markAsUnread'])->name('notifications.markAsUnread');
