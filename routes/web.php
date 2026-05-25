@@ -206,7 +206,11 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'destroy'])->name('condemned-equipment.destroy');
         });
         
+        // Added the missing PDF download route safely before the wildcard {condemnedEquipment} route
+        Route::get('/{ticket}/pdf', [CondemnedEquipmentController::class, 'downloadPdf'])->name('condemned-equipment.pdf');
         Route::get('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
+        Route::get('/condemned-equipment/{id}/print', [App\Http\Controllers\CondemnedEquipmentController::class, 'downloadCertificate'])
+     ->name('condemned-equipment.print');
     });
 
     /* 🔔 SYSTEM LOGS & NOTIFICATIONS */

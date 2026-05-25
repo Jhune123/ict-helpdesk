@@ -13,7 +13,6 @@ class CondemnedEquipment extends Model
 
     /**
      * Using guarded = [] allows all columns to be saved automatically.
-     * This is perfect for an archive table where fields might change.
      */
     protected $guarded = [];
 
@@ -22,7 +21,7 @@ class CondemnedEquipment extends Model
      */
     protected $casts = [
         'date_submitted' => 'datetime',
-        'date_condemned' => 'datetime', // Matches the date_condemned sent by TicketController
+        'date_condemned' => 'datetime',
         'date_finished'  => 'datetime',
     ];
 
@@ -34,14 +33,19 @@ class CondemnedEquipment extends Model
         static::creating(function ($model) {
             $year = now()->year;
 
-            // We force a new 'COND-' reference number even if it came from a 'KSU-ICTO' ticket
-            if (empty($model->ticket_number) || !str_starts_with($model->ticket_number, 'COND-')) {
+            // Check if we need to convert an incoming ticket number into the asset archive format
+            if (!empty($model->ticket_number) && !str_starts_with($model->ticket_number, 'COND-')) {
                 
-                // Save the original ticket number in description or a separate field if needed before overwriting
-                if (!empty($model->ticket_number) && empty($model->notes)) {
-                    $model->notes = "Original Ticket Reference: " . $model->ticket_number;
+                $referenceText = "Original Ticket Reference: " . $model->ticket_number;
+                
+                // FIXED: Changed $model->notes to $model->description to avoid missing column errors
+                if (empty($model->description)) {
+                    $model->description = $referenceText;
+                } else {
+                    $model->description .= "\n" . $referenceText;
                 }
 
+                // Look for the last generated condemnation voucher for the current year
                 $lastTicket = self::where('ticket_number', 'like', "COND-{$year}-%")
                                   ->orderBy('id', 'desc')
                                   ->first();
@@ -49,17 +53,17 @@ class CondemnedEquipment extends Model
                 $nextNumber = 1;
 
                 if ($lastTicket && $lastTicket->ticket_number) {
-                    // Safely extract the last 5 digits
+                    // Safely extract the last 5 trailing sequential digits
                     if (preg_match('/-(\d{5})$/', $lastTicket->ticket_number, $matches)) {
                         $nextNumber = intval($matches[1]) + 1;
                     }
                 }
 
-                // Generates format: COND-2026-00001
+                // Generates standardized format: COND-2026-00001
                 $model->ticket_number = 'COND-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
             }
 
-            // Ensure date_condemned is set if the controller forgot it
+            // Ensure date_condemned is initialized if not explicitly passed
             if (empty($model->date_condemned)) {
                 $model->date_condemned = now();
             }

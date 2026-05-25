@@ -8,12 +8,16 @@
             📋 Condemned Equipment Details
         </h1>
         <div class="flex gap-2">
+            <a href="{{ route('condemned-equipment.print', $condemnedEquipment->id) }}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow text-sm flex items-center gap-1 transition duration-200">
+                🖨️ Print Certification
+            </a>
             <a href="{{ route('condemned-equipment.edit', $condemnedEquipment->id) }}" 
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm flex items-center gap-1 transition duration-200">
                 ✏️ Edit
             </a>
             <a href="{{ route('condemned-equipment.index') }}" 
-               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow text-sm">
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow text-sm flex items-center gap-1 transition duration-200">
                 ⬅ Back to List
             </a>
         </div>

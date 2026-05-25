@@ -102,23 +102,23 @@ class TicketController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'           => 'nullable|string|max:255',
-            'description'     => 'nullable|string',
-            'equipment_type'  => 'nullable|string|max:255',
-            'brand_model'     => 'nullable|string|max:255',
-            'serial_no'       => 'nullable|string|max:255',
-            'priority'        => 'nullable|string|max:50',
-            'category_id'     => 'nullable|integer',
-            'category_manual' => 'nullable|string|max:255',
-            'department'      => 'nullable|string|max:255',
-            'assigned_to'     => 'nullable|integer',
-            'client_name'     => 'nullable|string|max:255',
-            'contact_number'  => 'nullable|string|max:255', 
-            'remarks'         => 'nullable|string|max:500',
-            'form_data'       => 'nullable|array',
-            'meta'            => 'nullable|array', 
-            'status'          => 'nullable|string', 
-            'form_type'       => 'nullable|string',
+            'title'                       => 'nullable|string|max:255',
+            'description'                 => 'nullable|string',
+            'equipment_type'              => 'nullable|string|max:255',
+            'brand_model'                 => 'nullable|string|max:255',
+            'serial_no'                   => 'nullable|string|max:255',
+            'priority'                    => 'nullable|string|max:50',
+            'category_id'                 => 'nullable|integer',
+            'category_manual'             => 'nullable|string|max:255',
+            'department'                  => 'nullable|string|max:255',
+            'assigned_to'                 => 'nullable|integer',
+            'client_name'                 => 'nullable|string|max:255',
+            'contact_number'              => 'nullable|string|max:255', 
+            'remarks'                     => 'nullable|string|max:500',
+            'form_data'                   => 'nullable|array',
+            'meta'                        => 'nullable|array', 
+            'status'                      => 'nullable|string', 
+            'form_type'                   => 'nullable|string',
             'network_office'              => 'nullable|string|max:255',
             'network_request_type'        => 'nullable|string|max:255',
             'network_request_type_others' => 'nullable|string|max:255',
@@ -170,6 +170,8 @@ class TicketController extends Controller
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-09';
         }
 
+        $targetStatus = $validated['status'] ?? 'Open';
+
         $ticket = Ticket::create([
             'ticket_number'   => $ticketNumber,
             'title'           => $validated['title'] ?? 'QMS Support Ticket',
@@ -181,7 +183,7 @@ class TicketController extends Controller
             'category_id'     => $categoryId,
             'department'      => $department,
             'assigned_to'     => $assignedTo,
-            'status'          => $validated['status'] ?? 'Open',
+            'status'          => $targetStatus,
             'remarks'         => $validated['remarks'] ?? null,
             'client_name'     => $validated['client_name'] ?? Auth::user()->name, 
             'contact_number'  => $validated['contact_number'] ?? null,
@@ -207,6 +209,34 @@ class TicketController extends Controller
         }
 
         ActivityLogger::log('created', $ticket, 'Created Ticket: "' . $ticket->title . '"');
+
+        // Capture initial Condemned states directly on storage creation
+        if (strtolower($targetStatus) === 'condemned') {
+            try {
+                $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
+                CondemnedEquipment::create([
+                    'item_name'      => $ticket->title,
+                    'property_no'    => $ticket->form_data['property_no'] ?? 'PENDING', 
+                    'ticket_number'  => $ticket->ticket_number,
+                    'title'          => $ticket->title,
+                    'description'    => $ticket->description,
+                    'equipment_type' => $ticket->equipment_type,
+                    'brand_model'    => $ticket->brand_model,
+                    'serial_no'      => $ticket->serial_no,
+                    'category'       => $categoryName,
+                    'department'     => $ticket->department,
+                    'it_personnel'   => Auth::user()->name ?? 'System',
+                    'client_name'    => $ticket->client_name,
+                    'priority'       => $ticket->priority,
+                    'contact'        => $ticket->contact_number,
+                    'status'         => 'Condemned',
+                    'date_submitted' => $ticket->created_at,
+                    'date_finished'  => now(),
+                ]);
+            } catch (\Exception $e) {
+                Log::error("Condemn Transfer Failed during explicit ticket creation: " . $e->getMessage());
+            }
+        }
 
         if ($assignedTo && ($it = User::find($assignedTo))) {
             try { $it->notify(new TicketAssignedNotification($ticket)); } catch (\Exception $e) {}
@@ -278,36 +308,46 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-        // Condemned Logic
-        if ($validated['status'] === 'Condemned' && $ticket->status !== 'Condemned') {
+       // Condemned Logic (Debugging Version)
+        if (strtolower($validated['status']) === 'condemned' && strtolower($ticket->status) !== 'condemned') {
             try {
                 $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
+                
+                // Safely handle form_data whether it's an array or a JSON string
+                $ticketFormData = is_array($ticket->form_data) ? $ticket->form_data : json_decode($ticket->form_data, true);
+                $validatedFormData = is_array($validated['form_data'] ?? null) ? $validated['form_data'] : [];
+                $propertyNo = $ticketFormData['property_no'] ?? ($validatedFormData['property_no'] ?? 'PENDING');
+
                 CondemnedEquipment::create([
-                    'item_name'      => $validated['title'],
-                    'property_no'    => $ticket->form_data['property_no'] ?? 'PENDING', 
+                    'item_name'      => $validated['title'] ?? $ticket->title,
+                    'property_no'    => $propertyNo, 
                     'ticket_number'  => $ticket->ticket_number,
-                    'title'          => $validated['title'],
-                    'description'    => $validated['description'],
-                    'equipment_type' => $validated['equipment_type'],
-                    'brand_model'    => $validated['brand_model'],
-                    'serial_no'      => $validated['serial_no'],
+                    'title'          => $validated['title'] ?? $ticket->title,
+                    'description'    => $validated['description'] ?? $ticket->description,
+                    'equipment_type' => $validated['equipment_type'] ?? $ticket->equipment_type,
+                    'brand_model'    => $validated['brand_model'] ?? $ticket->brand_model,
+                    'serial_no'      => $validated['serial_no'] ?? $ticket->serial_no,
                     'category'       => $categoryName,
-                    'department'     => $validated['department'],
+                    'department'     => $validated['department'] ?? $ticket->department,
                     'it_personnel'   => Auth::user()->name,
-                    'client_name'    => $validated['client_name'],
-                    'priority'       => $validated['priority'],
-                    'contact'        => $validated['contact_number'],
+                    'client_name'    => $validated['client_name'] ?? $ticket->client_name,
+                    'priority'       => $validated['priority'] ?? $ticket->priority,
+                    'contact'        => $validated['contact_number'] ?? $ticket->contact_number, // ⚠️ CHECK: Is this column named 'contact' or 'contact_number' in your migration?
                     'status'         => 'Condemned',
                     'date_submitted' => $ticket->created_at,
                     'date_finished'  => now(),
                 ]);
             } catch (\Exception $e) {
-                Log::error("Condemn Transfer Failed: " . $e->getMessage());
+                // 🛑 This will halt execution and print the exact error on your screen!
+                dd([
+                    'Error Message' => $e->getMessage(),
+                    'File' => $e->getFile(),
+                    'Line' => $e->getLine()
+                ]);
             }
         }
-
         $oldStatus = $ticket->status;
-        $dateFinished = in_array($validated['status'], ['Closed', 'Condemned']) ? Carbon::now('Asia/Manila') : $ticket->date_finished;
+        $dateFinished = in_array(strtolower($validated['status']), ['closed', 'condemned']) ? Carbon::now('Asia/Manila') : $ticket->date_finished;
 
         $updatedFormData = $ticket->form_data ?? [];
         if (!empty($validated['form_data'])) {

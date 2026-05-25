@@ -12,6 +12,7 @@ use App\Models\Attachment;
 use App\Models\Feedback;
 use App\Models\NetworkRequest; 
 use App\Models\Task;
+use App\Models\CondemnedEquipment; // Imported for automation handling
 
 class Ticket extends Model
 {
@@ -51,6 +52,31 @@ class Ticket extends Model
         'date_finished'  => 'datetime',
         'form_data'      => 'array', 
     ];
+
+    /**
+     * The "booted" method of the model.
+     * Automatically handles internal application events safely.
+     */
+    protected static function booted()
+    {
+        static::updated(function ($ticket) {
+            // Check if status field changed, and if it transitioned specifically to 'condemned'
+            if ($ticket->isDirty('status') && $ticket->status === 'condemned') {
+                
+                // Safety guard against record duplicate handling
+                $exists = CondemnedEquipment::where('ticket_id', $ticket->id)->exists();
+
+                if (!$exists) {
+                    CondemnedEquipment::create([
+                        'ticket_id'    => $ticket->id,
+                        'user_id'      => auth()->id() ?? $ticket->assigned_to ?? $ticket->created_by,
+                        'reason'       => $ticket->remarks ?? 'Automatically logged via ticket state conversion.',
+                        'condemned_at' => now(),
+                    ]);
+                }
+            }
+        });
+    }
 
     /* --- RELATIONSHIPS --- */
 
@@ -95,6 +121,14 @@ class Ticket extends Model
     public function task()
     {
         return $this->hasOne(Task::class, 'ticket_id');
+    }
+
+    /**
+     * Relationship: Linked record inside the Condemned Equipment engine.
+     */
+    public function condemnedRecord()
+    {
+        return $this->hasOne(CondemnedEquipment::class, 'ticket_id');
     }
 
     /* --- ACCESSORS / HELPERS --- */
