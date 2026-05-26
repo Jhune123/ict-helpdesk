@@ -122,7 +122,6 @@ Route::middleware('auth')->group(function () {
 
     /* 🗂️ CATEGORIES & DEPARTMENTS */
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
 
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
@@ -133,6 +132,8 @@ Route::middleware('auth')->group(function () {
         
         Route::resource('departments', DepartmentController::class)->except(['create', 'show', 'edit']);
     });
+
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
 
     /* 🛠️ PREVENTIVE MAINTENANCE (PMS) */
     Route::prefix('maintenance')->group(function () {
@@ -171,12 +172,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks/export/pdf', [TaskScheduleController::class, 'exportPdf'])->name('tasks.export.pdf');
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     
-    Route::get('/tasks', [TaskScheduleController::class, 'index'])->name('tasks.index');
-    Route::get('/tasks/{task}', [TaskScheduleController::class, 'show'])->name('tasks.show');
-    
-    Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
-    Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])->name('meetings.show');
-
+    // Explicit Admin/IT-Staff routes placed BEFORE wildcard handlers
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/tasks/create', [TaskScheduleController::class, 'create'])->name('tasks.create');
         Route::post('/tasks', [TaskScheduleController::class, 'store'])->name('tasks.store');
@@ -190,6 +186,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/meetings/{meeting}', [MeetingController::class, 'update'])->name('meetings.update');
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy'])->name('meetings.destroy');
     });
+
+    // General Authenticated viewing routes containing baseline wildcards
+    Route::get('/tasks', [TaskScheduleController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/{task}', [TaskScheduleController::class, 'show'])->name('tasks.show');
+    
+    Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
+    Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])->name('meetings.show');
 
     /* 🗑️ CONDEMNED EQUIPMENT */
     Route::prefix('condemned-equipment')->group(function () {
@@ -206,11 +209,9 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'destroy'])->name('condemned-equipment.destroy');
         });
         
-        // Added the missing PDF download route safely before the wildcard {condemnedEquipment} route
         Route::get('/{ticket}/pdf', [CondemnedEquipmentController::class, 'downloadPdf'])->name('condemned-equipment.pdf');
+        Route::get('/{id}/print', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.print');
         Route::get('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
-        Route::get('/condemned-equipment/{id}/print', [App\Http\Controllers\CondemnedEquipmentController::class, 'downloadCertificate'])
-     ->name('condemned-equipment.print');
     });
 
     /* 🔔 SYSTEM LOGS & NOTIFICATIONS */

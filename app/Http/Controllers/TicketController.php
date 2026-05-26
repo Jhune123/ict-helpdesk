@@ -23,13 +23,21 @@ use Illuminate\Support\Str;
 class TicketController extends Controller
 {
     /**
-     * 📝 Ticket List (Active Workspace)
+     * 📝 Ticket List (Dynamic: Handles Active Workspaces & Archives)
      */
     public function index(Request $request)
     {
         $query = Ticket::with(['category', 'assignee', 'feedback'])
-            ->whereIn('status', ['Open', 'In Progress'])
             ->orderBy('created_at', 'desc');
+
+        // Context check: Toggle between live operational queue or static archives log
+        if ($request->input('view') === 'archive') {
+            // Support both Title Case and lowercase text configurations safely
+            $query->whereIn('status', ['Closed', 'Finished', 'closed', 'finished']);
+        } else {
+            // Default workspace layout filters active jobs
+            $query->whereIn('status', ['Open', 'In Progress', 'open', 'in progress']);
+        }
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -170,7 +178,16 @@ class TicketController extends Controller
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-09';
         }
 
+        // 🛡️ Safe Casing Normalization Map
+        $statusMap = [
+            'open'        => 'Open',
+            'in progress' => 'In Progress',
+            'closed'      => 'Closed',
+            'finished'    => 'Finished',
+            'condemned'   => 'Condemned'
+        ];
         $targetStatus = $validated['status'] ?? 'Open';
+        $targetStatus = $statusMap[strtolower($targetStatus)] ?? $targetStatus;
 
         $ticket = Ticket::create([
             'ticket_number'   => $ticketNumber,
@@ -231,7 +248,7 @@ class TicketController extends Controller
                     'contact'        => $ticket->contact_number,
                     'status'         => 'Condemned',
                     'date_submitted' => $ticket->created_at,
-                    'date_finished'  => now(),
+                    'date_condemned' => now(),
                 ]);
             } catch (\Exception $e) {
                 Log::error("Condemn Transfer Failed during explicit ticket creation: " . $e->getMessage());
@@ -308,46 +325,52 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
-       // Condemned Logic (Debugging Version)
-        if (strtolower($validated['status']) === 'condemned' && strtolower($ticket->status) !== 'condemned') {
-            try {
-                $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
-                
-                // Safely handle form_data whether it's an array or a JSON string
-                $ticketFormData = is_array($ticket->form_data) ? $ticket->form_data : json_decode($ticket->form_data, true);
-                $validatedFormData = is_array($validated['form_data'] ?? null) ? $validated['form_data'] : [];
-                $propertyNo = $ticketFormData['property_no'] ?? ($validatedFormData['property_no'] ?? 'PENDING');
-
-                CondemnedEquipment::create([
-                    'item_name'      => $validated['title'] ?? $ticket->title,
-                    'property_no'    => $propertyNo, 
-                    'ticket_number'  => $ticket->ticket_number,
-                    'title'          => $validated['title'] ?? $ticket->title,
-                    'description'    => $validated['description'] ?? $ticket->description,
-                    'equipment_type' => $validated['equipment_type'] ?? $ticket->equipment_type,
-                    'brand_model'    => $validated['brand_model'] ?? $ticket->brand_model,
-                    'serial_no'      => $validated['serial_no'] ?? $ticket->serial_no,
-                    'category'       => $categoryName,
-                    'department'     => $validated['department'] ?? $ticket->department,
-                    'it_personnel'   => Auth::user()->name,
-                    'client_name'    => $validated['client_name'] ?? $ticket->client_name,
-                    'priority'       => $validated['priority'] ?? $ticket->priority,
-                    'contact'        => $validated['contact_number'] ?? $ticket->contact_number, // ⚠️ CHECK: Is this column named 'contact' or 'contact_number' in your migration?
-                    'status'         => 'Condemned',
-                    'date_submitted' => $ticket->created_at,
-                    'date_finished'  => now(),
-                ]);
-            } catch (\Exception $e) {
-                // 🛑 This will halt execution and print the exact error on your screen!
-                dd([
-                    'Error Message' => $e->getMessage(),
-                    'File' => $e->getFile(),
-                    'Line' => $e->getLine()
-                ]);
-            }
-        }
         $oldStatus = $ticket->status;
-        $dateFinished = in_array(strtolower($validated['status']), ['closed', 'condemned']) ? Carbon::now('Asia/Manila') : $ticket->date_finished;
+
+        // 🛡️ Normalize input casing immediately to prevent strict-matching query bugs
+        $statusMap = [
+            'open'        => 'Open',
+            'in progress' => 'In Progress',
+            'closed'      => 'Closed',
+            'finished'    => 'Finished',
+            'condemned'   => 'Condemned'
+        ];
+        if (isset($validated['status'])) {
+            $validated['status'] = $statusMap[strtolower($validated['status'])] ?? $validated['status'];
+        }
+
+        // Condemned Logic
+        if (strtolower($validated['status']) === 'condemned' && strtolower($oldStatus) !== 'condemned') {
+            $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
+            
+            $ticketFormData = is_array($ticket->form_data) ? $ticket->form_data : json_decode($ticket->form_data, true);
+            $validatedFormData = is_array($validated['form_data'] ?? null) ? $validated['form_data'] : [];
+            $propertyNo = $ticketFormData['property_no'] ?? ($validatedFormData['property_no'] ?? 'PENDING');
+
+            $condemnedFields = [
+                'item_name'      => $validated['title'] ?? $ticket->title,
+                'property_no'    => $propertyNo, 
+                'ticket_number'  => $ticket->ticket_number,
+                'title'          => $validated['title'] ?? $ticket->title,
+                'description'    => $validated['description'] ?? $ticket->description,
+                'equipment_type' => $validated['equipment_type'] ?? $ticket->equipment_type,
+                'brand_model'    => $validated['brand_model'] ?? $ticket->brand_model,
+                'serial_no'      => $validated['serial_no'] ?? $ticket->serial_no,
+                'category'       => $categoryName,
+                'department'     => $validated['department'] ?? $ticket->department,
+                'it_personnel'   => Auth::user()->name,
+                'client_name'    => $validated['client_name'] ?? $ticket->client_name,
+                'priority'       => $validated['priority'] ?? $ticket->priority,
+                'contact'        => $validated['contact_number'] ?? $ticket->contact_number,
+                'status'         => 'Condemned',
+                'date_submitted' => $ticket->created_at,
+                'date_condemned' => now(),
+            ];
+
+            CondemnedEquipment::create($condemnedFields);
+        }
+
+        $dateFinished = in_array(strtolower($validated['status']), ['closed', 'finished', 'condemned']) ? Carbon::now('Asia/Manila') : $ticket->date_finished;
 
         $updatedFormData = $ticket->form_data ?? [];
         if (!empty($validated['form_data'])) {
@@ -379,6 +402,28 @@ class TicketController extends Controller
 
         if ($oldStatus !== $validated['status']) {
             try { $ticket->notify(new TicketStatusChanged($validated['status'])); } catch (\Exception $e) {}
+        }
+
+        // Clean up from Condemned log table if rolled back out to active workspaces
+        $newStatusLower = strtolower($validated['status']);
+        if (strtolower($oldStatus) === 'condemned' && $newStatusLower !== 'condemned') {
+            CondemnedEquipment::where('ticket_number', $ticket->ticket_number)->delete();
+        }
+
+        // 🚀 Context-aware workspace routing engine
+        if (in_array($newStatusLower, ['open', 'in progress'])) {
+            return redirect()->route('tickets.index')
+                             ->with('success', 'Ticket updated successfully and moved to Active Workspace queue ✅');
+        }
+
+        if (in_array($newStatusLower, ['closed', 'finished'])) {
+            return redirect()->route('tickets.index', ['view' => 'archive'])
+                             ->with('success', 'Ticket resolved successfully and moved into Archives Archive 🗄️');
+        }
+
+        if ($newStatusLower === 'condemned') {
+            return redirect()->route('condemned-equipment.index')
+                             ->with('success', 'Ticket successfully transferred into Condemned Log registries 📋');
         }
 
         return redirect()->route('tickets.show', $ticket->id)->with('success', 'Ticket updated successfully ✅');
