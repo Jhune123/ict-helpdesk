@@ -47,7 +47,7 @@
 
         {{-- Description --}}
         <div class="md:col-span-2 bg-gray-50 p-4 rounded border">
-            <span class="block text-sm font-bold text-gray-500 uppercase mb-2">Description / Remarks</span>
+            <span class="block text-sm font-bold text-gray-500 uppercase mb-2">Description / Remarks:</span>
             <p class="whitespace-pre-wrap">{{ $condemnedEquipment->description ?: 'No description provided.' }}</p>
         </div>
 

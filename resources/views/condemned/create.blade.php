@@ -8,12 +8,7 @@
     </h1>
 
     @php
-        // These stay here as they are specific to this form's logic
-        $categories = [
-            'Hardware', 'Software', 'Network', 'Email & Accounts', 'Website & Online Services',
-            'Printing & Scanning', 'Multimedia Equipment', 'Server & Storage', 'Security', 'Others'
-        ];
-
+        // Categories and Departments are now passed dynamically from the Controller (Database Seeders)
         $it_personnel = ['Walid', 'Bryan', 'Jhune', 'Reymar'];
     @endphp
 
@@ -42,7 +37,7 @@
 
             {{-- Description --}}
             <div class="md:col-span-2">
-                <label class="block font-semibold mb-1">Description</label>
+                <label class="block font-semibold mb-1">Description / Remarks:</label>
                 <textarea name="description" rows="3" class="border rounded w-full p-2">{{ old('description') }}</textarea>
             </div>
 
@@ -77,7 +72,7 @@
                 <select name="category" class="border rounded w-full p-2">
                     <option value="">Select Category</option>
                     @foreach($categories as $cat)
-                        <option value="{{ $cat }}" {{ old('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                        <option value="{{ $cat->name }}" {{ old('category') == $cat->name ? 'selected' : '' }}>{{ $cat->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -88,7 +83,7 @@
                 <select name="department" class="border rounded w-full p-2 select2">
                     <option value="">Select Department</option>
                     @foreach($departments as $dept)
-                        <option value="{{ $dept }}" {{ old('department') == $dept ? 'selected' : '' }}>{{ $dept }}</option>
+                        <option value="{{ $dept->name }}" {{ old('department') == $dept->name ? 'selected' : '' }}>{{ $dept->name }}</option>
                     @endforeach
                 </select>
             </div>

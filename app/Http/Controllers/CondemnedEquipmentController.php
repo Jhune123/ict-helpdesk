@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CondemnedEquipment;
 use App\Models\Department;
+use App\Models\Category; // Added Category model import
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\CondemnedEquipmentExport;
@@ -50,8 +51,12 @@ class CondemnedEquipmentController extends Controller
     public function create()
     {
         $this->authorizeAdminOrStaff();
-        $departments = Department::orderBy('name', 'asc')->pluck('name');
-        return view('condemned.create', compact('departments'));
+        
+        // Fetch full collections to match the Ticket creating process
+        $departments = Department::orderBy('name', 'asc')->get();
+        $categories = Category::orderBy('name', 'asc')->get();
+        
+        return view('condemned.create', compact('departments', 'categories'));
     }
 
     public function store(Request $request)
@@ -110,9 +115,12 @@ class CondemnedEquipmentController extends Controller
     {
         $this->authorizeAdminOrStaff();
         $condemnedEquipment = CondemnedEquipment::findOrFail($id);
-        $departments = Department::orderBy('name', 'asc')->pluck('name');
+        
+        // Fetch full collections to match the Ticket editing process
+        $departments = Department::orderBy('name', 'asc')->get();
+        $categories = Category::orderBy('name', 'asc')->get();
 
-        return view('condemned.edit', compact('condemnedEquipment', 'departments'));
+        return view('condemned.edit', compact('condemnedEquipment', 'departments', 'categories'));
     }
 
     public function update(Request $request, $id)

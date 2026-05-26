@@ -9,13 +9,7 @@
 
     {{-- DEFINE LISTS --}}
     @php
-        $departments = [
-            "Accounting Section", "Administrative Services", "Business Affairs",
-            "College of Engineering", "ICT Office", "Library", "Registrar"
-        ];
-        $categories = [
-            'Hardware', 'Software', 'Network', 'Multimedia', 'Others'
-        ];
+        // Categories and Departments are now passed dynamically from the Controller (Database Seeders)
         $it_personnel = ['Walid', 'Bryan', 'Jhune', 'Reymar'];
     @endphp
 
@@ -45,7 +39,7 @@
 
             {{-- Description --}}
             <div class="md:col-span-2">
-                <label class="block font-semibold mb-1">Description</label>
+                <label class="block font-semibold mb-1">Description / Remarks:</label>
                 <textarea name="description" rows="3" class="border rounded w-full p-2">{{ old('description', $condemnedEquipment->description) }}</textarea>
             </div>
 
@@ -93,7 +87,9 @@
                 <select name="category" class="border rounded w-full p-2">
                     <option value="">Select Category</option>
                     @foreach($categories as $cat)
-                        <option value="{{ $cat }}" {{ $condemnedEquipment->category == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                        <option value="{{ $cat->name }}" {{ old('category', $condemnedEquipment->category) == $cat->name ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -104,7 +100,9 @@
                 <select name="department" class="border rounded w-full p-2">
                     <option value="">Select Department</option>
                     @foreach($departments as $dept)
-                        <option value="{{ $dept }}" {{ $condemnedEquipment->department == $dept ? 'selected' : '' }}>{{ $dept }}</option>
+                        <option value="{{ $dept->name }}" {{ old('department', $condemnedEquipment->department) == $dept->name ? 'selected' : '' }}>
+                            {{ $dept->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
