@@ -7,12 +7,6 @@
         ✏️ Edit Condemned Equipment
     </h1>
 
-    {{-- DEFINE LISTS --}}
-    @php
-        // Categories and Departments are now passed dynamically from the Controller (Database Seeders)
-        $it_personnel = ['Walid', 'Bryan', 'Jhune', 'Reymar'];
-    @endphp
-
     <form action="{{ route('condemned-equipment.update', $condemnedEquipment->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -43,14 +37,13 @@
                 <textarea name="description" rows="3" class="border rounded w-full p-2">{{ old('description', $condemnedEquipment->description) }}</textarea>
             </div>
 
-            {{-- ✅ ATTACHMENT SECTION --}}
+            {{-- ATTACHMENT SECTION --}}
             <div class="md:col-span-2 bg-blue-50 p-4 rounded border border-blue-200">
                 <label class="block font-semibold mb-2">Attachment / Proof</label>
                 
                 @if($condemnedEquipment->attachment_path)
                     <div class="mb-3 flex items-center gap-2">
                         <span class="text-sm text-green-700 font-bold">✅ Current File:</span>
-                        {{-- Ensure 'storage/' is correct and link exists --}}
                         <a href="{{ asset('storage/' . $condemnedEquipment->attachment_path) }}" target="_blank" class="text-blue-600 underline text-sm hover:text-blue-800">
                             View Current Attachment
                         </a>
@@ -107,13 +100,15 @@
                 </select>
             </div>
 
-            {{-- IT Personnel --}}
+            {{-- Dynamic IT Personnel Dropdown --}}
             <div>
                 <label class="block font-semibold mb-1">IT Personnel</label>
                 <select name="it_personnel" class="border rounded w-full p-2">
                     <option value="">Select Personnel</option>
                     @foreach($it_personnel as $person)
-                        <option value="{{ $person }}" {{ $condemnedEquipment->it_personnel == $person ? 'selected' : '' }}>{{ $person }}</option>
+                        <option value="{{ $person->name }}" {{ old('it_personnel', $condemnedEquipment->it_personnel) == $person->name ? 'selected' : '' }}>
+                            {{ $person->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -150,7 +145,7 @@
                 </select>
             </div>
 
-            {{-- ✅ DATES FIXED: FORCED FORMATTING --}}
+            {{-- DATES FIXED --}}
             <div>
                 <label class="block font-semibold mb-1">Date Submitted</label>
                 <input type="date" name="date_submitted" 

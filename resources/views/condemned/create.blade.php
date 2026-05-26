@@ -7,11 +7,6 @@
         ➕ Add Condemned Equipment
     </h1>
 
-    @php
-        // Categories and Departments are now passed dynamically from the Controller (Database Seeders)
-        $it_personnel = ['Walid', 'Bryan', 'Jhune', 'Reymar'];
-    @endphp
-
     <form action="{{ route('condemned-equipment.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
@@ -77,7 +72,7 @@
                 </select>
             </div>
 
-            {{-- Department Dropdown (Dynamic from Tickets/Departments Table) --}}
+            {{-- Department Dropdown --}}
             <div>
                 <label class="block font-semibold mb-1">Department</label>
                 <select name="department" class="border rounded w-full p-2 select2">
@@ -88,13 +83,13 @@
                 </select>
             </div>
 
-            {{-- IT Personnel Dropdown --}}
+            {{-- Dynamic IT Personnel Dropdown --}}
             <div>
                 <label class="block font-semibold mb-1">IT Personnel</label>
                 <select name="it_personnel" class="border rounded w-full p-2">
                     <option value="">Select Personnel</option>
                     @foreach($it_personnel as $person)
-                        <option value="{{ $person }}" {{ old('it_personnel') == $person ? 'selected' : '' }}>{{ $person }}</option>
+                        <option value="{{ $person->name }}" {{ old('it_personnel') == $person->name ? 'selected' : '' }}>{{ $person->name }}</option>
                     @endforeach
                 </select>
             </div>

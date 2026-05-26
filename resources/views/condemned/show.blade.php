@@ -8,6 +8,13 @@
             📋 Condemned Equipment Details
         </h1>
         <div class="flex gap-2">
+            {{-- ✅ VIEW PDF BUTTON (Before Print) --}}
+            <a href="{{ route('condemned-equipment.downloadCertificate', $condemnedEquipment->id) }}" 
+               target="_blank"
+               class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded shadow text-sm flex items-center gap-1 transition duration-200">
+                📄 View PDF
+            </a>
+            
             <a href="{{ route('condemned-equipment.print', $condemnedEquipment->id) }}" 
                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow text-sm flex items-center gap-1 transition duration-200">
                 🖨️ Print Certification
@@ -51,7 +58,7 @@
             <p class="whitespace-pre-wrap">{{ $condemnedEquipment->description ?: 'No description provided.' }}</p>
         </div>
 
-        {{-- ✅ ATTACHMENT SECTION --}}
+        {{-- ATTACHMENT SECTION --}}
         <div class="md:col-span-2 mt-2">
             <span class="block text-sm font-bold text-gray-500 uppercase mb-2">Attachment / Proof</span>
             

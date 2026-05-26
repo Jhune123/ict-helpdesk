@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/csv', [TicketController::class, 'exportCsv'])->name('tickets.export.csv');
     });
 
+    // Explicit ticket layout routes
     Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrder');
     Route::get('/tickets/{ticket}/job-order-pdf', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
     
@@ -211,6 +212,10 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/{ticket}/pdf', [CondemnedEquipmentController::class, 'downloadPdf'])->name('condemned-equipment.pdf');
         Route::get('/{id}/print', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.print');
+        
+        // Added the missing dynamic certificate viewing route here (placed safely above wildcard)
+        Route::get('/{id}/download-certificate', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.downloadCertificate');
+        
         Route::get('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
     });
 

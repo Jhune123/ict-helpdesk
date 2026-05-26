@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CondemnedEquipment;
 use App\Models\Department;
-use App\Models\Category; // Added Category model import
+use App\Models\Category;
+use App\Models\User; // Added User model import
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\CondemnedEquipmentExport;
@@ -52,11 +53,13 @@ class CondemnedEquipmentController extends Controller
     {
         $this->authorizeAdminOrStaff();
         
-        // Fetch full collections to match the Ticket creating process
         $departments = Department::orderBy('name', 'asc')->get();
         $categories = Category::orderBy('name', 'asc')->get();
         
-        return view('condemned.create', compact('departments', 'categories'));
+        // Fetch IT personnel matching your ticket system. 
+        $it_personnel = User::orderBy('name', 'asc')->get();
+        
+        return view('condemned.create', compact('departments', 'categories', 'it_personnel'));
     }
 
     public function store(Request $request)
@@ -96,7 +99,6 @@ class CondemnedEquipmentController extends Controller
             $validated['attachment_path'] = $request->file('attachment')->store('condemned_proofs', 'public');
         }
 
-        // FIXED: Remove file object instance before entry insertion to avoid SQL unknown column errors
         unset($validated['attachment']);
 
         CondemnedEquipment::create($validated);
@@ -116,11 +118,13 @@ class CondemnedEquipmentController extends Controller
         $this->authorizeAdminOrStaff();
         $condemnedEquipment = CondemnedEquipment::findOrFail($id);
         
-        // Fetch full collections to match the Ticket editing process
         $departments = Department::orderBy('name', 'asc')->get();
         $categories = Category::orderBy('name', 'asc')->get();
 
-        return view('condemned.edit', compact('condemnedEquipment', 'departments', 'categories'));
+        // Fetch IT personnel matching your ticket system.
+        $it_personnel = User::orderBy('name', 'asc')->get();
+
+        return view('condemned.edit', compact('condemnedEquipment', 'departments', 'categories', 'it_personnel'));
     }
 
     public function update(Request $request, $id)
@@ -155,7 +159,6 @@ class CondemnedEquipmentController extends Controller
             $validated['attachment_path'] = $request->file('attachment')->store('condemned_proofs', 'public');
         }
 
-        // FIXED: Remove file object instance before entity updates to avoid SQL unknown column errors
         unset($validated['attachment']);
 
         $equipment->update($validated);
@@ -179,34 +182,24 @@ class CondemnedEquipmentController extends Controller
     }
 
     /**
-     * Generate and download a single item's Condemned Certification PDF.
+     * Preview single certification PDF inline within the browser tab.
      */
     public function downloadCertificate($id)
     {
         $condemnedEquipment = CondemnedEquipment::findOrFail($id);
-        
-        // Wrap single model element inside a collection array fallback wrapper
         $equipments = collect([$condemnedEquipment]);
 
-        // Safe Absolute Base64 Image Conversions
         $ksuLogoPath = public_path('image/KSU-logo.png');
         $bpLogoPath = public_path('image/Bagong-Pilipinas.png');
 
-        $ksuLogoBase64 = '';
-        if (file_exists($ksuLogoPath)) {
-            $ksuLogoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($ksuLogoPath));
-        }
+        $ksuLogoBase64 = file_exists($ksuLogoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ksuLogoPath)) : '';
+        $bpLogoBase64 = file_exists($bpLogoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($bpLogoPath)) : '';
 
-        $bpLogoBase64 = '';
-        if (file_exists($bpLogoPath)) {
-            $bpLogoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($bpLogoPath));
-        }
-
-        // Render portrait layout form matching your template spec rules
         $pdf = Pdf::loadView('condemned.pdf', compact('equipments', 'condemnedEquipment', 'ksuLogoBase64', 'bpLogoBase64'))
                   ->setPaper('a4', 'portrait');
 
-        return $pdf->download('condemned_certification_' . $condemnedEquipment->ticket_number . '.pdf');
+        // Changed from ->download() to ->stream() to allow inline preview before printing
+        return $pdf->stream('condemned_certification_' . $condemnedEquipment->ticket_number . '.pdf');
     }
 
     public function exportPdf()
@@ -227,21 +220,12 @@ class CondemnedEquipmentController extends Controller
             ]);
         }
 
-        // Safe Absolute Base64 Image Conversions
         $ksuLogoPath = public_path('image/KSU-logo.png');
         $bpLogoPath = public_path('image/Bagong-Pilipinas.png');
 
-        $ksuLogoBase64 = '';
-        if (file_exists($ksuLogoPath)) {
-            $ksuLogoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($ksuLogoPath));
-        }
+        $ksuLogoBase64 = file_exists($ksuLogoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ksuLogoPath)) : '';
+        $bpLogoBase64 = file_exists($bpLogoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($bpLogoPath)) : '';
 
-        $bpLogoBase64 = '';
-        if (file_exists($bpLogoPath)) {
-            $bpLogoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($bpLogoPath));
-        }
-
-        // Updated paper setup to target standard A4 Portrait
         $pdf = Pdf::loadView('condemned.pdf', compact('equipments', 'condemnedEquipment', 'ksuLogoBase64', 'bpLogoBase64'))
                   ->setPaper('a4', 'portrait');
 
