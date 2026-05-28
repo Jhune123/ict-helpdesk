@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CondemnedEquipment;
 use App\Models\Department;
 use App\Models\Category;
-use App\Models\User; // Added User model import
+use App\Models\User; 
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\CondemnedEquipmentExport;
@@ -56,8 +56,8 @@ class CondemnedEquipmentController extends Controller
         $departments = Department::orderBy('name', 'asc')->get();
         $categories = Category::orderBy('name', 'asc')->get();
         
-        // Fetch IT personnel matching your ticket system. 
-        $it_personnel = User::orderBy('name', 'asc')->get();
+        // ✅ CHANGED: Only fetch users with 'admin' or 'it_staff' roles
+        $it_personnel = User::role(['admin', 'it_staff'])->orderBy('name', 'asc')->get();
         
         return view('condemned.create', compact('departments', 'categories', 'it_personnel'));
     }
@@ -121,8 +121,8 @@ class CondemnedEquipmentController extends Controller
         $departments = Department::orderBy('name', 'asc')->get();
         $categories = Category::orderBy('name', 'asc')->get();
 
-        // Fetch IT personnel matching your ticket system.
-        $it_personnel = User::orderBy('name', 'asc')->get();
+        // ✅ CHANGED: Only fetch users with 'admin' or 'it_staff' roles
+        $it_personnel = User::role(['admin', 'it_staff'])->orderBy('name', 'asc')->get();
 
         return view('condemned.edit', compact('condemnedEquipment', 'departments', 'categories', 'it_personnel'));
     }
@@ -198,7 +198,6 @@ class CondemnedEquipmentController extends Controller
         $pdf = Pdf::loadView('condemned.pdf', compact('equipments', 'condemnedEquipment', 'ksuLogoBase64', 'bpLogoBase64'))
                   ->setPaper('a4', 'portrait');
 
-        // Changed from ->download() to ->stream() to allow inline preview before printing
         return $pdf->stream('condemned_certification_' . $condemnedEquipment->ticket_number . '.pdf');
     }
 
