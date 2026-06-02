@@ -22,11 +22,19 @@
             padding: 8px;
         }
         .header-logo {
-            width: 20%;
+            width: 26%;
             vertical-align: middle;
+            white-space: nowrap;
+        }
+        .header-logo img {
+            max-width: 65px;
+            height: auto;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 4px;
         }
         .header-title {
-            width: 50%;
+            width: 44%;
             font-weight: bold;
             vertical-align: middle;
         }
@@ -44,6 +52,7 @@
             margin-bottom: 5px;
             font-size: 14px;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .field-row {
             margin-bottom: 6px;
@@ -79,9 +88,44 @@
             padding-left: 10px !important;
         }
         .footer-note {
-            margin-top: 30px;
+            margin-top: 25px;
             text-align: justify;
             font-size: 12px;
+        }
+        
+        /* Signature Layout Elements */
+        .signature-block {
+            text-align: center;
+            width: 280px;
+            margin-top: 10px;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 25px;
+            margin-bottom: 5px;
+        }
+        .signature-subtitle {
+            font-size: 12px;
+            color: #333;
+        }
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .form-table td {
+            padding: 5px 0;
+            vertical-align: bottom;
+        }
+        .form-label {
+            white-space: nowrap;
+            padding-right: 10px;
+        }
+        .form-line {
+            border-bottom: 1px solid #000;
+            width: 100%;
+            display: inline-block;
+            min-height: 18px;
         }
     </style>
 </head>
@@ -90,20 +134,21 @@
     <table class="header-table">
         <tr>
             <td rowspan="4" class="header-logo">
-                <img src="{{ public_path('image/school-logo.jpg') }}" alt="KSU Logo" width="80">
+                <img src="{{ public_path('image/school-logo.jpg') }}" alt="KSU Logo">
+                <img src="{{ public_path('image/Bagong-Pilipinas.png') }}" alt="Bagong Pilipinas Logo">
             </td>
             <td rowspan="2" class="header-title">
                 <div style="font-size: 18px;">Kalinga State University</div>
-                <div style="font-size: 16px;">Quality Management System</div>
+                <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; margin-top: 3px;">Information and Communications Technology Office</div>
             </td>
             <td class="header-meta">Doc. Ref No.: <strong>KSU-ICTO-QF-03</strong></td>
         </tr>
         <tr>
-            <td class="header-meta">Effectivity Date: October 14, 2025</td>
+            <td class="header-meta">Effectivity Date: March 24, 2026</td>
         </tr>
         <tr>
-            <td rowspan="2" class="header-title" style="font-size: 16px;">Multimedia Request Form</td>
-            <td class="header-meta">Revision No.: 2.0</td>
+            <td rowspan="2" class="header-title" style="font-size: 14px; text-transform: uppercase;">Multimedia Request Form</td>
+            <td class="header-meta">Revision No.: 3.0</td>
         </tr>
         <tr>
             <td class="header-meta">Page No.: 1</td>
@@ -178,11 +223,40 @@
         <h3>3. PROJECT TIMELINE</h3>
         <div class="field-row">Requested Start Date: <span class="underline-value" style="width: 65%;">{{ $ticket->form_data['start_date'] ?? '' }}</span></div>
         <div class="field-row">Requested Completion Date: <span class="underline-value" style="width: 60%;">{{ $ticket->form_data['completion_date'] ?? '' }}</span></div>
-        <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 70%;">{{ $ticket->remarks ?? $ticket->status }}</span></div>
+        <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 70%;">{{ $ticket->remarks ?? ($ticket->status ?? '') }}</span></div>
+        @if(empty($ticket->remarks))
+            <div class="field-row" style="border-bottom: 1px solid #000; height: 20px; margin-top: 10px; width: 100%;"></div>
+        @endif
     </div>
 
     <div class="footer-note">
         By submitting this form, you acknowledge that the information provided is accurate and complete. The approval of this request is subject to the approval of the Information and Communications Technology Office.
+    </div>
+
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <span style="font-weight: bold; display: block; margin-bottom: 5px;">Requested by:</span>
+        <div class="signature-block">
+            <div class="signature-line" style="vertical-align: bottom;">
+                <strong>{{ $ticket->client_name ?? '' }}</strong>
+            </div>
+            <div class="signature-subtitle">User signature over printed name</div>
+        </div>
+    </div>
+
+    <div class="form-section" style="border-top: 1px dashed #000; padding-top: 15px;">
+        <h3 style="font-size: 14px; font-weight: bold;">USER ACKNOWLEDGEMENT</h3>
+        <div style="margin-bottom: 15px; font-style: italic; text-align: justify; margin-top: 5px;">
+            I, the undersigned, hereby acknowledge that the ICT services requested have been completed to my satisfaction.
+        </div>
+        
+        <table class="form-table">
+            <tr>
+                <td class="form-label" style="width: 210px;">Signature over printed name:</td>
+                <td style="width: 45%; padding-right: 30px;"><div class="form-line"></div></td>
+                <td class="form-label" style="width: 45px;">Date:</td>
+                <td><div class="form-line"></div></td>
+            </tr>
+        </table>
     </div>
 
 </body>

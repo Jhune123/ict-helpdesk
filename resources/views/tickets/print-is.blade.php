@@ -20,8 +20,23 @@
             border: 1px solid #000;
             padding: 8px;
         }
-        .header-logo { width: 20%; vertical-align: middle; }
-        .header-title { width: 50%; font-weight: bold; vertical-align: middle; }
+        .header-logo { 
+            width: 26%; 
+            vertical-align: middle; 
+            white-space: nowrap;
+        }
+        .header-logo img {
+            max-width: 65px;
+            height: auto;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 4px;
+        }
+        .header-title { 
+            width: 44%; 
+            font-weight: bold; 
+            vertical-align: middle; 
+        }
         .header-meta { 
             width: 30%; 
             text-align: left; 
@@ -34,6 +49,7 @@
             margin-bottom: 5px; 
             font-size: 14px; 
             font-weight: bold; 
+            text-transform: uppercase;
         }
         .field-row { margin-bottom: 8px; }
         .underline-value {
@@ -55,9 +71,44 @@
         }
         .check-label-cell { padding-left: 10px !important; }
         .footer-note {
-            margin-top: 30px;
+            margin-top: 25px;
             text-align: justify;
             font-size: 12px;
+        }
+        
+        /* Signature Layout Elements */
+        .signature-block {
+            text-align: center;
+            width: 280px;
+            margin-top: 10px;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 25px;
+            margin-bottom: 5px;
+        }
+        .signature-subtitle {
+            font-size: 12px;
+            color: #333;
+        }
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .form-table td {
+            padding: 5px 0;
+            vertical-align: bottom;
+        }
+        .form-label {
+            white-space: nowrap;
+            padding-right: 10px;
+        }
+        .form-line {
+            border-bottom: 1px solid #000;
+            width: 100%;
+            display: inline-block;
+            min-height: 18px;
         }
     </style>
 </head>
@@ -66,20 +117,21 @@
     <table class="header-table">
         <tr>
             <td rowspan="4" class="header-logo">
-                <img src="{{ public_path('image/school-logo.jpg') }}" width="80">
+                <img src="{{ public_path('image/school-logo.jpg') }}" alt="KSU Logo">
+                <img src="{{ public_path('image/Bagong-Pilipinas.png') }}" alt="Bagong Pilipinas Logo">
             </td>
             <td rowspan="2" class="header-title">
                 <div style="font-size: 16px;">Kalinga State University</div>
-                <div style="font-size: 14px;">Quality Management System</div>
+                <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; margin-top: 3px;">Information and Communications Technology Office</div>
             </td>
             <td class="header-meta">Doc. Ref No.: <strong>KSU-ICTO-QF-02</strong></td>
         </tr>
         <tr>
-            <td class="header-meta">Effectivity Date: October 14, 2025</td>
+            <td class="header-meta">Effectivity Date: March 24, 2026</td>
         </tr>
         <tr>
-            <td rowspan="2" class="header-title" style="font-size: 14px;">Information System Request Form</td>
-            <td class="header-meta">Revision No.: 2.0</td>
+            <td rowspan="2" class="header-title" style="font-size: 14px; text-transform: uppercase;">Information System Request Form</td>
+            <td class="header-meta">Revision No.: 3.0</td>
         </tr>
         <tr>
             <td class="header-meta">Page No.: 1</td>
@@ -93,14 +145,14 @@
 
     <div class="form-section">
         <h3>1. REQUESTOR INFORMATION</h3>
-        <div class="field-row">User’s Full Name: <span class="underline-value" style="width: 70%;">{{ $ticket->client_name }}</span></div>
+        <div class="field-row">User’s Full Name: <span class="underline-value" style="width: 70%;" style="vertical-align: bottom;">{{ $ticket->client_name }}</span></div>
         <div class="field-row">User’s Office Name & Address: <span class="underline-value" style="width: 58%;">{{ $ticket->department }}</span></div>
         <div class="field-row">User’s Contact Number: <span class="underline-value" style="width: 65%;">{{ $ticket->contact_number }}</span></div>
         <div class="field-row">Email Address: <span class="underline-value" style="width: 75%;">{{ data_get($ticket, 'form_data.email', $ticket->user->email ?? '') }}</span></div>
     </div>
 
     @php
-        /** * Safely get request types for the Information System Form */
+        /** * Safely format incoming requested categories */
         $reqTypes = data_get($ticket, 'form_data.request_type', []);
         $reqTypes = is_array($reqTypes) ? $reqTypes : explode(',', (string)$reqTypes);
         $check = '&#10004;'; 
@@ -141,11 +193,40 @@
         <h3>3. PROJECT REQUEST TIMELINE</h3>
         <div class="field-row">Start Date: <span class="underline-value" style="width: 80%;">{{ data_get($ticket, 'form_data.start_date', '') }}</span></div>
         <div class="field-row">Completion Date: <span class="underline-value" style="width: 72%;">{{ data_get($ticket, 'form_data.completion_date', '') }}</span></div>
-        <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 75%;">{{ $ticket->remarks ?? 'None' }}</span></div>
+        <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 75%;">{{ $ticket->remarks ?? '' }}</span></div>
+        @if(empty($ticket->remarks))
+            <div class="field-row" style="border-bottom: 1px solid #000; height: 20px; margin-top: 10px; width: 100%;"></div>
+        @endif
     </div>
 
     <div class="footer-note">
         By submitting this form, you acknowledge that the information provided is accurate and complete. The approval of this request is subject to the approval of the Information and Communications Technology Office.
+    </div>
+
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <span style="font-weight: bold; display: block; margin-bottom: 5px;">Requested by:</span>
+        <div class="signature-block">
+            <div class="signature-line" style="vertical-align: bottom;">
+                <strong>{{ $ticket->client_name }}</strong>
+            </div>
+            <div class="signature-subtitle">User signature over printed name</div>
+        </div>
+    </div>
+
+    <div class="form-section" style="border-top: 1px dashed #000; padding-top: 15px;">
+        <h3 style="font-size: 14px; font-weight: bold;">USER ACKNOWLEDGEMENT</h3>
+        <div style="margin-bottom: 15px; font-style: italic; text-align: justify; margin-top: 5px;">
+            I, the undersigned, hereby acknowledge that the ICT services requested have been completed to my satisfaction.
+        </div>
+        
+        <table class="form-table">
+            <tr>
+                <td class="form-label" style="width: 210px;">Signature over printed name:</td>
+                <td style="width: 45%; padding-right: 30px;"><div class="form-line"></div></td>
+                <td class="form-label" style="width: 45px;">Date:</td>
+                <td><div class="form-line"></div></td>
+            </tr>
+        </table>
     </div>
 
 </body>

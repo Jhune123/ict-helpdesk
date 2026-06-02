@@ -21,7 +21,7 @@
                 <option value="information-system">Information System Request Form (KSU-ICTO-QF-02)</option>
                 <option value="multimedia">Multimedia Request Form (KSU-ICTO-QF-03)</option>
                 <option value="network">Network Request Form (KSU-ICTO-QF-04)</option>
-                <option value="equipment-borrower">Equipment Borrower's Form (KSU-ICTO-QF-09)</option>
+                <option value="equipment-borrower">Equipment Borrower's Form (KSU-ICTO-QF-08)</option>
                 <option value="generic">Standard / General Ticket</option>
             </select>
         </div>
@@ -249,13 +249,13 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 📦 5. EQUIPMENT BORROWER'S FORM (KSU-ICTO-QF-09)             --}}
+        {{-- 📦 5. EQUIPMENT BORROWER'S FORM (KSU-ICTO-QF-08)             --}}
         {{-- ========================================================== --}}
         <div id="form-equipment-borrower" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    <strong>Official Form:</strong> Equipment Borrower's Form (KSU-ICTO-QF-09)
+                    <strong>Official Form:</strong> Equipment Borrower's Form (KSU-ICTO-QF-08)
                 </div>
             </div>
             
@@ -264,7 +264,7 @@
                 <input type="hidden" name="form_type" value="equipment_borrower">
                 {{-- Providing a default title so the generic store request doesn't fail if it requires one --}}
                 <input type="hidden" name="title" value="Equipment Borrowing Request">
-                <textarea name="description" class="hidden">Requesting to borrow equipment per Form KSU-ICTO-QF-09</textarea>
+                <textarea name="description" class="hidden">Requesting to borrow equipment per Form KSU-ICTO-QF-08</textarea>
                 
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
                     
