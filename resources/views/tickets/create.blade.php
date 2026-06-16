@@ -21,13 +21,14 @@
                 <option value="information-system">Information System Request Form (KSU-ICTO-QF-02)</option>
                 <option value="multimedia">Multimedia Request Form (KSU-ICTO-QF-03)</option>
                 <option value="network">Network Request Form (KSU-ICTO-QF-04)</option>
+                <option value="incident-report">Incident Report Form (KSU-ICTO-QF-06)</option> {{-- Integrated Form Dropdown --}}
                 <option value="equipment-borrower">Equipment Borrower's Form (KSU-ICTO-QF-08)</option>
                 <option value="generic">Standard / General Ticket</option>
             </select>
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 🛠️ 1. EQUIPMENT REPAIR FORM (KSU-ICTO-QF-01)                 --}}
+        {{-- 🛠️ 1. EQUIPMENT REPAIR FORM (KSU-ICTO-QF-01)                  --}}
         {{-- ========================================================== --}}
         <div id="form-equipment-repair" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-blue-50 p-3 rounded border border-blue-200 text-sm text-blue-800 flex items-center gap-2">
@@ -165,7 +166,7 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 🌐 4. NETWORK REQUEST FORM (KSU-ICTO-QF-04)                  --}}
+        {{-- 🌐 4. NETWORK REQUEST FORM (KSU-ICTO-QF-04)                   --}}
         {{-- ========================================================== --}}
         <div id="form-network" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-green-50 p-3 rounded border border-green-200 text-sm text-green-800 flex items-center justify-between">
@@ -200,6 +201,7 @@
                                         <input type="checkbox" name="meta[request_type][]" value="{{ $type }}" class="rounded text-green-600">
                                         <span>{{ $type }}</span>
                                     </label>
+                                
                                 @endforeach
                             </div>
                             <div class="mt-2 ml-4 flex items-center gap-2">
@@ -248,8 +250,171 @@
             </form>
         </div>
 
+       {{-- ========================================================== --}}
+{{-- 🚨 5. INCIDENT REPORT FORM (KSU-ICTO-QF-06)                --}}
+{{-- ========================================================== --}}
+<div id="form-incident-report" class="form-section hidden border-t border-gray-200 pt-6">
+    <div class="mb-6 bg-rose-50 p-3 rounded border border-rose-200 text-sm text-rose-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <strong>Official Form:</strong> Incident Report Form (KSU-ICTO-QF-06)
+        </div>
+    </div>
+    
+    <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
+        @csrf
+        <input type="hidden" name="form_type" value="incident_report">
+        <input type="hidden" name="title" value="Incident Report (KSU-ICTO-QF-06)">
+
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
+            
+            {{-- HEADER / TICKET TRACKING --}}
+            <div class="flex flex-col md:flex-row md:justify-between md:items-end border-b border-gray-300 pb-4 mb-4 gap-2">
+                <div class="font-bold text-gray-700 text-lg">
+                    Request No.: <span class="inline-block w-48 border-b-2 border-gray-400"></span>
+                </div>
+                <div class="text-sm italic text-gray-500 font-medium">
+                    To be filled by KSU ICT User
+                </div>
+            </div>
+
+            {{-- 1. EMPLOYEE INFORMATION --}}
+            <div>
+                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">1. EMPLOYEE INFORMATION</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">User's Full Name:</label>
+                        <input type="text" name="meta[full_name]" value="{{ Auth::user()->name ?? '' }}" class="w-full border border-gray-300 rounded-md p-2" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">User's Office Name & Position:</label>
+                        <input type="text" name="meta[office_name_position]" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. ICTO Office / IT Staff" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">User's Contact Number:</label>
+                        <input type="text" name="contact_number" class="w-full border border-gray-300 rounded-md p-2" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Email Address:</label>
+                        <input type="email" name="meta[email_address]" value="{{ Auth::user()->email ?? '' }}" class="w-full border border-gray-300 rounded-md p-2">
+                    </div>
+                </div>
+            </div>
+
+            {{-- 2. INCIDENT DETAILS --}}
+            <div>
+                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. INCIDENT DETAILS:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Date of Incident:</label>
+                        <input type="date" name="meta[incident_date]" value="{{ date('Y-m-d') }}" class="w-full border border-gray-300 rounded-md p-2" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Time of Incident:</label>
+                        <input type="time" name="meta[incident_time]" value="{{ date('H:i') }}" class="w-full border border-gray-300 rounded-md p-2" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Location of Incident:</label>
+                        <input type="text" name="meta[location]" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. Computer Lab 1" required>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 3. INCIDENT DESCRIPTION --}}
+            <div>
+                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">3. INCIDENT DESCRIPTION:</h3>
+                <div>
+                    <textarea name="description" rows="5" class="w-full border border-gray-300 rounded-md p-2" placeholder="Please describe how the incident happened in detail..." required></textarea>
+                </div>
+            </div>
+
+            {{-- 4. DAMAGED / STOLEN EQUIPMENT INFORMATION --}}
+            <div>
+                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">4. DAMAGED/STOLEN EQUIPMENT INFORMATION:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Equipment Name/Type:</label>
+                        <input type="text" name="meta[equipment_type]" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. Network Switch, Desktop Monitor">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Quantity:</label>
+                        <input type="number" name="meta[equipment_qty]" class="w-full border border-gray-300 rounded-md p-2" min="1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Equipment Serial Number:</label>
+                        <input type="text" name="meta[equipment_serial]" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. SN-12345-KSU">
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Remarks:</label>
+                        <input type="text" name="meta[equipment_remarks]" class="w-full border border-gray-300 rounded-md p-2" placeholder="Enter condition or additional notes...">
+                    </div>
+                </div>
+            </div>
+
+            {{-- 5. ACTIONS TAKEN --}}
+            <div>
+                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">5. ACTIONS TAKEN:</h3>
+                <div>
+                    <textarea name="meta[actions_taken]" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="Enter any initial actions taken (if applicable)..."></textarea>
+                </div>
+            </div>
+
+            {{-- DISCLAIMER & SIGNATURES BLOCK --}}
+            <div class="pt-6 border-t border-gray-300 space-y-6">
+                
+                <p class="text-sm font-medium text-gray-700 italic">
+                    By submitting this form, you acknowledge that the information provided is accurate and complete.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Prepared By --}}
+                    <div class="p-4 bg-rose-50 border border-rose-200 rounded-md">
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 uppercase">Prepared by:</h4>
+                        <label class="flex items-start space-x-3 cursor-pointer mb-3">
+                            <input type="checkbox" name="meta[client_signature_acknowledged]" value="Yes" class="mt-1 w-5 h-5 rounded text-rose-600 focus:ring-rose-500" required>
+                            <span class="text-sm font-semibold text-gray-700 leading-relaxed">
+                                I confirm the details above. This serves as my digital signature.
+                            </span>
+                        </label>
+                        <input type="text" name="meta[employee_name_signature]" value="{{ Auth::user()->name ?? '' }}" class="w-full border border-gray-300 rounded-md p-2 text-sm bg-white" placeholder="Employee Name" readonly>
+                    </div>
+
+                    {{-- Conformed By --}}
+                    <div class="p-4 bg-gray-100 border border-gray-200 rounded-md">
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 uppercase">Conformed by:</h4>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Supervisor Name:</label>
+                        <input type="text" name="meta[supervisor_name]" class="w-full border border-gray-300 rounded-md p-2 mb-2" placeholder="Enter Supervisor's Name">
+                        <span class="text-xs text-gray-500 italic">Signature / Date will be secured offline.</span>
+                    </div>
+                </div>
+
+                {{-- User Acknowledgement (Post-Service Info) --}}
+                <div class="p-5 bg-white border border-gray-300 rounded-md shadow-sm">
+                    <h3 class="font-bold text-md text-gray-800 mb-2 uppercase">User Acknowledgement</h3>
+                    <p class="text-sm text-gray-600 mb-4 indent-4">
+                        I, the undersigned, hereby acknowledge that the ICT services requested have been completed to my satisfaction.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60">
+                        <div>
+                            <label class="block font-semibold text-gray-600 text-sm mb-1">Signature over printed name:</label>
+                            <input type="text" disabled class="w-full border border-gray-300 bg-gray-50 rounded-md p-2 cursor-not-allowed" placeholder="To be signed upon completion">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 text-sm mb-1">Date:</label>
+                            <input type="text" disabled class="w-full border border-gray-300 bg-gray-50 rounded-md p-2 cursor-not-allowed" placeholder="To be dated upon completion">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        @include('tickets.partials.inline-lower-fields', ['btnColor' => 'rose', 'btnText' => 'Submit Incident Report'])
+    </form>
+</div>
+
         {{-- ========================================================== --}}
-        {{-- 📦 5. EQUIPMENT BORROWER'S FORM (KSU-ICTO-QF-08)             --}}
+        {{-- 📦 6. EQUIPMENT BORROWER'S FORM (KSU-ICTO-QF-08)             --}}
         {{-- ========================================================== --}}
         <div id="form-equipment-borrower" class="form-section hidden border-t border-gray-200 pt-6">
             <div class="mb-6 bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-800 flex items-center justify-between">
@@ -262,7 +427,6 @@
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
                 @csrf
                 <input type="hidden" name="form_type" value="equipment_borrower">
-                {{-- Providing a default title so the generic store request doesn't fail if it requires one --}}
                 <input type="hidden" name="title" value="Equipment Borrowing Request">
                 <textarea name="description" class="hidden">Requesting to borrow equipment per Form KSU-ICTO-QF-08</textarea>
                 
@@ -315,7 +479,7 @@
         </div>
 
         {{-- ========================================================== --}}
-        {{-- 📝 6. GENERIC / STANDARD FORM                              --}}
+        {{-- 📝 7. GENERIC / STANDARD FORM (Fixed and Closed Cleanly)     --}}
         {{-- ========================================================== --}}
         <div id="form-generic" class="form-section hidden border-t border-gray-200 pt-6">
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
@@ -340,45 +504,50 @@
                         <h3 class="text-sm font-bold text-gray-800 mb-3">EQUIPMENT INFORMATION</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Equipment Type</label>
-                                <input type="text" name="meta[equipment_type]" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="e.g. Laptop">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Equipment Type</label>
+                                <input type="text" name="meta[equipment_type]" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. Laptop">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Brand & Model No.</label>
-                                <input type="text" name="meta[brand_model]" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="e.g. HP LaserJet">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Brand / Model</label>
+                                <input type="text" name="meta[brand_model]" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. ThinkPad E14">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Serial No.</label>
-                                <input type="text" name="meta[serial_no]" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="S/N: 12345">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Serial Number</label>
+                                <input type="text" name="meta[serial_no]" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. SN-XXXXXX">
                             </div>
                         </div>
                     </div>
 
-                    {{-- Message / Description --}}
-                    <div class="pt-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Message / Description</label>
-                        <textarea name="description" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="Describe your request or issue here..."></textarea>
+                    {{-- Issue Description Block --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Issue Description / Details</label>
+                        <textarea name="description" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="Please write details regarding your general request or issue here..."></textarea>
                     </div>
                 </div>
 
-                @include('tickets.partials.inline-lower-fields', ['btnColor' => 'gray', 'btnText' => 'Submit Ticket'])
+                @include('tickets.partials.inline-lower-fields', ['btnColor' => 'gray', 'btnText' => 'Submit General Ticket'])
             </form>
         </div>
 
     </div>
 </div>
 
+{{-- Dynamic Switcher Script Handling --}}
 <script>
     function toggleForm() {
         const selector = document.getElementById('category_selector');
-        const sections = document.querySelectorAll('.form-section');
+        const selection = selector.value;
         
-        // Hide all sections first
-        sections.forEach(s => s.classList.add('hidden'));
+        // Hide all active form section partitions
+        document.querySelectorAll('.form-section').forEach(section => {
+            section.classList.add('hidden');
+        });
         
-        // Unhide the targeted section
-        const target = document.getElementById('form-' + selector.value);
-        if (target) { target.classList.remove('hidden'); }
+        // Target specific section ID using active option value parameters
+        const targetForm = document.getElementById('form-' + selection);
+        if (targetForm) {
+            targetForm.classList.remove('hidden');
+        }
     }
 </script>
 @endsection

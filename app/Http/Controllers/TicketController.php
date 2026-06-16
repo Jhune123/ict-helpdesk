@@ -11,6 +11,7 @@ use App\Models\CondemnedEquipment;
 use App\Models\NetworkRequest; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // Added for robust raw DB collision checking
 use Carbon\Carbon;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketStatusChanged; 
@@ -32,10 +33,8 @@ class TicketController extends Controller
 
         // Context check: Toggle between live operational queue or static archives log
         if ($request->input('view') === 'archive') {
-            // Support both Title Case and lowercase text configurations safely
             $query->whereIn('status', ['Closed', 'Finished', 'closed', 'finished']);
         } else {
-            // Default workspace layout filters active jobs
             $query->whereIn('status', ['Open', 'In Progress', 'open', 'in progress']);
         }
 
@@ -136,24 +135,43 @@ class TicketController extends Controller
             'network_device_others'       => 'nullable|string|max:255',
         ]);
 
-        $last = Ticket::latest()->first();
-        $nextNum = $last ? ((int) substr($last->ticket_number, -3) + 1) : 1;
-        $ticketNumber = 'KSU-ICTO-TIC-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        // 🛡️ Robust Ticket Generation: Bypasses global scopes, soft deletes, and handles sequence gaps
+        $nextNum = 1;
+        $lastTicket = DB::table('tickets')->orderBy('id', 'desc')->first();
+        if ($lastTicket && !empty($lastTicket->ticket_number)) {
+            $lastNumString = substr($lastTicket->ticket_number, -3);
+            if (is_numeric($lastNumString)) {
+                $nextNum = (int) $lastNumString + 1;
+            }
+        }
+
+        // Integrity safeguard: Loop forward until finding a completely unused slot in the database matrix
+        do {
+            $ticketNumber = 'KSU-ICTO-TIC-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+            $exists = DB::table('tickets')->where('ticket_number', $ticketNumber)->exists();
+            if ($exists) {
+                $nextNum++;
+            }
+        } while ($exists);
 
         $categoryId = $validated['category_id'] ?? null;
         if (!$categoryId && !empty($validated['category_manual'])) {
             $categoryId = Category::firstOrCreate(['name' => $validated['category_manual']])->id;
         }
 
+        $formTypeLower = strtolower($request->input('form_type') ?? '');
+
         // Auto-assign category based on form type
-        if ($request->input('form_type') === 'network_request' && !$categoryId) {
+        if ($formTypeLower === 'network_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Network / Internet'])->id;
-        } elseif ($request->input('form_type') === 'multimedia_request' && !$categoryId) {
+        } elseif ($formTypeLower === 'multimedia_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Multimedia Services'])->id;
-        } elseif ($request->input('form_type') === 'information_system_request' && !$categoryId) {
+        } elseif ($formTypeLower === 'information_system_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Information System'])->id;
-        } elseif (in_array($request->input('form_type'), ['equipment_request', 'equipment_repair', 'equipment_borrow']) && !$categoryId) {
+        } elseif (in_array($formTypeLower, ['equipment_request', 'equipment_repair', 'equipment_borrow']) && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Equipment Repair'])->id;
+        } elseif (Str::contains($formTypeLower, 'incident') && !$categoryId) {
+            $categoryId = Category::firstOrCreate(['name' => 'Incident Report'])->id; 
         }
 
         $deptInput = $validated['department'] ?? null;
@@ -168,14 +186,16 @@ class TicketController extends Controller
         }
 
         // Inject original form type metadata for PDF routing later
-        if ($request->input('form_type') === 'multimedia_request') {
+        if ($formTypeLower === 'multimedia_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-03';
-        } elseif ($request->input('form_type') === 'information_system_request') {
+        } elseif ($formTypeLower === 'information_system_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-02';
-        } elseif (in_array($request->input('form_type'), ['equipment_request', 'equipment_repair'])) {
+        } elseif (in_array($formTypeLower, ['equipment_request', 'equipment_repair'])) {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-01';
-        } elseif ($request->input('form_type') === 'equipment_borrow') {
+        } elseif ($formTypeLower === 'equipment_borrow') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-09';
+        } elseif (Str::contains($formTypeLower, 'incident')) {
+            $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-06'; 
         }
 
         // 🛡️ Safe Casing Normalization Map
@@ -209,7 +229,7 @@ class TicketController extends Controller
             'form_data'       => !empty($formDataToSave) ? $formDataToSave : null, 
         ]);
 
-        if ($request->input('form_type') === 'network_request') {
+        if ($formTypeLower === 'network_request') {
             NetworkRequest::create([
                 'ticket_id'           => $ticket->id,
                 'user_id'             => Auth::id(),
@@ -448,10 +468,14 @@ class TicketController extends Controller
     public function jobOrderPdf(Ticket $ticket)
     {
         $categoryName = $ticket->category ? $ticket->category->name : 'General';
+        
         $categoryLower = strtolower($categoryName);
+        $titleLower = strtolower($ticket->title ?? '');
 
+        // 1. Default fallback is Equipment Repair (QF-01)
         $view = 'tickets.equipment-repair'; 
 
+        // 2. Check by Category Name OR Ticket Title
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
         } 
@@ -464,15 +488,30 @@ class TicketController extends Controller
         elseif (Str::contains($categoryLower, 'borrow')) {
             $view = 'tickets.borrower-form';
         }
+        elseif (Str::contains($categoryLower, 'incident') || Str::contains($titleLower, 'incident')) {
+            $view = 'tickets.incident-report.job-order'; 
+        }
 
-        // Flag Overrides
-        if (isset($ticket->form_data['original_form_type'])) {
-            if ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-03') {
-                $view = 'tickets.print-multimedia'; 
-            } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-02') {
-                $view = 'tickets.print-is'; 
-            } elseif ($ticket->form_data['original_form_type'] === 'KSU-ICTO-QF-09') {
-                $view = 'tickets.borrower-form'; 
+        // Safely parse form_data whether it is an array or a JSON string
+        $formData = is_string($ticket->form_data) ? json_decode($ticket->form_data, true) : $ticket->form_data;
+
+        // 3. Flag Overrides (Highest Priority)
+        if (is_array($formData)) {
+            if (isset($formData['original_form_type'])) {
+                if ($formData['original_form_type'] === 'KSU-ICTO-QF-03') {
+                    $view = 'tickets.print-multimedia'; 
+                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-02') {
+                    $view = 'tickets.print-is'; 
+                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-09') {
+                    $view = 'tickets.borrower-form'; 
+                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-06') {
+                    $view = 'tickets.incident-report.job-order'; 
+                }
+            }
+            
+            $embeddedFormType = strtolower($formData['form_type'] ?? '');
+            if (Str::contains($embeddedFormType, 'incident')) {
+                $view = 'tickets.incident-report.job-order';
             }
         }
 
