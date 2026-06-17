@@ -22,6 +22,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SurveyReportController; // Added Survey Report Controller
 
 /*
 |--------------------------------------------------------------------------
@@ -120,6 +121,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/feedbacks/{feedback}', [FeedbackController::class, 'update'])->name('feedbacks.update');
         Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->name('feedbacks.destroy');
     });
+
+    /* 📊 CSS REPORTS (Monthly & Yearly Summary) */
+    Route::get('/reports/client-satisfaction', [SurveyReportController::class, 'index'])->name('reports.css');
+    Route::get('/reports/client-satisfaction/pdf', [SurveyReportController::class, 'exportPdf'])->name('reports.css.pdf');
 
     /* 🗂️ CATEGORIES & DEPARTMENTS */
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');

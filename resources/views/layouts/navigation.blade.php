@@ -3,7 +3,7 @@
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <a href="{{ route('dashboard') }}">
-                    <x-application-logo class="block h-10 w-auto fill-current text-green-50" />
+                    <img src="{{ asset('image/KSU-logo.png') }}" alt="KSU Logo" class="block h-12 w-auto">
                 </a>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
@@ -42,81 +42,30 @@
             <div class="flex items-center space-x-6">
                 <div class="relative">
                     <button @click="notifyOpen = !notifyOpen" class="relative focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 text-yellow-400 hover:text-yellow-300 transition"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0
-                                0118 14.158V11a6.002 6.002 0
-                                00-4-5.659V5a2 2 0
-                                10-4 0v.341C7.67 6.165 6
-                                8.388 6 11v3.159c0 .538-.214
-                                1.055-.595 1.436L4 17h5m6
-                                0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400 hover:text-yellow-300 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-
-                        @if(auth()->user()->unreadNotifications->count() > 0)
-                            <span class="absolute top-0 right-0 inline-flex items-center justify-center
-                                px-1.5 py-0.5 text-xs font-bold leading-none text-white
-                                bg-red-600 rounded-full">
+                        @if(auth()->check() && auth()->user()->unreadNotifications->count() > 0)
+                            <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                                 {{ auth()->user()->unreadNotifications->count() }}
                             </span>
                         @endif
                     </button>
-
-                    <div x-show="notifyOpen" x-transition @click.away="notifyOpen = false"
-                        class="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg z-50">
-                        <div class="p-3 font-bold border-b">Notifications</div>
-
-                        @forelse(auth()->user()->unreadNotifications->take(5) as $notification)
-                            <div class="px-4 py-3 border-b hover:bg-green-50 cursor-pointer">
-                                <a href="{{ route('tickets.show', $notification->data['ticket_id'] ?? '#') }}" class="text-green-800 hover:text-green-600">
-                                    {{ $notification->data['message'] ?? 'New Notification' }}
-                                </a>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    {{ $notification->created_at->diffForHumans() }}
-                                </p>
-                            </div>
-                        @empty
-                            <div class="px-4 py-3 text-gray-500 text-sm">
-                                No notifications
-                            </div>
-                        @endforelse
-
-                        <div class="text-center p-2">
-                            <a href="{{ route('notifications.index') }}"
-                               class="text-green-700 hover:underline text-sm font-medium">
-                                View All
-                            </a>
-                        </div>
                     </div>
-                </div>
 
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button
-                            class="flex items-center text-sm font-medium text-green-100
-                                   hover:text-white focus:outline-none transition-colors duration-200">
+                        <button class="flex items-center text-sm font-medium text-green-100 hover:text-white focus:outline-none transition-colors duration-200">
                             <div>{{ Auth::user()->name }}</div>
                             <div class="ml-1">
-                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0
-                                        011.414 0L10 10.586l3.293-3.293
-                                        a1 1 0 111.414 1.414l-4 4a1 1 0
-                                        01-1.414 0l-4-4a1 1 0
-                                        010-1.414z"
-                                        clip-rule="evenodd" />
-                                </svg>
+                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                             </div>
                         </button>
                     </x-slot>
-
                     <x-slot name="content">
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault(); this.closest('form').submit();">
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
                         </form>
