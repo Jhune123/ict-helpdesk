@@ -461,6 +461,10 @@ class TicketController extends Controller
      */
     public function jobOrderPdf(Ticket $ticket)
     {
+        // Prevent memory exhaustion on DomPDF processing
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
         $categoryName = $ticket->category ? $ticket->category->name : 'General';
         
         $categoryLower = strtolower($categoryName);
@@ -506,7 +510,7 @@ class TicketController extends Controller
         }
 
         return Pdf::loadView($view, compact('ticket'))
-            ->setPaper('A4')
+            ->setPaper('A4', 'portrait')
             ->stream('JobOrder-'.$ticket->ticket_number.'.pdf');
     }
 
@@ -515,6 +519,10 @@ class TicketController extends Controller
      */
     public function exportPdf()
     {
+        // Prevent memory exhaustion on DomPDF processing
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
         $tickets = Ticket::with(['category', 'assignee'])->latest()->get();
         return Pdf::loadView('tickets.export_pdf', compact('tickets'))->setPaper('A4', 'landscape')->download('Tickets.pdf');
     }
