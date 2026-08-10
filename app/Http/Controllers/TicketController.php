@@ -515,16 +515,37 @@ class TicketController extends Controller
     }
 
     /**
-     * 📄 Export Tickets PDF
+     * 📄 Export Tickets PDF (Optimized to prevent 500 Memory Exhaustion)
      */
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        // Prevent memory exhaustion on DomPDF processing
-        ini_set('memory_limit', '512M');
+        // Allocate up to 1GB RAM for PDF generation
+        ini_set('memory_limit', '1024M');
         set_time_limit(300);
 
-        $tickets = Ticket::with(['category', 'assignee'])->latest()->get();
-        return Pdf::loadView('tickets.export_pdf', compact('tickets'))->setPaper('A4', 'landscape')->download('Tickets.pdf');
+        $query = Ticket::with(['category', 'assignee'])->latest();
+
+        // Apply filters matching index view
+        if ($request->filled('month')) {
+            $query->whereMonth('date_submitted', $request->month);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('date_submitted', $request->year);
+        }
+
+        if ($request->input('view') === 'archive') {
+            $query->whereIn('status', ['Closed', 'Finished', 'closed', 'finished']);
+        } else {
+            $query->whereIn('status', ['Open', 'In Progress', 'open', 'in progress']);
+        }
+
+        // Limit to 250 records max to protect DomPDF from memory exhaustion
+        $tickets = $query->take(250)->get();
+
+        return Pdf::loadView('tickets.export_pdf', compact('tickets'))
+            ->setPaper('A4', 'landscape')
+            ->download('Tickets_Report.pdf');
     }
 
     /**
