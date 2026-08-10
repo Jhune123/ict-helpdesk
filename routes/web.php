@@ -22,7 +22,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\SurveyReportController; // Added Survey Report Controller
+use App\Http\Controllers\SurveyReportController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -218,7 +218,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{ticket}/pdf', [CondemnedEquipmentController::class, 'downloadPdf'])->name('condemned-equipment.pdf');
         Route::get('/{id}/print', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.print');
         
-        // Added the missing dynamic certificate viewing route here (placed safely above wildcard)
+        // Dynamic certificate viewing route (placed safely above wildcard)
         Route::get('/{id}/download-certificate', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.downloadCertificate');
         
         Route::get('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');

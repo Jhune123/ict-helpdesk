@@ -11,7 +11,7 @@ use App\Models\CondemnedEquipment;
 use App\Models\NetworkRequest; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Added for robust raw DB collision checking
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketStatusChanged; 
@@ -135,17 +135,17 @@ class TicketController extends Controller
             'network_device_others'       => 'nullable|string|max:255',
         ]);
 
-        // 🛡️ Robust Ticket Generation: Bypasses global scopes, soft deletes, and handles sequence gaps
+        // 🛡️ Robust Ticket Generation
         $nextNum = 1;
         $lastTicket = DB::table('tickets')->orderBy('id', 'desc')->first();
+        
         if ($lastTicket && !empty($lastTicket->ticket_number)) {
-            $lastNumString = substr($lastTicket->ticket_number, -3);
+            $lastNumString = substr($lastTicket->ticket_number, 13);
             if (is_numeric($lastNumString)) {
                 $nextNum = (int) $lastNumString + 1;
             }
         }
 
-        // Integrity safeguard: Loop forward until finding a completely unused slot in the database matrix
         do {
             $ticketNumber = 'KSU-ICTO-TIC-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
             $exists = DB::table('tickets')->where('ticket_number', $ticketNumber)->exists();
@@ -161,7 +161,6 @@ class TicketController extends Controller
 
         $formTypeLower = strtolower($request->input('form_type') ?? '');
 
-        // Auto-assign category based on form type
         if ($formTypeLower === 'network_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Network / Internet'])->id;
         } elseif ($formTypeLower === 'multimedia_request' && !$categoryId) {
@@ -177,7 +176,6 @@ class TicketController extends Controller
         $deptInput = $validated['department'] ?? null;
         $department = $deptInput ? Department::firstOrCreate(['name' => $deptInput])->name : null;
 
-        // Security: Only IT/Admin can set an initial assignee
         $assignedTo = Auth::user()->hasAnyRole(['admin', 'it_staff']) ? ($validated['assigned_to'] ?? null) : null;
 
         $formDataToSave = $validated['form_data'] ?? [];
@@ -185,7 +183,6 @@ class TicketController extends Controller
             $formDataToSave = array_merge($formDataToSave, $validated['meta']);
         }
 
-        // Inject original form type metadata for PDF routing later
         if ($formTypeLower === 'multimedia_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-03';
         } elseif ($formTypeLower === 'information_system_request') {
@@ -198,7 +195,6 @@ class TicketController extends Controller
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-06'; 
         }
 
-        // 🛡️ Safe Casing Normalization Map
         $statusMap = [
             'open'        => 'Open',
             'in progress' => 'In Progress',
@@ -247,7 +243,6 @@ class TicketController extends Controller
 
         ActivityLogger::log('created', $ticket, 'Created Ticket: "' . $ticket->title . '"');
 
-        // Capture initial Condemned states directly on storage creation
         if (strtolower($targetStatus) === 'condemned') {
             try {
                 $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
@@ -284,7 +279,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 👁 Show Ticket (Clients can see this)
+     * 👁 Show Ticket
      */
     public function show(Ticket $ticket)
     {
@@ -347,7 +342,6 @@ class TicketController extends Controller
 
         $oldStatus = $ticket->status;
 
-        // 🛡️ Normalize input casing immediately to prevent strict-matching query bugs
         $statusMap = [
             'open'        => 'Open',
             'in progress' => 'In Progress',
@@ -355,15 +349,14 @@ class TicketController extends Controller
             'finished'    => 'Finished',
             'condemned'   => 'Condemned'
         ];
-        if (isset($validated['status'])) {
-            $validated['status'] = $statusMap[strtolower($validated['status'])] ?? $validated['status'];
-        }
+        
+        $newStatus = $statusMap[strtolower($validated['status'])] ?? $validated['status'];
+        $validated['status'] = $newStatus;
 
-        // Condemned Logic
-        if (strtolower($validated['status']) === 'condemned' && strtolower($oldStatus) !== 'condemned') {
+        if (strtolower($newStatus) === 'condemned' && strtolower($oldStatus) !== 'condemned') {
             $categoryName = Category::find($categoryId)->name ?? 'Uncategorized';
             
-            $ticketFormData = is_array($ticket->form_data) ? $ticket->form_data : json_decode($ticket->form_data, true);
+            $ticketFormData = is_string($ticket->form_data) ? json_decode($ticket->form_data, true) : ($ticket->form_data ?? []);
             $validatedFormData = is_array($validated['form_data'] ?? null) ? $validated['form_data'] : [];
             $propertyNo = $ticketFormData['property_no'] ?? ($validatedFormData['property_no'] ?? 'PENDING');
 
@@ -390,14 +383,17 @@ class TicketController extends Controller
             CondemnedEquipment::create($condemnedFields);
         }
 
-        $dateFinished = in_array(strtolower($validated['status']), ['closed', 'finished', 'condemned']) ? Carbon::now('Asia/Manila') : $ticket->date_finished;
+        $dateFinished = in_array(strtolower($newStatus), ['closed', 'finished', 'condemned']) 
+            ? Carbon::now('Asia/Manila') 
+            : $ticket->date_finished;
 
-        $updatedFormData = $ticket->form_data ?? [];
+        $updatedFormData = is_string($ticket->form_data) ? json_decode($ticket->form_data, true) : ($ticket->form_data ?? []);
+        
         if (!empty($validated['form_data'])) {
-            $updatedFormData = array_merge($updatedFormData, $validated['form_data']);
+            $updatedFormData = array_merge((array) $updatedFormData, $validated['form_data']);
         }
         if (!empty($validated['meta'])) {
-            $updatedFormData = array_merge($updatedFormData, $validated['meta']);
+            $updatedFormData = array_merge((array) $updatedFormData, $validated['meta']);
         }
 
         $ticket->update([
@@ -413,24 +409,22 @@ class TicketController extends Controller
             'client_name'     => $validated['client_name'],
             'contact_number'  => $validated['contact_number'],
             'remarks'         => $validated['remarks'],
-            'status'          => $validated['status'],
+            'status'          => $newStatus,
             'date_finished'   => $dateFinished,
             'form_data'       => !empty($updatedFormData) ? $updatedFormData : null, 
         ]);
 
         ActivityLogger::log('updated', $ticket, "Updated Ticket: #{$ticket->ticket_number}");
 
-        if ($oldStatus !== $validated['status']) {
-            try { $ticket->notify(new TicketStatusChanged($validated['status'])); } catch (\Exception $e) {}
+        if ($oldStatus !== $newStatus) {
+            try { $ticket->notify(new TicketStatusChanged($newStatus)); } catch (\Exception $e) {}
         }
 
-        // Clean up from Condemned log table if rolled back out to active workspaces
-        $newStatusLower = strtolower($validated['status']);
+        $newStatusLower = strtolower($newStatus);
         if (strtolower($oldStatus) === 'condemned' && $newStatusLower !== 'condemned') {
             CondemnedEquipment::where('ticket_number', $ticket->ticket_number)->delete();
         }
 
-        // 🚀 Context-aware workspace routing engine
         if (in_array($newStatusLower, ['open', 'in progress'])) {
             return redirect()->route('tickets.index')
                              ->with('success', 'Ticket updated successfully and moved to Active Workspace queue ✅');
@@ -463,7 +457,7 @@ class TicketController extends Controller
     }
 
     /**
-     * 📄 Generate Job Order PDF (Clients are ALLOWED to view this)
+     * 📄 Generate Job Order PDF
      */
     public function jobOrderPdf(Ticket $ticket)
     {
@@ -472,10 +466,8 @@ class TicketController extends Controller
         $categoryLower = strtolower($categoryName);
         $titleLower = strtolower($ticket->title ?? '');
 
-        // 1. Default fallback is Equipment Repair (QF-01)
         $view = 'tickets.equipment-repair'; 
 
-        // 2. Check by Category Name OR Ticket Title
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
         } 
@@ -492,10 +484,8 @@ class TicketController extends Controller
             $view = 'tickets.incident-report.job-order'; 
         }
 
-        // Safely parse form_data whether it is an array or a JSON string
         $formData = is_string($ticket->form_data) ? json_decode($ticket->form_data, true) : $ticket->form_data;
 
-        // 3. Flag Overrides (Highest Priority)
         if (is_array($formData)) {
             if (isset($formData['original_form_type'])) {
                 if ($formData['original_form_type'] === 'KSU-ICTO-QF-03') {
@@ -520,9 +510,28 @@ class TicketController extends Controller
             ->stream('JobOrder-'.$ticket->ticket_number.'.pdf');
     }
 
+    /**
+     * 📄 Export Tickets PDF
+     */
     public function exportPdf()
     {
         $tickets = Ticket::with(['category', 'assignee'])->latest()->get();
         return Pdf::loadView('tickets.export_pdf', compact('tickets'))->setPaper('A4', 'landscape')->download('Tickets.pdf');
+    }
+
+    /**
+     * 📊 Export Tickets Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        return Excel::download(new TicketsExport($request), 'tickets.xlsx');
+    }
+
+    /**
+     * 📄 Export Tickets CSV
+     */
+    public function exportCsv(Request $request)
+    {
+        return Excel::download(new TicketsExport($request), 'tickets.csv');
     }
 }
