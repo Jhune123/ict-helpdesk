@@ -518,12 +518,20 @@ class TicketController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        ini_set('memory_limit', '1024M');
-        set_time_limit(300);
+        // Remove memory & execution timeout constraints for large datasets
+        ini_set('memory_limit', '-1');
+        set_time_limit(0);
 
-        $query = Ticket::with(['category', 'assignee'])->orderBy('created_at', 'desc');
+        $query = Ticket::with(['category:id,name', 'assignee:id,name'])
+            ->select([
+                'id', 'ticket_number', 'title', 'description', 'equipment_type',
+                'brand_model', 'serial_no', 'category_id', 'department',
+                'assigned_to', 'client_name', 'priority', 'contact_number',
+                'status', 'date_submitted', 'date_finished', 'created_at'
+            ])
+            ->orderBy('created_at', 'desc');
 
-        // Apply Search Filter if specified
+        // Apply Search Filter if present
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('ticket_number', 'like', "%{$search}%")
@@ -535,22 +543,33 @@ class TicketController extends Controller
             });
         }
 
-        // Apply Month Filter if specified
+        // Apply Month Filter if present
         if ($request->filled('month')) {
             $query->whereMonth('date_submitted', $request->month);
         }
 
-        // Apply Year Filter if specified
+        // Apply Year Filter if present
         if ($request->filled('year')) {
             $query->whereYear('date_submitted', $request->year);
         }
 
-        // Removed status filter restrictions & limits to capture ALL tickets created
         $tickets = $query->get();
 
-        return Pdf::loadView('tickets.export_pdf', compact('tickets'))
+        // Chunking array prevents Dompdf Cellmap memory leak across large table trees
+        $ticketChunks = $tickets->chunk(50);
+        $totalCount = $tickets->count();
+
+        $pdf = Pdf::loadView('tickets.export_pdf', compact('ticketChunks', 'totalCount'))
             ->setPaper('A4', 'landscape')
-            ->download('Tickets_Report.pdf');
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => false,
+                'defaultFont'          => 'sans-serif',
+                'dpi'                  => 96,
+                'enable_php'           => false,
+            ]);
+
+        return $pdf->download('Tickets_Report.pdf');
     }
 
     /**
