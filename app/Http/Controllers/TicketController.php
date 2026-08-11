@@ -461,7 +461,6 @@ class TicketController extends Controller
      */
     public function jobOrderPdf(Ticket $ticket)
     {
-        // Prevent memory exhaustion on DomPDF processing
         ini_set('memory_limit', '512M');
         set_time_limit(300);
 
@@ -515,33 +514,39 @@ class TicketController extends Controller
     }
 
     /**
-     * 📄 Export Tickets PDF (Optimized to prevent 500 Memory Exhaustion)
+     * 📄 Export ALL Tickets PDF (Fetches all created tickets regardless of status or archive state)
      */
     public function exportPdf(Request $request)
     {
-        // Allocate up to 1GB RAM for PDF generation
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
 
-        $query = Ticket::with(['category', 'assignee'])->latest();
+        $query = Ticket::with(['category', 'assignee'])->orderBy('created_at', 'desc');
 
-        // Apply filters matching index view
+        // Apply Search Filter if specified
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ticket_number', 'like', "%{$search}%")
+                  ->orWhere('serial_no', 'like', "%{$search}%")
+                  ->orWhere('department', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($catQuery) use ($search) {
+                      $catQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply Month Filter if specified
         if ($request->filled('month')) {
             $query->whereMonth('date_submitted', $request->month);
         }
 
+        // Apply Year Filter if specified
         if ($request->filled('year')) {
             $query->whereYear('date_submitted', $request->year);
         }
 
-        if ($request->input('view') === 'archive') {
-            $query->whereIn('status', ['Closed', 'Finished', 'closed', 'finished']);
-        } else {
-            $query->whereIn('status', ['Open', 'In Progress', 'open', 'in progress']);
-        }
-
-        // Limit to 250 records max to protect DomPDF from memory exhaustion
-        $tickets = $query->take(250)->get();
+        // Removed status filter restrictions & limits to capture ALL tickets created
+        $tickets = $query->get();
 
         return Pdf::loadView('tickets.export_pdf', compact('tickets'))
             ->setPaper('A4', 'landscape')
