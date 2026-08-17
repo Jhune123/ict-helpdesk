@@ -52,15 +52,25 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. REQUEST DETAILS</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Equipment Type:</label><input type="text" name="equipment_type" class="w-full border border-gray-300 rounded-md p-2" required></div>
-                            <div><label class="block font-semibold text-gray-600 text-sm mb-1">Brand & Model No:</label><input type="text" name="brand_model" class="w-full border border-gray-300 rounded-md p-2"></div>
-                        </div>
-                    </div>
-                </div>
-                @include('tickets.partials.inline-lower-fields', ['btnColor' => 'blue', 'btnText' => 'Submit Repair Request'])
-            </form>
-        </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Equipment Type:</label>
+        <input type="text" name="equipment_type" class="w-full border border-gray-300 rounded-md p-2" value="{{ old('equipment_type') }}" required>
+    </div>
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Brand & Model No:</label>
+        <input type="text" name="brand_model" class="w-full border border-gray-300 rounded-md p-2" value="{{ old('brand_model') }}">
+    </div>
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Serial No.:</label>
+        <input type="text" name="serial_no" class="w-full border border-gray-300 rounded-md p-2" value="{{ old('serial_no') }}">
+    </div>
+</div>
+</div>
+</div>
+@include('tickets.partials.inline-lower-fields', ['btnColor' => 'blue', 'btnText' => 'Submit Repair Request'])
+</form>
+</div>
 
         {{-- ========================================================== --}}
         {{-- 💻 2. INFORMATION SYSTEM REQUEST FORM (KSU-ICTO-QF-02)       --}}
