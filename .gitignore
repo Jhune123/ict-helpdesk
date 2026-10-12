@@ -1,29 +1,63 @@
-﻿# Laravel
+﻿# -----------------------------------------------------------------------------
+# Laravel Core
+# -----------------------------------------------------------------------------
 /vendor
 /node_modules
 /public/storage
-/public/build/*
 /public/hot
-/storage/*.key
-/storage/framework/*
 .env
 .env.backup
+.env.production
+.env.local
+.env.*.local
 .phpunit.result.cache
 
-# Laravel specific
+# Note: /public/build is intentionally NOT ignored so 'npm run build' CSS/JS assets 
+# are committed to Git and deployed cleanly on production via git pull.
+
+# -----------------------------------------------------------------------------
+# Storage & Framework Cache
+# -----------------------------------------------------------------------------
+/storage/*.key
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
+
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# -----------------------------------------------------------------------------
+# Legacy Mix & Debug
+# -----------------------------------------------------------------------------
 /public/mix-manifest.json
 /storage/debugbar
-/storage/log/*.log
 
-# IDE & OS files
+# -----------------------------------------------------------------------------
+# Operating System & IDE Files
+# -----------------------------------------------------------------------------
 /.idea
 /.vscode
 .DS_Store
 Thumbs.db
+*.swp
 
-# Composer & npm logs
-composer.lock
-package-lock.json
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
+# -----------------------------------------------------------------------------
+# NPM / Package Logs
+# (Note: package-lock.json & composer.lock are tracked for version consistency)
+# -----------------------------------------------------------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
