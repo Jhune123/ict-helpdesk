@@ -142,3 +142,58 @@ test('OJT interns see their exact rendered hours and required target on their da
         ->assertSee('Clock In / Out')
         ->assertDontSee($otherIntern->name);
 });
+
+test('OJT dashboard shows present and absent totals for its selected intern roster', function () {
+    $department = Department::create(['name' => 'ICT']);
+    $otherDepartment = Department::create(['name' => 'Finance']);
+    $admin = createOjtRoleUser('admin');
+    $presentIntern = createOjtRoleUser('ojt', $department->id);
+    createOjtRoleUser('ojt', $department->id);
+    createOjtRoleUser('ojt', $otherDepartment->id);
+
+    OjtAttendance::create([
+        'user_id' => $presentIntern->id,
+        'department_id' => $department->id,
+        'date' => now('Asia/Manila')->toDateString(),
+        'am_in' => '08:00:00',
+        'status' => 'AM Checked In',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('ojt.dashboard', ['department_id' => $department->id]))
+        ->assertOk()
+        ->assertViewHas('presentToday', 1)
+        ->assertViewHas('absentToday', 1)
+        ->assertSee('Total OJT Interns')
+        ->assertSee('Present Today')
+        ->assertSee('Absent Today');
+});
+
+test('supervisor department dashboard counts present and absent interns per department', function () {
+    $department = Department::create(['name' => 'ICT']);
+    $supervisor = createOjtRoleUser('ojt_supervisor', $department->id);
+    $presentIntern = createOjtRoleUser('ojt', $department->id);
+    createOjtRoleUser('ojt', $department->id);
+
+    OjtAttendance::create([
+        'user_id' => $presentIntern->id,
+        'department_id' => $department->id,
+        'date' => now('Asia/Manila')->toDateString(),
+        'pm_in' => '13:00:00',
+        'status' => 'PM Checked In',
+    ]);
+
+    $this->actingAs($supervisor)
+        ->get(route('supervisor.dashboard'))
+        ->assertOk()
+        ->assertViewHas('totalInterns', 2)
+        ->assertViewHas('activeToday', 1)
+        ->assertViewHas('departmentStats', function ($stats) use ($department) {
+            $departmentStat = $stats->firstWhere('id', $department->id);
+
+            return $departmentStat->total_interns === 2
+                && $departmentStat->present_today === 1
+                && $departmentStat->absent_today === 1;
+        })
+        ->assertSee('1 Present · 1 Absent');
+});

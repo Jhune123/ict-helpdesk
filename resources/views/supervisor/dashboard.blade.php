@@ -94,7 +94,7 @@
                         <span>🏢 {{ $dept->name }}</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black
                                      {{ $isSelected ? 'bg-emerald-950 text-emerald-200' : 'bg-emerald-200/80 text-emerald-900' }}">
-                            {{ $deptPresent }}/{{ $deptTotal }} Present
+                            {{ $deptPresent }} Present · {{ max(0, $deptTotal - $deptPresent) }} Absent
                         </span>
                     </a>
                 @endforeach

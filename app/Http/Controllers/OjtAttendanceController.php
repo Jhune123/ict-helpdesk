@@ -94,6 +94,7 @@ class OjtAttendanceController extends Controller
                 'department_id' => $student->department_id,
                 'proof_photo'   => $todayLog?->proof_photo,
                 'status'        => $todayLog?->status ?? 'Not Checked In',
+                'is_present'    => $todayLog?->isPresent() ?? false,
                 'raw_am_in'     => $todayLog?->am_in,
                 'raw_am_out'    => $todayLog?->am_out,
                 'raw_pm_in'     => $todayLog?->pm_in,
@@ -117,6 +118,8 @@ class OjtAttendanceController extends Controller
             : 0;
         $myRequiredHours = $currentUser->required_hours ?? 486;
 
+        $presentToday = $students->where('is_present', true)->count();
+        $absentToday = max(0, $students->count() - $presentToday);
         $totalLogsToday = OjtAttendance::whereDate('date', $today)->count();
         $departmentsCount = $departments->count();
         $serverTime = $now->format('F d, Y - h:i:s A') . ' (PST)';
@@ -130,7 +133,9 @@ class OjtAttendanceController extends Controller
             'serverTime',
             'isOjtIntern',
             'myRenderedMinutes',
-            'myRequiredHours'
+            'myRequiredHours',
+            'presentToday',
+            'absentToday'
         ));
     }
 

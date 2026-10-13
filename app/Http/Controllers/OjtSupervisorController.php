@@ -61,7 +61,7 @@ class OjtSupervisorController extends Controller
             
             $present = $deptInterns->filter(function ($intern) {
                 $log = $intern->ojtAttendances->first();
-                return $log && in_array($log->status, ['AM Checked In', 'AM Checked Out', 'PM Checked In', 'Completed Today', 'On Premises']);
+                return $log?->isPresent() ?? false;
             })->count();
 
             return (object) [
@@ -87,7 +87,7 @@ class OjtSupervisorController extends Controller
         $students = $filteredInterns->map(function ($student) use ($today, $currentMonth, $currentYear, &$activeToday, &$totalRenderedMinutes) {
             $todayLog = $student->ojtAttendances->first();
 
-            $isPresent = $todayLog && in_array($todayLog->status, ['AM Checked In', 'AM Checked Out', 'PM Checked In', 'Completed Today', 'On Premises']);
+            $isPresent = $todayLog?->isPresent() ?? false;
             if ($isPresent) {
                 $activeToday++;
             }

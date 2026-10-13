@@ -153,6 +153,23 @@
             </section>
         @endif
 
+        @unless($isOjtIntern)
+            <section class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4" aria-label="Today's OJT attendance totals">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                    <p class="text-xs font-black uppercase text-slate-500">Total OJT Interns</p>
+                    <p class="mt-1 text-3xl font-black text-slate-800">{{ $students->count() }}</p>
+                </div>
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center shadow-sm">
+                    <p class="text-xs font-black uppercase text-emerald-800">Present Today</p>
+                    <p class="mt-1 text-3xl font-black text-emerald-700">{{ $presentToday }}</p>
+                </div>
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center shadow-sm">
+                    <p class="text-xs font-black uppercase text-rose-800">Absent Today</p>
+                    <p class="mt-1 text-3xl font-black text-rose-700">{{ $absentToday }}</p>
+                </div>
+            </section>
+        @endunless
+
         {{-- Tracking Board --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             

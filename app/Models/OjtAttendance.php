@@ -84,6 +84,24 @@ class OjtAttendance extends Model
         return min(intdiv($totalSeconds, 60), 8 * 60);
     }
 
+    public function isPresent(): bool
+    {
+        foreach (['am_in', 'am_out', 'pm_in', 'pm_out'] as $field) {
+            if ($this->getAttribute($field)) {
+                return true;
+            }
+        }
+
+        return in_array($this->status, [
+            'AM Checked In',
+            'AM Checked Out',
+            'PM Checked In',
+            'Completed Today',
+            'On Premises',
+            'Timed Out',
+        ], true);
+    }
+
     /**
      * Preserve the decimal-hours value for existing integrations and storage.
      */
