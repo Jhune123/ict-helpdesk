@@ -41,6 +41,10 @@
                 <input type="hidden" name="form_type" value="equipment_repair">
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
                     <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label>
+                        <input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a short title for this ticket">
+                    </div>
+                    <div>
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">1. REQUESTOR INFORMATION</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2"><label class="block font-semibold text-gray-600 text-sm mb-1">User's Full Name:</label><input type="text" name="meta[full_name]" class="w-full border border-gray-300 rounded-md p-2" required></div>
@@ -104,7 +108,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. REQUEST DETAILS</h3>
-                        <div class="mb-4"><label class="block font-semibold text-gray-600 text-sm mb-1">I.S. Name / Project Title:</label><input type="text" name="title" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                        <div class="mb-4"><label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label><input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a title for this ticket or system request"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-4 mb-4">
                             @foreach(['Account Management', 'Bug Report', 'System Installation/Repair', 'Technical Support/Assistance'] as $type)
                                 <label class="flex items-center space-x-2 text-sm"><input type="checkbox" name="meta[request_type][]" value="{{ $type }}" class="rounded text-teal-600"> <span>{{ $type }}</span></label>
@@ -153,7 +157,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. REQUEST DETAILS</h3>
-                        <div class="mb-4"><label class="block font-semibold text-gray-600 text-sm mb-1">Project Name:</label><input type="text" name="title" class="w-full border border-gray-300 rounded-md p-2" required></div>
+                        <div class="mb-4"><label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label><input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a title for this ticket or multimedia request"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-4 mb-4">
                             @foreach(['Photography/Documentation', 'Videography', 'Graphic Design', 'Audio Recording', 'Live Streaming', 'Technical Support/Assistance'] as $type)
                                 <label class="flex items-center space-x-2 text-sm"><input type="checkbox" name="meta[request_type][]" value="{{ $type }}" class="rounded text-purple-600"> <span>{{ $type }}</span></label>
@@ -195,6 +199,10 @@
                 @csrf
                 <input type="hidden" name="form_type" value="network_request">
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label>
+                        <input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a short title for this ticket">
+                    </div>
                     <div>
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">1. REQUESTOR INFORMATION</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -278,9 +286,12 @@
     <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
         @csrf
         <input type="hidden" name="form_type" value="incident_report">
-        <input type="hidden" name="title" value="Incident Report (KSU-ICTO-QF-06)">
 
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
+            <div>
+                <label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label>
+                <input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a short title for this ticket">
+            </div>
             
             {{-- HEADER / TICKET TRACKING --}}
             <div class="flex flex-col md:flex-row md:justify-between md:items-end border-b border-gray-300 pb-4 mb-4 gap-2">
@@ -441,9 +452,12 @@
             <form action="{{ route('tickets.store') }}" method="POST" class="space-y-5">
                 @csrf
                 <input type="hidden" name="form_type" value="equipment_borrower">
-                <input type="hidden" name="title" value="Equipment Borrowing Request">
                 
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label>
+                        <input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a short title for this ticket">
+                    </div>
                     
                     {{-- BORROWER'S INFORMATION --}}
                     <div>

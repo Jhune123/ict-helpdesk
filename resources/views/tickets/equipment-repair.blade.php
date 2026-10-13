@@ -162,15 +162,19 @@
             <table class="form-table">
                 <tr>
                     <td class="form-label" style="width: 120px;">Date Requested:</td>
-                    <td><div class="form-line">{{ isset($ticket->created_at) ? \Carbon\Carbon::parse($ticket->created_at)->format('F d, Y') : '' }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.date_requested', isset($ticket->created_at) ? \Carbon\Carbon::parse($ticket->created_at)->format('F d, Y') : '') }}</div></td>
+                </tr>
+                <tr>
+                    <td class="form-label">Ticket Title:</td>
+                    <td><div class="form-line">{{ $ticket->title ?? '' }}</div></td>
                 </tr>
                 <tr>
                     <td class="form-label">User's Full Name:</td>
-                    <td><div class="form-line">{{ $ticket->user->name ?? ($ticket->client_name ?? '') }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.full_name', $ticket->client_name ?? $ticket->user->name ?? '') }}</div></td>
                 </tr>
                 <tr>
                     <td class="form-label">User's Office Name & Address:</td>
-                    <td><div class="form-line">{{ $ticket->department ?? '' }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.office_address', $ticket->department ?? '') }}</div></td>
                 </tr>
                 <tr>
                     <td class="form-label">User's Contact Number:</td>
@@ -178,7 +182,7 @@
                 </tr>
                 <tr>
                     <td class="form-label">Email Address:</td>
-                    <td><div class="form-line">{{ $ticket->user->email ?? '' }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.email_address', $ticket->user->email ?? '') }}</div></td>
                 </tr>
             </table>
         </div>
@@ -234,7 +238,7 @@
             <span style="font-weight: bold; display: block; margin-bottom: 5px;">Requested by:</span>
             <div class="signature-block">
                 <div class="signature-line" style="vertical-align: bottom; padding-top: 15px;">
-                    <strong>{{ $ticket->user->name ?? ($ticket->client_name ?? '') }}</strong>
+                    <strong>{{ data_get($ticket, 'form_data.full_name', $ticket->client_name ?? $ticket->user->name ?? '') }}</strong>
                 </div>
                 <div class="signature-subtitle">User signature over printed name</div>
             </div>

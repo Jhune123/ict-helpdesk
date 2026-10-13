@@ -86,6 +86,14 @@
     <div class="section-title">1. REQUESTOR INFORMATION</div>
     <table class="form-table">
         <tr>
+            <td class="label-cell">Date Requested:</td>
+            <td class="line-cell">{{ data_get($ticket, 'form_data.date_requested', $ticket->created_at?->format('F d, Y')) }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Ticket Title:</td>
+            <td class="line-cell">{{ $ticket->title ?? '' }}</td>
+        </tr>
+        <tr>
             <td class="label-cell">User's Full Name:</td>
             <td class="line-cell">{{ $ticket->client_name ?? '' }}</td>
         </tr>
@@ -93,7 +101,7 @@
     <table class="form-table">
         <tr>
             <td class="label-cell">User's Office Name & Address:</td>
-            <td class="line-cell">{{ $ticket->department ?? '' }} {{ isset($ticket->form_data['office_address']) && $ticket->form_data['office_address'] ? '- ' . $ticket->form_data['office_address'] : '' }}</td>
+            <td class="line-cell">{{ data_get($ticket, 'form_data.office_address', $ticket->department ?? '') }}</td>
         </tr>
     </table>
     <table class="form-table">
@@ -105,16 +113,18 @@
     <table class="form-table">
         <tr>
             <td class="label-cell">Email Address:</td>
-            <td class="line-cell">{{ $ticket->form_data['email'] ?? ($ticket->user->email ?? '') }}</td>
+            <td class="line-cell">{{ data_get($ticket, 'form_data.email_address', data_get($ticket, 'form_data.email', $ticket->user->email ?? '')) }}</td>
         </tr>
     </table>
 
     @php
         $reqTypes = $ticket->form_data['request_type'] ?? [];
         $reqTypes = is_array($reqTypes) ? $reqTypes : explode(',', (string)$reqTypes);
+        $otherRequestType = data_get($ticket, 'form_data.request_type_other', data_get($ticket, 'form_data.request_type_others', ''));
         
         $deviceTypes = $ticket->form_data['device_type'] ?? [];
         $deviceTypes = is_array($deviceTypes) ? $deviceTypes : explode(',', (string)$deviceTypes);
+        $otherDeviceType = data_get($ticket, 'form_data.device_other', data_get($ticket, 'form_data.device_others', ''));
     @endphp
 
     <div class="section-title">2. REQUEST DETAILS</div>
@@ -129,9 +139,9 @@
             <tr>
                 <td><span class="box">{{ in_array('Network Troubleshooting', $reqTypes) ? '✔' : '' }}</span> Network Troubleshooting</td>
                 <td>
-                    <span class="box">{{ in_array('Others', $reqTypes) ? '✔' : '' }}</span> Others: 
+                    <span class="box">{{ in_array('Others', $reqTypes) || filled($otherRequestType) ? '✔' : '' }}</span> Others:
                     <span style="border-bottom: 1px solid #000; padding: 0 5px; display: inline-block; width: 180px; font-weight: bold;">
-                        {{ $ticket->form_data['request_type_others'] ?? '' }}
+                        {{ $otherRequestType }}
                     </span>
                 </td>
             </tr>
@@ -163,9 +173,9 @@
             <tr>
                 <td><span class="box">{{ in_array('Laptop', $deviceTypes) ? '✔' : '' }}</span> Laptop</td>
                 <td>
-                    <span class="box">{{ in_array('Others', $deviceTypes) ? '✔' : '' }}</span> Others: 
+                    <span class="box">{{ in_array('Others', $deviceTypes) || filled($otherDeviceType) ? '✔' : '' }}</span> Others:
                     <span style="border-bottom: 1px solid #000; padding: 0 5px; display: inline-block; width: 180px; font-weight: bold;">
-                        {{ $ticket->form_data['device_others'] ?? '' }}
+                        {{ $otherDeviceType }}
                     </span>
                 </td>
             </tr>
@@ -183,15 +193,18 @@
     <table class="form-table">
         <tr>
             <td class="label-cell">Start Date:</td>
-            <td class="line-cell">{{ !empty($ticket->form_data['start_date']) ? \Carbon\Carbon::parse($ticket->form_data['start_date'])->format('F d, Y') : '' }}</td>
+            <td class="line-cell">{{ !empty($ticket->form_data['requested_start_date'] ?? $ticket->form_data['start_date'] ?? null) ? \Carbon\Carbon::parse($ticket->form_data['requested_start_date'] ?? $ticket->form_data['start_date'])->format('F d, Y') : '' }}</td>
         </tr>
     </table>
     <table class="form-table">
         <tr>
             <td class="label-cell">Completion Date:</td>
-            <td class="line-cell">{{ !empty($ticket->form_data['completion_date']) ? \Carbon\Carbon::parse($ticket->form_data['completion_date'])->format('F d, Y') : '' }}</td>
+            <td class="line-cell">{{ !empty($ticket->form_data['requested_completion_date'] ?? $ticket->form_data['completion_date'] ?? null) ? \Carbon\Carbon::parse($ticket->form_data['requested_completion_date'] ?? $ticket->form_data['completion_date'])->format('F d, Y') : '' }}</td>
         </tr>
     </table>
+
+    <div class="section-title">4. REQUEST DESCRIPTION</div>
+    <div class="form-table">{{ $ticket->description ?? '' }}</div>
     <table class="form-table">
         <tr>
             <td class="label-cell">Status/Remarks:</td>

@@ -257,8 +257,14 @@
     </table>
     <table class="form-grid">
         <tr>
+            <td class="lbl" style="width: 20%;">Ticket Title:</td>
+            <td class="val-line" style="width: 80%;">{{ $ticket->title ?? '' }}</td>
+        </tr>
+    </table>
+    <table class="form-grid">
+        <tr>
             <td class="lbl" style="width: 28%;">User's Office Name & Position:</td>
-            <td class="val-line" style="width: 72%;">{{ $ticket->department ?? '' }}</td>
+            <td class="val-line" style="width: 72%;">{{ $formData['office_name_position'] ?? $ticket->department ?? '' }}</td>
         </tr>
     </table>
     <table class="form-grid">
@@ -270,7 +276,7 @@
     <table class="form-grid">
         <tr>
             <td class="lbl" style="width: 16%;">Email Address:</td>
-            <td class="val-line" style="width: 84%;">{{ $formData['email'] ?? $ticket->user->email ?? '' }}</td>
+            <td class="val-line" style="width: 84%;">{{ $formData['email_address'] ?? $formData['email'] ?? $ticket->user->email ?? '' }}</td>
         </tr>
     </table>
 
@@ -310,25 +316,25 @@
     <table class="form-grid">
         <tr>
             <td class="lbl" style="width: 26%;">Equipment Name/Type:</td>
-            <td class="val-line" style="width: 74%;">{{ $ticket->equipment_type ?? 'N/A' }}</td>
+            <td class="val-line" style="width: 74%;">{{ $formData['equipment_type'] ?? $ticket->equipment_type ?? 'N/A' }}</td>
         </tr>
     </table>
     <table class="form-grid">
         <tr>
             <td class="lbl" style="width: 12%;">Quantity:</td>
-            <td class="val-line" style="width: 88%;">{{ $formData['quantity'] ?? '1' }}</td>
+            <td class="val-line" style="width: 88%;">{{ $formData['equipment_qty'] ?? $formData['quantity'] ?? '1' }}</td>
         </tr>
     </table>
     <table class="form-grid">
         <tr>
             <td class="lbl" style="width: 27%;">Equipment Serial Number:</td>
-            <td class="val-line" style="width: 73%;">{{ $ticket->serial_no ?? 'N/A' }}</td>
+            <td class="val-line" style="width: 73%;">{{ $formData['equipment_serial'] ?? $ticket->serial_no ?? 'N/A' }}</td>
         </tr>
     </table>
     <table class="form-grid">
         <tr>
             <td class="lbl" style="width: 12%;">Remarks:</td>
-            <td class="val-line" style="width: 88%;">{{ $ticket->remarks ?? '' }}</td>
+            <td class="val-line" style="width: 88%;">{{ $formData['equipment_remarks'] ?? $ticket->remarks ?? '' }}</td>
         </tr>
     </table>
 

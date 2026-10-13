@@ -85,6 +85,11 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function user()
+    {
+        return $this->creator();
+    }
+
     public function assignee()
     {
         return $this->belongsTo(User::class, 'assigned_to');

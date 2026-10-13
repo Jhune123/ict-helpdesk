@@ -167,7 +167,9 @@ class TicketController extends Controller
             $categoryId = Category::firstOrCreate(['name' => 'Multimedia Services'])->id;
         } elseif ($formTypeLower === 'information_system_request' && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Information System'])->id;
-        } elseif (in_array($formTypeLower, ['equipment_request', 'equipment_repair', 'equipment_borrow']) && !$categoryId) {
+        } elseif (in_array($formTypeLower, ['equipment_borrow', 'equipment_borrower']) && !$categoryId) {
+            $categoryId = Category::firstOrCreate(['name' => 'Equipment Borrowing'])->id;
+        } elseif (in_array($formTypeLower, ['equipment_request', 'equipment_repair']) && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Equipment Repair'])->id;
         } elseif (Str::contains($formTypeLower, 'incident') && !$categoryId) {
             $categoryId = Category::firstOrCreate(['name' => 'Incident Report'])->id; 
@@ -185,14 +187,19 @@ class TicketController extends Controller
 
         if ($formTypeLower === 'multimedia_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-03';
+        } elseif ($formTypeLower === 'network_request') {
+            $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-04';
         } elseif ($formTypeLower === 'information_system_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-02';
         } elseif (in_array($formTypeLower, ['equipment_request', 'equipment_repair'])) {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-01';
-        } elseif ($formTypeLower === 'equipment_borrow') {
+        } elseif (in_array($formTypeLower, ['equipment_borrow', 'equipment_borrower'])) {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-09';
         } elseif (Str::contains($formTypeLower, 'incident')) {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-06'; 
+        }
+        if ($formTypeLower !== '') {
+            $formDataToSave['form_type'] = $formTypeLower;
         }
 
         $statusMap = [
@@ -227,17 +234,23 @@ class TicketController extends Controller
         ]);
 
         if ($formTypeLower === 'network_request') {
+            $networkMetadata = $validated['meta'] ?? [];
+            $networkRequestTypes = data_get($networkMetadata, 'request_type', []);
+            $networkDeviceTypes = data_get($networkMetadata, 'device_type', []);
+
             NetworkRequest::create([
                 'ticket_id'           => $ticket->id,
                 'user_id'             => Auth::id(),
-                'office'              => $validated['network_office'] ?? 'N/A',
+                'office'              => data_get($networkMetadata, 'office_address', $validated['network_office'] ?? 'N/A'),
                 'contact_number'      => $validated['contact_number'] ?? 'N/A',
-                'request_type'        => $validated['network_request_type'] ?? 'N/A',
-                'request_type_others' => $validated['network_request_type_others'] ?? null,
-                'location'            => $validated['network_location'] ?? null,
-                'mac_address'         => $validated['network_mac_address'] ?? null,
-                'device'              => $validated['network_device'] ?? 'N/A',
-                'device_others'       => $validated['network_device_others'] ?? null,
+                'request_type'        => is_array($networkRequestTypes) ? implode(', ', $networkRequestTypes) : ($networkRequestTypes ?: 'N/A'),
+                'request_type_others' => data_get($networkMetadata, 'request_type_other', $validated['network_request_type_others'] ?? null),
+                'location'            => data_get($networkMetadata, 'location', $validated['network_location'] ?? null),
+                'mac_address'         => data_get($networkMetadata, 'mac_address', $validated['network_mac_address'] ?? null),
+                'device'              => is_array($networkDeviceTypes) ? implode(', ', $networkDeviceTypes) : ($networkDeviceTypes ?: 'N/A'),
+                'device_others'       => data_get($networkMetadata, 'device_other', $validated['network_device_others'] ?? null),
+                'start_date'          => data_get($networkMetadata, 'requested_start_date'),
+                'completion_date'     => data_get($networkMetadata, 'requested_completion_date'),
                 'remarks'             => $validated['remarks'] ?? null,
             ]);
         }
@@ -494,6 +507,8 @@ class TicketController extends Controller
             if (isset($formData['original_form_type'])) {
                 if ($formData['original_form_type'] === 'KSU-ICTO-QF-03') {
                     $view = 'tickets.print-multimedia'; 
+                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-04') {
+                    $view = 'tickets.print-network';
                 } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-02') {
                     $view = 'tickets.print-is'; 
                 } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-09') {

@@ -121,8 +121,7 @@
                 ">
                     <td class="px-3 py-2 font-bold">{{ $ticket->ticket_number }}</td>
                     
-                    {{-- UPDATED: Strips out the word " Request" from the displayed title --}}
-                    <td class="px-3 py-2">{{ str_replace(' Request', '', $ticket->title) }}</td>
+                    <td class="px-3 py-2">{{ $ticket->title }}</td>
                     
                     <td class="max-w-md whitespace-pre-wrap break-words px-3 py-2 align-top">{{ $ticket->description ?: 'N/A' }}</td>
                     <td class="px-3 py-2">{{ $ticket->brand_model ?? '-' }}</td>

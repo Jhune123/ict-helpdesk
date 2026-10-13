@@ -145,10 +145,11 @@
 
     <div class="form-section">
         <h3>1. REQUESTOR INFORMATION</h3>
+        <div class="field-row">Date Requested: <span class="underline-value" style="width: 70%;">{{ data_get($ticket, 'form_data.date_requested', $ticket->created_at?->format('F d, Y')) }}</span></div>
         <div class="field-row">User’s Full Name: <span class="underline-value" style="width: 70%;" style="vertical-align: bottom;">{{ $ticket->client_name }}</span></div>
-        <div class="field-row">User’s Office Name & Address: <span class="underline-value" style="width: 58%;">{{ $ticket->department }}</span></div>
+        <div class="field-row">User’s Office Name & Address: <span class="underline-value" style="width: 58%;">{{ data_get($ticket, 'form_data.office_address', $ticket->department) }}</span></div>
         <div class="field-row">User’s Contact Number: <span class="underline-value" style="width: 65%;">{{ $ticket->contact_number }}</span></div>
-        <div class="field-row">Email Address: <span class="underline-value" style="width: 75%;">{{ data_get($ticket, 'form_data.email', $ticket->user->email ?? '') }}</span></div>
+        <div class="field-row">Email Address: <span class="underline-value" style="width: 75%;">{{ data_get($ticket, 'form_data.email_address', data_get($ticket, 'form_data.email', $ticket->user->email ?? '')) }}</span></div>
     </div>
 
     @php
@@ -191,9 +192,10 @@
 
     <div class="form-section">
         <h3>3. PROJECT REQUEST TIMELINE</h3>
-        <div class="field-row">Start Date: <span class="underline-value" style="width: 80%;">{{ data_get($ticket, 'form_data.start_date', '') }}</span></div>
-        <div class="field-row">Completion Date: <span class="underline-value" style="width: 72%;">{{ data_get($ticket, 'form_data.completion_date', '') }}</span></div>
+        <div class="field-row">Start Date: <span class="underline-value" style="width: 80%;">{{ data_get($ticket, 'form_data.requested_start_date', data_get($ticket, 'form_data.start_date', '')) }}</span></div>
+        <div class="field-row">Completion Date: <span class="underline-value" style="width: 72%;">{{ data_get($ticket, 'form_data.requested_completion_date', data_get($ticket, 'form_data.completion_date', '')) }}</span></div>
         <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 75%;">{{ $ticket->remarks ?? '' }}</span></div>
+        <div class="field-row">Request Details: <span class="underline-value" style="width: 75%;">{{ $ticket->description ?? '' }}</span></div>
         @if(empty($ticket->remarks))
             <div class="field-row" style="border-bottom: 1px solid #000; height: 20px; margin-top: 10px; width: 100%;"></div>
         @endif

@@ -17,6 +17,7 @@
     </style>
 </head>
 <body>
+    @php($formData = $ticket->form_data ?? [])
 
     <table class="table-container">
         <tr>
@@ -44,6 +45,9 @@
         </tr>
 
         <tr>
+            <td colspan="3"><strong>Ticket Title:</strong> {{ $ticket->title ?? '' }}<br><strong>Purpose / Request Description:</strong> {{ $ticket->description ?? '' }}</td>
+        </tr>
+        <tr>
             <td colspan="2" class="section-header">BORROWER'S INFORMATION</td>
             <td class="section-header">EQUIPMENT DETAILS</td>
         </tr>
@@ -52,18 +56,18 @@
             <td colspan="2" style="padding: 0;">
                 <table style="width: 100%; border-collapse: collapse; border: none;">
                     <tr><td style="border: none; border-bottom: 1px solid black; width: 35%; padding: 7px 8px;">Full Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ $ticket->client_name }}</td></tr>
-                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Office Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ $ticket->department ?? 'N/A' }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Office Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ data_get($formData, 'office_name', $ticket->department ?? 'N/A') }}</td></tr>
                     <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Contact Number</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ $ticket->contact_number ?? 'N/A' }}</td></tr>
-                    <tr><td style="border: none; height: 35px; padding: 7px 8px;">Email Address</td><td style="border: none; padding: 7px 8px;">{{ $ticket->client_email ?? 'N/A' }}</td></tr>
+                    <tr><td style="border: none; height: 35px; padding: 7px 8px;">Email Address</td><td style="border: none; padding: 7px 8px;">{{ data_get($formData, 'email_address', 'N/A') }}</td></tr>
                 </table>
             </td>
             <td style="padding: 0;">
                 <table style="width: 100%; border-collapse: collapse; border: none;">
-                    <tr><td style="border: none; border-bottom: 1px solid black; width: 50%; padding: 6px 8px;">Equipment Name/Type</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ $ticket->equipment_type }}</td></tr>
-                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">Quantity</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">1</td></tr>
-                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">Serial Number</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ $ticket->serial_no ?? 'N/A' }}</td></tr>
-                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">Date Borrowed</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ now()->format('F d, Y') }}</td></tr>
-                    <tr><td style="border: none; padding: 6px 8px;">Expected Return Date</td><td style="border: none; padding: 6px 8px;">{{ $ticket->expected_return_date ?? '' }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; width: 50%; padding: 6px 8px;">Equipment Name/Type</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ data_get($formData, 'equipment_type', $ticket->equipment_type) }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">Quantity</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ data_get($formData, 'quantity', 1) }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">Serial Number</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ data_get($formData, 'serial_no', $ticket->serial_no ?? 'N/A') }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">Date Borrowed</td><td style="border: none; border-bottom: 1px solid black; padding: 6px 8px;">{{ data_get($formData, 'date_borrowed', '') }}</td></tr>
+                    <tr><td style="border: none; padding: 6px 8px;">Expected Return Date</td><td style="border: none; padding: 6px 8px;">{{ data_get($formData, 'expected_return_date', '') }}</td></tr>
                 </table>
             </td>
         </tr>
