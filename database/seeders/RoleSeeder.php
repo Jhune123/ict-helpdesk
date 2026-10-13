@@ -10,14 +10,16 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // Clear cached roles & permissions
+        // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Roles
         $roles = [
             'admin',
             'it_staff',
             'user',
+            'ojt',
+            'supervisor',     // 👈 Added to fix RoleDoesNotExist for 'supervisor'
+            'ojt_supervisor', // 👈 Added OJT Supervisor
         ];
 
         foreach ($roles as $role) {
@@ -27,6 +29,6 @@ class RoleSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('✅ Roles seeded: admin, it_staff, user');
+        $this->command->info('✅ Roles seeded: admin, it_staff, user, ojt, supervisor, ojt_supervisor');
     }
 }

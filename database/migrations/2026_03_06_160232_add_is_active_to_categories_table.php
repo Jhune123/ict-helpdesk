@@ -10,17 +10,24 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::table('categories', function (Blueprint $table) {
-        // This adds the missing column that the seeder is looking for
-        $table->boolean('is_active')->default(true)->after('description');
-    });
-}
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            if (!Schema::hasColumn('categories', 'is_active')) {
+                // This adds the missing column that the seeder is looking for
+                $table->boolean('is_active')->default(true)->after('description');
+            }
+        });
+    }
 
-public function down(): void
-{
-    Schema::table('categories', function (Blueprint $table) {
-        $table->dropColumn('is_active');
-    });
-}
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            if (Schema::hasColumn('categories', 'is_active')) {
+                $table->dropColumn('is_active');
+            }
+        });
+    }
 };

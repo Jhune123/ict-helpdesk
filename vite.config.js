@@ -8,7 +8,14 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '0.0.0.0', // Exposes Vite on your local network
+        cors: true,      // Prevents CORS errors on mobile browsers
+        hmr: {
+            host: '172.168.14.70', // Connects Vite HMR directly to your PC's IP
+        },
+    },
     build: {
-        outDir: 'public/build', // 👈 ensure this matches
+        outDir: 'public/build',
     },
 });

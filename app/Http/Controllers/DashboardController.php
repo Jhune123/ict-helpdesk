@@ -5,11 +5,58 @@ namespace App\Http\Controllers;
 use App\Models\Ticket;
 use App\Models\Asset;
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    /**
+     * Display the Main OJT Dashboard
+     */
+    public function index(Request $request)
+    {
+        $currentUser = Auth::user();
+
+        // 1. Fetch OJT Trainees with their department & attendance relationship
+        $studentsQuery = User::role('ojt')->with(['department', 'ojtAttendances']);
+
+        // 2. Department Scoping Logic:
+        // Lock Supervisors to ONLY see interns in their assigned department
+        if ($currentUser->hasRole('supervisor')) {
+            $selectedDept = $currentUser->department_id;
+            $studentsQuery->where('department_id', $selectedDept);
+        } else {
+            // Admin & IT Staff can filter by selected department
+            $selectedDept = $request->input('department_id');
+            if (!empty($selectedDept)) {
+                $studentsQuery->where('department_id', $selectedDept);
+            }
+        }
+
+        $students = $studentsQuery->orderBy('name', 'asc')->get();
+
+        // 3. Stats calculation
+        $departments = class_exists(Department::class) ? Department::all() : collect();
+        $departmentsCount = $departments->count();
+
+        // Count total active logs for today
+        $totalLogsToday = User::role('ojt')
+            ->whereHas('ojtAttendances', function ($query) {
+                $query->whereDate('created_at', Carbon::today());
+            })
+            ->count();
+
+        return view('dashboard', compact(
+            'students',
+            'departments',
+            'selectedDept',
+            'departmentsCount',
+            'totalLogsToday'
+        ));
+    }
+
     /**
      * Display the Analytics Dashboard
      */

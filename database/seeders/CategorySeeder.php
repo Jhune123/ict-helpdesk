@@ -3,33 +3,42 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Category;
+use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $categories = [
-
-            'Hardware',
-            'Software',
-            'Network',
+        $pillars = [
             'Email & Accounts',
-            'Website & Online Services',
-            'Printing & Scanning',
-            'Multimedia Equipment',
-            'Server & Storage',
-            'Security',
+            'Equipment Borrowing',
+            'Equipment Repair',
+            'Hardware',
+            'Information System',
+            'Information System/ Software',
+            'Layouting',
+            'Multimedia',
+            'Multimedia Services',
+            'Network',
+            'Network / Internet',
             'Others',
-
+            'Printing & Scanning',
+            'Scheduled Maintenance',
+            'Security',
+            'Server & Storage',
+            'Software Installation',
+            'Support to Operation',
+            'Website & Online Services',
         ];
 
-        foreach ($categories as $category) {
-            Category::firstOrCreate([
-                'name' => $category
-            ]);
+        foreach ($pillars as $pillar) {
+            // Adjust 'categories' or 'name' if your table/column is named differently (e.g. 'pillars', 'services')
+            DB::table('categories')->updateOrInsert(
+                ['name' => $pillar],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
         }
 
-        $this->command->info('✅ Categories seeded successfully.');
+        $this->command->info('All 19 ICTO Service Pillars restored successfully.');
     }
 }

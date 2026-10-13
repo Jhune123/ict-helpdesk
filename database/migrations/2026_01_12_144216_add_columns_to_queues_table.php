@@ -12,10 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('queues', function (Blueprint $table) {
-            $table->string('service_type')->nullable()->after('queue_number');
-            $table->string('served_by')->nullable()->after('window_number');
-            $table->timestamp('called_at')->nullable()->after('served_by');
-            $table->timestamp('served_at')->nullable()->after('called_at');
+            if (!Schema::hasColumn('queues', 'service_type')) {
+                $table->string('service_type')->nullable()->after('queue_number');
+            }
+            if (!Schema::hasColumn('queues', 'served_by')) {
+                $table->string('served_by')->nullable()->after('window_number');
+            }
+            if (!Schema::hasColumn('queues', 'called_at')) {
+                $table->timestamp('called_at')->nullable()->after('served_by');
+            }
+            if (!Schema::hasColumn('queues', 'served_at')) {
+                $table->timestamp('served_at')->nullable()->after('called_at');
+            }
         });
     }
 
@@ -25,7 +33,24 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('queues', function (Blueprint $table) {
-            $table->dropColumn(['service_type', 'served_by', 'called_at', 'served_at']);
+            $columnsToDrop = [];
+
+            if (Schema::hasColumn('queues', 'service_type')) {
+                $columnsToDrop[] = 'service_type';
+            }
+            if (Schema::hasColumn('queues', 'served_by')) {
+                $columnsToDrop[] = 'served_by';
+            }
+            if (Schema::hasColumn('queues', 'called_at')) {
+                $columnsToDrop[] = 'called_at';
+            }
+            if (Schema::hasColumn('queues', 'served_at')) {
+                $columnsToDrop[] = 'served_at';
+            }
+
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 };

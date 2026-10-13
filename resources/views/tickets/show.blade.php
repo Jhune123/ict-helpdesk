@@ -22,7 +22,21 @@
                 <p class="ml-2 text-gray-600">{{ $ticket->description ?? 'N/A' }}</p>
             </div>
             <div><span class="font-semibold">Status:</span> <span class="ml-2">{{ $ticket->status }}</span></div>
-            <div><span class="font-semibold">Category:</span> <span class="ml-2">{{ $ticket->categoryName }}</span></div>
+            
+            {{-- ✅ Safe Category Display & Optional Link --}}
+            <div>
+                <span class="font-semibold">Category:</span>
+                <span class="ml-2">
+                    @if(isset($ticket->category) && $ticket->category)
+                        <a href="{{ route('categories.show', $ticket->category->id ?? $ticket->category) }}" class="text-green-700 hover:underline font-medium">
+                            {{ $ticket->category->name ?? $ticket->categoryName }}
+                        </a>
+                    @else
+                        {{ $ticket->categoryName ?? 'N/A' }}
+                    @endif
+                </span>
+            </div>
+
             <div><span class="font-semibold">Department:</span> <span class="ml-2">{{ $ticket->department ?? 'N/A' }}</span></div>
             <div><span class="font-semibold">IT Personnel:</span> <span class="ml-2">{{ $ticket->assigneeName ?? 'Unassigned' }}</span></div>
             <div>
@@ -31,7 +45,7 @@
             </div>
             <div>
                 <span class="font-semibold">Date Created:</span>
-                <span class="ml-2">{{ $ticket->created_at->timezone('Asia/Manila')->format('F d, Y h:i A') }}</span>
+                <span class="ml-2">{{ $ticket->created_at ? $ticket->created_at->timezone('Asia/Manila')->format('F d, Y h:i A') : 'N/A' }}</span>
             </div>
             @if(in_array($ticket->status, ['Closed', 'Condemned']) && $ticket->date_finished)
             <div>
@@ -60,7 +74,9 @@
             <h3 class="font-bold text-pink-900 flex items-center gap-2 mb-3">Customer Feedback</h3>
             <div class="flex items-center mb-2">
                 @for($i = 1; $i <= 5; $i++)
-                    <svg class="w-6 h-6 {{ $i <= $ticket->feedback->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-6 h-6 {{ $i <= $ticket->feedback->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                    </svg>
                 @endfor
             </div>
             <p class="text-gray-700 italic">"{{ $ticket->feedback->comments }}"</p>
@@ -93,21 +109,25 @@
                     ⬅ Back to List
                 </a>
                 
+                {{-- ✅ Safe Task Link Resolution --}}
                 @if($ticket->task)
-                    <a href="{{ route('tasks.show', $ticket->task->id) }}" class="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-colors rounded-lg shadow-sm flex items-center gap-2 justify-center">
+                    @php
+                        $taskId = is_object($ticket->task) ? $ticket->task->id : $ticket->task;
+                    @endphp
+                    <a href="{{ route('tasks.show', $taskId) }}" class="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-colors rounded-lg shadow-sm flex items-center gap-2 justify-center">
                         📅 View Task Schedule
                     </a>
                 @endif
             </div>
 
             <div class="flex gap-3 w-full md:w-auto justify-end">
-                {{-- ✅ JOB ORDER: Visible to everyone (Clients & Staff) --}}
+                {{-- ✅ JOB ORDER --}}
                 <a href="{{ route('tickets.jobOrder', $ticket->id) }}" target="_blank" class="px-5 py-2.5 bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors rounded-lg shadow-sm flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     Print Job Order
                 </a>
                 
-                {{-- 🔒 EDIT TICKET: Only Admin and IT Staff can see this --}}
+                {{-- 🔒 EDIT TICKET: Admin & IT Staff --}}
                 @role('admin|it_staff')
                     <a href="{{ route('tickets.edit', $ticket->id) }}" class="px-5 py-2.5 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors rounded-lg shadow-sm">
                         ✏ Edit Ticket
@@ -132,11 +152,13 @@
                     <div class="flex justify-between items-start mb-2">
                         <div>
                             <strong class="text-gray-900">{{ $comment->user->name ?? 'Unknown User' }}</strong>
-                            <span class="text-xs text-gray-500 ml-2 bg-white px-2 py-0.5 rounded border border-gray-200">{{ $comment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}</span>
+                            <span class="text-xs text-gray-500 ml-2 bg-white px-2 py-0.5 rounded border border-gray-200">
+                                {{ $comment->created_at ? $comment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') : '' }}
+                            </span>
                         </div>
                         
                         {{-- 🔒 DELETE COMMENT: Only owner or admin --}}
-                        @if(auth()->id() === $comment->user_id || auth()->user()->hasRole('admin'))
+                        @if(auth()->id() === $comment->user_id || (auth()->check() && auth()->user()->hasRole('admin')))
                             <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this comment?');">
                                 @csrf 
                                 @method('DELETE')

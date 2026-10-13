@@ -23,6 +23,9 @@ use App\Http\Controllers\QueueController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SurveyReportController; 
+use App\Http\Controllers\OjtAttendanceController;
+use App\Http\Controllers\OjtSupervisorController;
+use App\Http\Controllers\Auth\UserController as AuthUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +44,7 @@ Route::get('/mis-queue/live-tv', [QueueController::class, 'liveTV'])->name('queu
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])->name('dashboard.analytics');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/dashboard/assets-analytics', [AssetController::class, 'analytics'])->name('assets.analytics');
@@ -87,11 +90,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/csv', [TicketController::class, 'exportCsv'])->name('tickets.export.csv');
     });
 
-    // Explicit ticket layout routes
     Route::get('/tickets/{ticket}/job-order', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrder');
     Route::get('/tickets/{ticket}/job-order-pdf', [TicketController::class, 'jobOrderPdf'])->name('tickets.jobOrderPdf');
     
-    // Explicit production-safe ticket routes
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
@@ -103,16 +104,19 @@ Route::middleware('auth')->group(function () {
         Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
     });
     
-    // Comment Routes
     Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/ojt/print-daily/{user}', [OjtAttendanceController::class, 'printDaily'])->name('ojt.print-daily');
+        Route::get('/ojt/print-monthly/{user}', [OjtAttendanceController::class, 'printMonthly'])->name('ojt.print-monthly');
+    });
 
     /* 📝 FEEDBACK SYSTEM */
     Route::get('/feedbacks/create/{ticket}', [FeedbackController::class, 'create'])->name('feedbacks.create');
     Route::post('/feedbacks/store/{ticket}', [FeedbackController::class, 'store'])->name('feedbacks.store');
     Route::get('/feedbacks/{feedback}/download-pdf', [FeedbackController::class, 'downloadPdf'])->name('feedbacks.download-pdf');
     
-    // Explicit production-safe feedback routes
     Route::get('/feedbacks', [FeedbackController::class, 'index'])->name('feedbacks.index');
     Route::get('/feedbacks/{feedback}', [FeedbackController::class, 'show'])->name('feedbacks.show');
 
@@ -122,7 +126,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->name('feedbacks.destroy');
     });
 
-    /* 📊 CSS REPORTS (Monthly & Yearly Summary) */
+    /* 📊 CSS REPORTS */
     Route::get('/reports/client-satisfaction', [SurveyReportController::class, 'index'])->name('reports.css');
     Route::get('/reports/client-satisfaction/pdf', [SurveyReportController::class, 'exportPdf'])->name('reports.css.pdf');
 
@@ -174,11 +178,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
     Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 
-    /* 📅 OTHER TOOLS (TASKS & MEETINGS) */
+    /* 📅 TASKS & MEETINGS */
     Route::get('/tasks/export/pdf', [TaskScheduleController::class, 'exportPdf'])->name('tasks.export.pdf');
     Route::get('/meetings/calendar', [MeetingController::class, 'calendar'])->name('meetings.calendar');
     
-    // Explicit Admin/IT-Staff routes placed BEFORE wildcard handlers
     Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
         Route::get('/tasks/create', [TaskScheduleController::class, 'create'])->name('tasks.create');
         Route::post('/tasks', [TaskScheduleController::class, 'store'])->name('tasks.store');
@@ -193,7 +196,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy'])->name('meetings.destroy');
     });
 
-    // General Authenticated viewing routes containing baseline wildcards
     Route::get('/tasks', [TaskScheduleController::class, 'index'])->name('tasks.index');
     Route::get('/tasks/{task}', [TaskScheduleController::class, 'show'])->name('tasks.show');
     
@@ -217,14 +219,42 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/{ticket}/pdf', [CondemnedEquipmentController::class, 'downloadPdf'])->name('condemned-equipment.pdf');
         Route::get('/{id}/print', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.print');
-        
-        // Dynamic certificate viewing route (placed safely above wildcard)
         Route::get('/{id}/download-certificate', [CondemnedEquipmentController::class, 'downloadCertificate'])->name('condemned-equipment.downloadCertificate');
-        
         Route::get('/{condemnedEquipment}', [CondemnedEquipmentController::class, 'show'])->name('condemned-equipment.show');
     });
 
-    /* 🔔 SYSTEM LOGS & NOTIFICATIONS */
+  /* 🕒 OJT ATTENDANCE MODULE */
+Route::prefix('ojt-attendance')->group(function () {
+    Route::get('/', [OjtAttendanceController::class, 'dashboard'])->name('ojt.index');
+    Route::get('/dashboard', [OjtAttendanceController::class, 'dashboard'])->name('ojt.dashboard');
+    Route::post('/select-role', [OjtAttendanceController::class, 'selectRole'])->name('ojt.select-role');
+    Route::post('/log', [OjtAttendanceController::class, 'storeLog'])->name('ojt.store-log');
+
+    // 🖨️ Printable Reports Routes
+    Route::get('/print-daily/{user}', [OjtAttendanceController::class, 'printDaily'])->name('ojt.print-daily');
+    Route::get('/print-monthly/{user}', [OjtAttendanceController::class, 'printMonthly'])->name('ojt.print-monthly');
+
+    // Admin & IT Staff Attendance Editing
+    Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+        Route::put('/attendance/{attendance}', [OjtAttendanceController::class, 'updateLog'])->name('ojt.update-log');
+        Route::patch('/intern/{user}/required-hours', [OjtAttendanceController::class, 'updateRequiredHours'])->name('ojt.update-required-hours');
+    });
+});
+
+// Alias routes matching /ojt/... prefixes to prevent 404 / routing mismatches
+Route::get('/ojt/print-daily/{user}', [OjtAttendanceController::class, 'printDaily']);
+Route::get('/ojt/print-monthly/{user}', [OjtAttendanceController::class, 'printMonthly']);
+
+Route::middleware(RoleMiddleware::class . ':admin|it_staff')->group(function () {
+    Route::put('/ojt/attendance/{attendance}', [OjtAttendanceController::class, 'updateLog']);
+});
+
+/* 👨‍💼 OJT SUPERVISOR DASHBOARD */
+Route::middleware(RoleMiddleware::class . ':supervisor|ojt_supervisor|admin|it_staff')->group(function () {
+    Route::get('/supervisor/dashboard', [OjtSupervisorController::class, 'dashboard'])->name('supervisor.dashboard');
+});
+
+    /* 🔔 NOTIFICATIONS & LOGS */
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/{id}/unread', [NotificationController::class, 'markAsUnread'])->name('notifications.markAsUnread');
@@ -233,6 +263,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ActivityLogController::class, 'index'])->name('activity-logs.index');
         Route::get('/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     });
+
+    /* 📝 USER REGISTRATION */
+    Route::get('/register', [AuthUserController::class, 'create'])->name('register');
+    Route::post('/register', [AuthUserController::class, 'store']); 
+
 });
 
 /* AUTH */
