@@ -204,6 +204,7 @@ class TicketController extends Controller
         ];
         $targetStatus = $validated['status'] ?? 'Open';
         $targetStatus = $statusMap[strtolower($targetStatus)] ?? $targetStatus;
+        $requestorName = data_get($validated, 'meta.full_name');
 
         $ticket = Ticket::create([
             'ticket_number'   => $ticketNumber,
@@ -218,7 +219,7 @@ class TicketController extends Controller
             'assigned_to'     => $assignedTo,
             'status'          => $targetStatus,
             'remarks'         => $validated['remarks'] ?? null,
-            'client_name'     => $validated['client_name'] ?? Auth::user()->name, 
+            'client_name'     => filled($requestorName) ? $requestorName : ($validated['client_name'] ?? null),
             'contact_number'  => $validated['contact_number'] ?? null,
             'date_submitted'  => Carbon::now('Asia/Manila'),
             'created_by'      => Auth::id(),

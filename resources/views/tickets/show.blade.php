@@ -19,7 +19,7 @@
             <div><span class="font-semibold">Title:</span> <span class="ml-2">{{ $ticket->title }}</span></div>
             <div>
                 <span class="font-semibold">Description:</span>
-                <p class="ml-2 text-gray-600">{{ $ticket->description ?? 'N/A' }}</p>
+                <p class="ml-2 whitespace-pre-wrap break-words text-gray-600">{{ $ticket->description ?? 'N/A' }}</p>
             </div>
             <div><span class="font-semibold">Status:</span> <span class="ml-2">{{ $ticket->status }}</span></div>
             

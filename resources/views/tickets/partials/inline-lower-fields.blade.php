@@ -1,6 +1,6 @@
 <div>
     <label for="client_name" class="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
-    <input type="text" name="client_name" id="client_name" value="{{ auth()->check() ? auth()->user()->name : old('client_name') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-{{ $btnColor }}-500 focus:border-{{ $btnColor }}-500" required>
+    <input type="text" name="client_name" id="client_name" value="{{ old('client_name') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-{{ $btnColor }}-500 focus:border-{{ $btnColor }}-500" required>
 </div>
 
 <div>

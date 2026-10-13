@@ -66,6 +66,10 @@
         <input type="text" name="serial_no" class="w-full border border-gray-300 rounded-md p-2" value="{{ old('serial_no') }}">
     </div>
 </div>
+<div class="mt-4">
+    <label class="block font-semibold text-gray-600 text-sm mb-1">Problem Description:</label>
+    <textarea name="description" rows="5" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Describe the equipment issue in detail...">{{ old('description') }}</textarea>
+</div>
 </div>
 </div>
 @include('tickets.partials.inline-lower-fields', ['btnColor' => 'blue', 'btnText' => 'Submit Repair Request'])
@@ -438,7 +442,6 @@
                 @csrf
                 <input type="hidden" name="form_type" value="equipment_borrower">
                 <input type="hidden" name="title" value="Equipment Borrowing Request">
-                <textarea name="description" class="hidden">Requesting to borrow equipment per Form KSU-ICTO-QF-08</textarea>
                 
                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 space-y-6">
                     
@@ -463,6 +466,11 @@
                             <div><label class="block font-semibold text-gray-600 text-sm mb-1">Date Borrowed:</label><input type="date" name="meta[date_borrowed]" value="{{ date('Y-m-d') }}" class="w-full border border-gray-300 rounded-md p-2" required></div>
                             <div><label class="block font-semibold text-gray-600 text-sm mb-1">Expected Return Date:</label><input type="date" name="meta[expected_return_date]" class="w-full border border-gray-300 rounded-md p-2" required></div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-600 text-sm mb-1">Purpose / Request Description:</label>
+                        <textarea name="description" rows="4" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Describe why the equipment is needed and any relevant details...">{{ old('description') }}</textarea>
                     </div>
                     
                     {{-- TERMS AND CONDITIONS --}}
@@ -544,6 +552,24 @@
 
 {{-- Dynamic Switcher Script Handling --}}
 <script>
+    document.querySelectorAll('form').forEach(form => {
+        const requestorName = form.querySelector('[name="meta[full_name]"]');
+        const clientName = form.querySelector('[name="client_name"]');
+
+        if (!requestorName || !clientName) {
+            return;
+        }
+
+        const syncClientName = () => {
+            clientName.value = requestorName.value;
+        };
+
+        requestorName.addEventListener('input', syncClientName);
+        requestorName.addEventListener('change', syncClientName);
+        form.addEventListener('submit', syncClientName);
+        syncClientName();
+    });
+
     function toggleForm() {
         const selector = document.getElementById('category_selector');
         const selection = selector.value;

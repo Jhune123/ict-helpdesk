@@ -1,4 +1,3 @@
-@php use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 
 @section('content')
@@ -125,7 +124,7 @@
                     {{-- UPDATED: Strips out the word " Request" from the displayed title --}}
                     <td class="px-3 py-2">{{ str_replace(' Request', '', $ticket->title) }}</td>
                     
-                    <td class="px-3 py-2" title="{{ $ticket->description }}">{{ Str::limit($ticket->description, 30) }}</td>
+                    <td class="max-w-md whitespace-pre-wrap break-words px-3 py-2 align-top">{{ $ticket->description ?: 'N/A' }}</td>
                     <td class="px-3 py-2">{{ $ticket->brand_model ?? '-' }}</td>
                     <td class="px-3 py-2 font-mono text-xs">{{ $ticket->serial_no ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->category->name ?? '-' }}</td>
