@@ -108,7 +108,7 @@
         </div>
 
         <div class="mt-6">
-            {{ $feedbacks->links() }}
+            {{ $feedbacks->withQueryString()->links() }}
         </div>
 
     </div>

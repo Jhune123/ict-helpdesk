@@ -26,6 +26,10 @@ It provides a centralized platform for handling service requests, assigning IT p
 - **Vite**
 - **Blade Templates**
 
+### Local development assets
+
+Vite HMR uses `localhost` by default so its CSS and JavaScript load when the app is opened at `http://localhost:8000`, even if the computer's network address changes. To use Vite from another device on the local network, set `VITE_HMR_HOST` in your local `.env` to this computer's LAN IP address and restart `npm run dev`.
+
 ---
 
 ## 👨‍💻 Developer

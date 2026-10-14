@@ -16,7 +16,7 @@ class FeedbackController extends Controller
     {
         $feedbacks = Feedback::with('ticket')
             ->latest()
-            ->paginate(10);
+            ->paginate(15);
 
         return view('feedbacks.index', compact('feedbacks'));
     }

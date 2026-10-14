@@ -103,6 +103,7 @@
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', (e) => {
                     if (!form.checkValidity()) return; // Don't disable if HTML5 validation fails
+                    if (form.target.toLowerCase() === '_blank') return;
 
                     const submitBtn = form.querySelector('button[type="submit"]');
                     if (submitBtn && !submitBtn.dataset.noDisable) {

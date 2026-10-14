@@ -228,8 +228,8 @@
         <div class="section-title">IV. QUALITATIVE FEEDBACK (TOP 3 RECENT COMMENTS)</div>
         <div class="feedback-box">
             <ol>
-                @forelse($surveys->whereNotNull('comments')->where('comments', '!=', '')->take(3) as $feedback)
-                    <li>{{ $feedback->comments }}</li>
+                @forelse($surveys->filter(fn ($survey) => filled($survey->suggestions ?? $survey->comments ?? null))->take(3) as $feedback)
+                    <li>{{ $feedback->suggestions ?? $feedback->comments }}</li>
                 @empty
                     <li style="color: #666; font-style: italic;">No specific comments recorded for this period.</li>
                 @endforelse
