@@ -188,7 +188,7 @@
                     Borrower:
                     <div class="signature-area">
                         <div class="signature-line">
-                            {{ $ticket->meta['full_name'] ?? '&nbsp;' }}
+                            {{ data_get($ticket, 'form_data.full_name', data_get($ticket, 'meta.full_name', $ticket->client_name ?? '')) }}
                         </div>
                         <div class="signature-label">Signature over printed name</div>
                     </div>
@@ -196,7 +196,7 @@
                 <td class="signature-box">
                     Staff-in-charge:
                     <div class="signature-area">
-                        <div class="signature-line" style="color: transparent;">&nbsp;</div>
+                        <div class="signature-line">{{ $ticket->assignee?->name ?? '' }}</div>
                         <div class="signature-label">Signature over printed name</div>
                     </div>
                 </td>
@@ -207,7 +207,7 @@
                 <td colspan="2" class="signature-box">
                     Received By:
                     <div class="signature-area" style="width: 40%; margin-left: auto; margin-right: auto;">
-                        <div class="signature-line" style="color: transparent;">&nbsp;</div>
+                        <div class="signature-line">{{ $ticket->assignee?->name ?? '' }}</div>
                         <div class="signature-label">Staff-in-charge / Date</div>
                     </div>
                 </td>

@@ -78,6 +78,7 @@
         <table id="tasksTable" class="display nowrap stripe hover w-full">
             <thead>
                 <tr>
+                    <th>Title</th>
                     <th>Date</th>
                     <th>Description</th>
                     <th>Requested By</th>
@@ -102,6 +103,7 @@
                 @endphp
 
                 <tr class="{{ $rowClass }}">
+                    <td class="wrap-text">{{ $task->title ?? '—' }}</td>
                     <td data-order="{{ $taskDate->format('Y-m-d') }}">
                         {{ $taskDate->format('M d, Y') }}
                     </td>
@@ -172,7 +174,7 @@ $(document).ready(function () {
         scrollX: true,
         pageLength: 15,
         lengthMenu: [5, 10, 15, 25, 50],
-        order: [[0, 'desc']], 
+        order: [[1, 'desc']],
         autoWidth: false,
         dom: 'Bfrtip',
         buttons: [

@@ -224,7 +224,7 @@
         <div class="field-row">Requested Start Date: <span class="underline-value" style="width: 65%;">{{ data_get($ticket, 'form_data.requested_start_date', data_get($ticket, 'form_data.start_date', '')) }}</span></div>
         <div class="field-row">Requested Completion Date: <span class="underline-value" style="width: 60%;">{{ data_get($ticket, 'form_data.requested_completion_date', data_get($ticket, 'form_data.completion_date', '')) }}</span></div>
         <div class="field-row">Status/Remarks: <span class="underline-value" style="width: 70%;">{{ $ticket->remarks ?? ($ticket->status ?? '') }}</span></div>
-        <div class="field-row">Request Details: <span class="underline-value" style="width: 70%;">{{ $ticket->description ?? '' }}</span></div>
+        <div class="field-row">Request Details: <span class="underline-value" style="width: 70%;">{{ data_get($ticket, 'form_data.multimedia_request_details', $ticket->description) }}</span></div>
         @if(empty($ticket->remarks))
             <div class="field-row" style="border-bottom: 1px solid #000; height: 20px; margin-top: 10px; width: 100%;"></div>
         @endif

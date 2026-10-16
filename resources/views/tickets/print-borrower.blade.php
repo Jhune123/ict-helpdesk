@@ -153,14 +153,14 @@
             <td colspan="2" class="align-top" style="height: 95px; padding: 10px;">
                 <p style="margin: 0 0 35px 0; font-weight: bold;">Borrower:</p>
                 <div class="text-center">
-                    <span class="signature-line">{{ data_get($ticket, 'meta.full_name', '') }}</span><br>
+                    <span class="signature-line">{{ data_get($ticket, 'form_data.full_name', data_get($ticket, 'meta.full_name', $ticket->client_name ?? '')) }}</span><br>
                     <span style="font-size: 11px; color: #333;">Signature over printed name</span>
                 </div>
             </td>
             <td colspan="2" class="align-top" style="height: 95px; padding: 10px;">
                 <p style="margin: 0 0 35px 0; font-weight: bold;">Released by (Staff-in-charge):</p>
                 <div class="text-center">
-                    <span class="signature-line" style="color: transparent;">&nbsp;</span><br>
+                    <span class="signature-line">{{ $ticket->assignee?->name ?? '' }}</span><br>
                     <span style="font-size: 11px; color: #333;">Signature over printed name</span>
                 </div>
             </td>
@@ -173,7 +173,7 @@
                 <table class="inner-sig-table">
                     <tr>
                         <td style="width: 50%;">
-                            <span class="signature-line" style="width: 75%; color: transparent;">&nbsp;</span><br>
+                            <span class="signature-line" style="width: 75%;">{{ $ticket->assignee?->name ?? '' }}</span><br>
                             <span style="font-size: 11px; color: #333;">Signature</span>
                         </td>
                         <td style="width: 50%;">

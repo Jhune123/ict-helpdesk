@@ -70,6 +70,28 @@
         <input type="text" name="serial_no" class="w-full border border-gray-300 rounded-md p-2" value="{{ old('serial_no') }}">
     </div>
 </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Property No.:</label>
+        <input type="text" name="meta[property_no]" class="w-full border border-gray-300 rounded-md p-2">
+    </div>
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Acquisition Date:</label>
+        <input type="date" name="meta[acquisition_date]" class="w-full border border-gray-300 rounded-md p-2">
+    </div>
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Acquisition Cost:</label>
+        <input type="text" name="meta[acquisition_cost]" class="w-full border border-gray-300 rounded-md p-2" placeholder="₱">
+    </div>
+    <div>
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Date of Last Repair:</label>
+        <input type="date" name="meta[last_repair_date]" class="w-full border border-gray-300 rounded-md p-2">
+    </div>
+    <div class="md:col-span-2">
+        <label class="block font-semibold text-gray-600 text-sm mb-1">Nature of Last Repair:</label>
+        <input type="text" name="meta[last_repair_nature]" class="w-full border border-gray-300 rounded-md p-2">
+    </div>
+</div>
 <div class="mt-4">
     <label class="block font-semibold text-gray-600 text-sm mb-1">Problem Description:</label>
     <textarea name="description" rows="5" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Describe the equipment issue in detail...">{{ old('description') }}</textarea>
@@ -110,9 +132,13 @@
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. REQUEST DETAILS</h3>
                         <div class="mb-4"><label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label><input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a title for this ticket or system request"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-4 mb-4">
-                            @foreach(['Account Management', 'Bug Report', 'System Installation/Repair', 'Technical Support/Assistance'] as $type)
+                            @foreach(['Account Management', 'Bug Report', 'System Installation/Repair', 'Technical Support/Assistance', 'Others'] as $type)
                                 <label class="flex items-center space-x-2 text-sm"><input type="checkbox" name="meta[request_type][]" value="{{ $type }}" class="rounded text-teal-600"> <span>{{ $type }}</span></label>
                             @endforeach
+                        </div>
+                        <div class="ml-4 mb-4">
+                            <label class="block font-semibold text-gray-600 text-sm mb-1">Other Request Type:</label>
+                            <input type="text" name="meta[other_request_type]" class="w-full border border-gray-300 rounded-md p-2">
                         </div>
                     </div>
                     <div>
@@ -159,9 +185,13 @@
                         <h3 class="font-bold text-lg text-gray-700 mb-3 border-b border-gray-300 pb-1">2. REQUEST DETAILS</h3>
                         <div class="mb-4"><label class="block font-semibold text-gray-600 text-sm mb-1">Title:</label><input type="text" name="title" value="{{ old('title') }}" class="w-full border border-gray-300 rounded-md p-2" required placeholder="Enter a title for this ticket or multimedia request"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-4 mb-4">
-                            @foreach(['Photography/Documentation', 'Videography', 'Graphic Design', 'Audio Recording', 'Live Streaming', 'Technical Support/Assistance'] as $type)
+                            @foreach(['Photography/Documentation', 'Videography', 'Graphic Design', 'Audio Recording', 'Live Streaming', 'Technical Support/Assistance', 'Others'] as $type)
                                 <label class="flex items-center space-x-2 text-sm"><input type="checkbox" name="meta[request_type][]" value="{{ $type }}" class="rounded text-purple-600"> <span>{{ $type }}</span></label>
                             @endforeach
+                        </div>
+                        <div class="ml-4 mb-4">
+                            <label class="block font-semibold text-gray-600 text-sm mb-1">Other Request Type:</label>
+                            <input type="text" name="meta[other_request_type]" class="w-full border border-gray-300 rounded-md p-2">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div><label class="block font-semibold text-gray-600 text-sm mb-1">Location:</label><input type="text" name="meta[location]" class="w-full border border-gray-300 rounded-md p-2"></div>

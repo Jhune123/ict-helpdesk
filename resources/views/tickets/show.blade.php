@@ -55,8 +55,30 @@
             @endif
         </div>
 
+        @php
+            $serviceFormData = collect($ticket->form_data ?? [])
+                ->except(['form_type', 'original_form_type', 'multimedia_request_details'])
+                ->filter(fn ($value) => is_array($value) ? !empty($value) : filled($value));
+        @endphp
+
+        @if($serviceFormData->isNotEmpty())
+            <div class="mt-8 bg-white shadow-sm overflow-hidden sm:rounded-lg border border-blue-200 border-l-4 border-l-blue-600">
+                <div class="px-4 py-5 bg-blue-50 sm:px-6 border-b border-blue-200">
+                    <h3 class="text-lg leading-6 font-extrabold text-blue-900">Submitted Service Form Details</h3>
+                </div>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-6">
+                    @foreach($serviceFormData as $field => $value)
+                        <div class="min-w-0">
+                            <dt class="text-sm font-semibold text-gray-600">{{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $field)) }}</dt>
+                            <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap break-words">{{ is_array($value) ? implode(', ', \Illuminate\Support\Arr::flatten($value)) : $value }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </div>
+        @endif
+
         {{-- NETWORK REQUEST SECTION --}}
-        @if($ticket->networkRequest)
+        @if($ticket->networkRequest && $serviceFormData->isEmpty())
             <div class="mt-8 bg-white shadow-sm overflow-hidden sm:rounded-lg border border-green-200 border-l-4 border-l-green-600 mb-2">
                 <div class="px-4 py-5 bg-green-50 sm:px-6 flex justify-between items-center border-b border-green-200">
                     <h3 class="text-lg leading-6 font-extrabold text-green-900 flex items-center gap-2">Network Request Details</h3>

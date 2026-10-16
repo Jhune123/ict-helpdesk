@@ -38,7 +38,7 @@
         <h3>1. REQUESTOR INFORMATION</h3>
         <div class="field-row">User’s Full Name: <span class="underline-value" style="width: 70%;">{{ $ticket->client_name }}</span></div>
         <div class="field-row">Office/Department: <span class="underline-value" style="width: 70%;">{{ $ticket->department }}</span></div>
-        <div class="field-row">Contact Number: <span class="underline-value" style="width: 71%;">{{ $ticket->contact_number }}</span></div>
+        <div class="field-row">Contact Number: <span class="underline-value" style="width: 71%;">{{ $ticket->contact_number ?? data_get($ticket, 'form_data.contact_info', '') }}</span></div>
     </div>
 
     <div class="form-section">
@@ -51,7 +51,7 @@
             @if(!empty($ticket->form_data))
                 <table style="width: 100%; margin-top: 5px;">
                     @foreach($ticket->form_data as $key => $value)
-                        @if($key !== 'original_form_type' && !empty($value))
+                        @if(!in_array($key, ['original_form_type', 'form_type']) && !empty($value))
                             <tr>
                                 <td style="width: 30%; text-transform: capitalize; padding: 4px 0;">{{ str_replace('_', ' ', $key) }}:</td>
                                 <td style="border-bottom: 1px solid #ddd; font-weight: bold;">
@@ -61,9 +61,8 @@
                         @endif
                     @endforeach
                 </table>
-            @else
-                <div class="field-row">Description: <span class="underline-value" style="width: 78%;">{{ $ticket->description }}</span></div>
             @endif
+            <div class="field-row">Description: <span class="underline-value" style="width: 78%;">{{ $ticket->description }}</span></div>
         </div>
     </div>
 

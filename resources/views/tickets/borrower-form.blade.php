@@ -55,7 +55,7 @@
         <tr>
             <td colspan="2" style="padding: 0;">
                 <table style="width: 100%; border-collapse: collapse; border: none;">
-                    <tr><td style="border: none; border-bottom: 1px solid black; width: 35%; padding: 7px 8px;">Full Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ $ticket->client_name }}</td></tr>
+                    <tr><td style="border: none; border-bottom: 1px solid black; width: 35%; padding: 7px 8px;">Full Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ data_get($formData, 'full_name', $ticket->client_name ?? '') }}</td></tr>
                     <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Office Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ data_get($formData, 'office_name', $ticket->department ?? 'N/A') }}</td></tr>
                     <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Contact Number</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ $ticket->contact_number ?? 'N/A' }}</td></tr>
                     <tr><td style="border: none; height: 35px; padding: 7px 8px;">Email Address</td><td style="border: none; padding: 7px 8px;">{{ data_get($formData, 'email_address', 'N/A') }}</td></tr>
@@ -82,6 +82,7 @@
                     <li>I will notify the ICT department immediately in case of any issues or concerns with the equipment.</li>
                     <li>I understand that failure to return the equipment on the agreed return date may result in penalties or restrictions on future borrowing privileges.</li>
                 </ul>
+                <strong>Agreed to Terms:</strong> {{ data_get($formData, 'agreed_to_terms', '') }}
             </td>
         </tr>
 
@@ -89,13 +90,17 @@
             <td colspan="2" style="padding: 10px; height: 75px;">
                 Borrower:
                 <div style="margin-top: 35px; text-align: center;">
-                    <span style="border-top: 1px solid black; padding: 0 40px; display: inline-block;">Signature over printed name</span>
+                    <span style="border-bottom: 1px solid black; min-width: 220px; padding: 0 20px; display: inline-block;">
+                        {{ data_get($formData, 'full_name', $ticket->client_name ?? '') }}
+                    </span>
+                    <div>Signature over printed name</div>
                 </div>
             </td>
             <td style="padding: 10px; height: 75px;">
                 Released by (Staff-in-charge):
                 <div style="margin-top: 35px; text-align: center;">
-                    <span style="border-top: 1px solid black; padding: 0 40px; display: inline-block;">Signature over printed name</span>
+                    <span style="border-bottom: 1px solid black; min-width: 220px; padding: 0 20px; display: inline-block;">{{ $ticket->assignee?->name ?? '' }}</span>
+                    <div>Signature over printed name</div>
                 </div>
             </td>
         </tr>
@@ -106,7 +111,8 @@
                 <table style="width: 100%; border: none; margin-top: 35px; border-collapse: collapse;">
                     <tr>
                         <td style="border: none; text-align: center; width: 50%; padding: 0;">
-                            <span style="border-top: 1px solid black; padding: 0 60px; display: inline-block;">Signature</span>
+                            <span style="border-bottom: 1px solid black; min-width: 220px; padding: 0 20px; display: inline-block;">{{ $ticket->assignee?->name ?? '' }}</span>
+                            <div>Signature</div>
                         </td>
                         <td style="border: none; text-align: center; width: 50%; padding: 0;">
                             <span style="border-top: 1px solid black; padding: 0 60px; display: inline-block;">Date</span>

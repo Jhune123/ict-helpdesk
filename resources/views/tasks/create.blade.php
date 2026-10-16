@@ -18,6 +18,11 @@
         @csrf
 
         <div>
+            <label class="block font-medium">Title</label>
+            <input type="text" name="title" value="{{ old('title') }}" class="w-full border-gray-300 rounded-lg" required>
+        </div>
+
+        <div>
             <label class="block font-medium">Date</label>
             <input type="date" name="date" value="{{ old('date') }}" class="w-full border-gray-300 rounded-lg" required>
         </div>
@@ -41,6 +46,18 @@
                 @foreach($departments as $department)
                     <option value="{{ $department->id }}" {{ old('department_id') == $department->id ? 'selected' : '' }}>
                         {{ $department->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="block font-medium">Category</label>
+            <select name="category_id" class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200" required>
+                <option value="">-- Select Category --</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                        {{ $category->name }}
                     </option>
                 @endforeach
             </select>

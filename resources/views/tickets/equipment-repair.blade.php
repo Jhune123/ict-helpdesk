@@ -200,19 +200,19 @@
                     <td class="form-label">Serial No:</td>
                     <td style="padding-right: 15px;"><div class="form-line">{{ $ticket->serial_no ?? '' }}</div></td>
                     <td class="form-label">Property No.:</td>
-                    <td><div class="form-line">{{ $ticket->form_data['property_no'] ?? '' }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.property_no', '') }}</div></td>
                 </tr>
                 <tr>
                     <td class="form-label">Acquisition Date:</td>
-                    <td style="padding-right: 15px;"><div class="form-line">{{ $ticket->form_data['acquisition_date'] ?? '' }}</div></td>
+                    <td style="padding-right: 15px;"><div class="form-line">{{ data_get($ticket, 'form_data.acquisition_date', '') }}</div></td>
                     <td class="form-label">Acquisition Cost:</td>
-                    <td><div class="form-line">{{ $ticket->form_data['acquisition_cost'] ?? '' }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.acquisition_cost', '') }}</div></td>
                 </tr>
                 <tr>
                     <td class="form-label">Date of Last Repair:</td>
-                    <td style="padding-right: 15px;"><div class="form-line">{{ $ticket->form_data['date_last_repair'] ?? '' }}</div></td>
+                    <td style="padding-right: 15px;"><div class="form-line">{{ data_get($ticket, 'form_data.last_repair_date', data_get($ticket, 'form_data.date_last_repair', '')) }}</div></td>
                     <td class="form-label">Nature of Last Repair:</td>
-                    <td><div class="form-line">{{ $ticket->form_data['nature_last_repair'] ?? '' }}</div></td>
+                    <td><div class="form-line">{{ data_get($ticket, 'form_data.last_repair_nature', data_get($ticket, 'form_data.nature_last_repair', '')) }}</div></td>
                 </tr>
             </table>
         </div>

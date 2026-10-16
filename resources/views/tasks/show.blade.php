@@ -5,6 +5,11 @@
     <h2 class="text-xl font-bold mb-4">Task Details</h2>
 
     <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+            <p class="text-gray-600 font-medium">Title</p>
+            <p class="text-lg break-words">{{ $task->title ?? '—' }}</p>
+        </div>
+
         <div>
             <p class="text-gray-600 font-medium">Date</p>
             <p class="text-lg">{{ \Carbon\Carbon::parse($task->date)->format('F d, Y') }}</p>
@@ -25,8 +30,18 @@
         </div>
 
         <div>
+            <p class="text-gray-600 font-medium">Requested By</p>
+            <p class="text-lg break-words">{{ $task->requested_by ?? '—' }}</p>
+        </div>
+
+        <div>
             <p class="text-gray-600 font-medium">Department</p>
-            <p class="text-lg break-words">{{ $task->department->name ?? $task->requested_by }}</p>
+            <p class="text-lg break-words">{{ $task->department->name ?? '—' }}</p>
+        </div>
+
+        <div>
+            <p class="text-gray-600 font-medium">Category</p>
+            <p class="text-lg break-words">{{ $task->category->name ?? '—' }}</p>
         </div>
 
         <div>

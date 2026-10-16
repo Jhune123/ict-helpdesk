@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\Category;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; // ✅ Added to catch silent crashes
@@ -30,36 +31,17 @@ class TaskObserver
             }
             $ticketNumber = 'KSU-ICTO-TIC-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
-            // 2. Ensure a "Scheduled Maintenance" category exists
-            $category = Category::firstOrCreate(['name' => 'Scheduled Maintenance']);
-
-            // 3. Format the Task details into the Ticket Description
-            $fullDescription = "Scheduled Task: " . $task->description . "\n";
-            $fullDescription .= "Location: " . $task->location . "\n";
-            $fullDescription .= "Scheduled Date: " . Carbon::parse($task->date)->format('F d, Y') . "\n";
-            $fullDescription .= "Time: " . $task->start_time . " to " . $task->end_time . "\n";
-            
-            if ($task->remarks) {
-                $fullDescription .= "Remarks: " . $task->remarks;
-            }
-
             // 4. Automatically create the Ticket AND save it to a variable
-            $ticket = Ticket::create([
-                'ticket_number'   => $ticketNumber,
-                'title'           => '[SCHEDULED] ' . substr($task->description, 0, 50),
-                'description'     => $fullDescription,
-                'equipment_type'  => 'N/A',
-                'brand_model'     => 'N/A',
-                'serial_no'       => 'N/A',
-                'priority'        => 'Normal',
-                'category_id'     => $category->id,
-                // ✅ Safely check if department exists before getting its name to prevent crashes
-                'department'      => $task->department ? $task->department->name : 'ICTO', 
-                'status'          => 'Open',
-                'client_name'     => $task->requested_by ?? 'N/A',
-                'date_submitted'  => Carbon::now('Asia/Manila'),
-                'created_by'      => Auth::id() ?? 1,
-            ]);
+            $ticket = Ticket::create(array_merge($this->ticketData($task), [
+                'ticket_number'  => $ticketNumber,
+                'equipment_type' => 'N/A',
+                'brand_model'    => 'N/A',
+                'serial_no'      => 'N/A',
+                'priority'       => 'Normal',
+                'status'         => 'Open',
+                'date_submitted' => Carbon::now('Asia/Manila'),
+                'created_by'     => Auth::id() ?? 1,
+            ]));
 
             // 5. Link the ticket back to the task!
             // ✅ Save quietly prevents infinite loops without triggering other events
@@ -70,5 +52,61 @@ class TaskObserver
             // ✅ If it crashes, it will now tell us exactly WHY in your log files!
             Log::error('TaskObserver failed to create ticket: ' . $e->getMessage());
         }
+    }
+
+    public function updated(Task $task): void
+    {
+        if (!$task->wasChanged([
+            'title',
+            'date',
+            'description',
+            'requested_by',
+            'department_id',
+            'category_id',
+            'location',
+            'start_time',
+            'end_time',
+            'assigned_to',
+            'remarks',
+        ])) {
+            return;
+        }
+
+        $task->unsetRelation('department');
+        $task->unsetRelation('category');
+        $task->ticket?->update($this->ticketData($task));
+    }
+
+    private function ticketData(Task $task): array
+    {
+        $departmentName = $task->department?->name ?? 'ICTO';
+        $category = $task->category ?? Category::firstOrCreate(['name' => 'Scheduled Maintenance']);
+        $assignedUserId = $task->assigned_to
+            ? User::where('name', $task->assigned_to)->value('id')
+            : null;
+        $ticketDescription = implode("\n", [
+            $task->description,
+            'Location: ' . $task->location,
+            'Schedule Date: ' . Carbon::parse($task->date)->format('F d, Y'),
+            'Time: ' . $task->start_time . ' to ' . $task->end_time,
+        ]);
+
+        return [
+            'title'       => $task->title ?: '[SCHEDULED] ' . substr($task->description, 0, 50),
+            'description' => $ticketDescription,
+            'department'  => $departmentName,
+            'category_id' => $category->id,
+            'client_name' => $task->requested_by ?? 'N/A',
+            'assigned_to' => $assignedUserId,
+            'remarks'     => $task->remarks,
+            'form_data'   => [
+                'form_type'  => 'scheduled_task',
+                'task_date'  => $task->date,
+                'location'   => $task->location,
+                'start_time' => $task->start_time,
+                'end_time'   => $task->end_time,
+                'category'   => $category->name,
+            ],
+        ];
     }
 }

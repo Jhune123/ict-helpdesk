@@ -121,6 +121,7 @@ class TicketController extends Controller
             'assigned_to'                 => 'nullable|integer',
             'client_name'                 => 'nullable|string|max:255',
             'contact_number'              => 'nullable|string|max:255', 
+            'contact_info'                => 'nullable|string|max:255',
             'remarks'                     => 'nullable|string|max:500',
             'form_data'                   => 'nullable|array',
             'meta'                        => 'nullable|array', 
@@ -185,6 +186,28 @@ class TicketController extends Controller
             $formDataToSave = array_merge($formDataToSave, $validated['meta']);
         }
 
+        $ticketDescription = $validated['description'] ?? 'N/A';
+        if ($formTypeLower === 'multimedia_request') {
+            $multimediaDetails = $validated['meta'] ?? [];
+            $formDataToSave['multimedia_request_details'] = $ticketDescription;
+            $scheduleLines = array_filter([
+                filled(data_get($multimediaDetails, 'location'))
+                    ? 'Location: ' . data_get($multimediaDetails, 'location')
+                    : null,
+                filled(data_get($multimediaDetails, 'date_time'))
+                    ? 'Date and Time: ' . data_get($multimediaDetails, 'date_time')
+                    : null,
+                filled(data_get($multimediaDetails, 'requested_start_date'))
+                    ? 'Requested Start Date: ' . Carbon::parse(data_get($multimediaDetails, 'requested_start_date'))->format('F d, Y')
+                    : null,
+                filled(data_get($multimediaDetails, 'requested_completion_date'))
+                    ? 'Requested Completion Date: ' . Carbon::parse(data_get($multimediaDetails, 'requested_completion_date'))->format('F d, Y')
+                    : null,
+            ]);
+
+            $ticketDescription = implode("\n", $scheduleLines);
+        }
+
         if ($formTypeLower === 'multimedia_request') {
             $formDataToSave['original_form_type'] = 'KSU-ICTO-QF-03';
         } elseif ($formTypeLower === 'network_request') {
@@ -216,7 +239,7 @@ class TicketController extends Controller
         $ticket = Ticket::create([
             'ticket_number'   => $ticketNumber,
             'title'           => $validated['title'] ?? 'QMS Support Ticket',
-            'description'     => $validated['description'] ?? 'N/A',
+            'description'     => $ticketDescription,
             'equipment_type'  => $validated['equipment_type'] ?? 'N/A',
             'brand_model'     => $validated['brand_model'] ?? 'N/A',
             'serial_no'       => $validated['serial_no'] ?? 'N/A',
@@ -227,7 +250,7 @@ class TicketController extends Controller
             'status'          => $targetStatus,
             'remarks'         => $validated['remarks'] ?? null,
             'client_name'     => filled($requestorName) ? $requestorName : ($validated['client_name'] ?? null),
-            'contact_number'  => $validated['contact_number'] ?? null,
+            'contact_number'  => $validated['contact_number'] ?? $validated['contact_info'] ?? null,
             'date_submitted'  => Carbon::now('Asia/Manila'),
             'created_by'      => Auth::id(),
             'form_data'       => !empty($formDataToSave) ? $formDataToSave : null, 
@@ -343,6 +366,7 @@ class TicketController extends Controller
             'assigned_to'     => 'nullable|integer',
             'client_name'     => 'required|string|max:255',
             'contact_number'  => 'nullable|string|max:255', 
+            'contact_info'    => 'nullable|string|max:255',
             'remarks'         => 'nullable|string|max:500',
             'status'          => 'required|string',
             'form_data'       => 'nullable|array', 
@@ -409,20 +433,50 @@ class TicketController extends Controller
         if (!empty($validated['meta'])) {
             $updatedFormData = array_merge((array) $updatedFormData, $validated['meta']);
         }
+        foreach (['request_type', 'device_type'] as $checkboxField) {
+            if (array_key_exists($checkboxField, $validated['form_data'] ?? [])) {
+                $values = $validated['form_data'][$checkboxField];
+                $updatedFormData[$checkboxField] = array_values(array_filter(
+                    is_array($values) ? $values : [$values],
+                    static fn ($value) => filled($value)
+                ));
+            }
+        }
+        $formType = strtolower($updatedFormData['form_type'] ?? '');
+        $description = $validated['description'];
+        if ($formType === 'multimedia_request') {
+            $multimediaFields = [
+                'location' => 'Location',
+                'date_time' => 'Date and Time',
+                'requested_start_date' => 'Requested Start Date',
+                'requested_completion_date' => 'Requested Completion Date',
+            ];
+            $scheduleLines = [];
+            foreach ($multimediaFields as $key => $label) {
+                $value = data_get($updatedFormData, $key);
+                if (filled($value)) {
+                    if (in_array($key, ['requested_start_date', 'requested_completion_date'], true)) {
+                        $value = Carbon::parse($value)->format('F d, Y');
+                    }
+                    $scheduleLines[] = "{$label}: {$value}";
+                }
+            }
+            $description = implode("\n", $scheduleLines);
+        }
 
         $ticket->update([
             'title'           => $validated['title'],
-            'description'     => $validated['description'],
-            'equipment_type'  => $validated['equipment_type'],
-            'brand_model'     => $validated['brand_model'],
-            'serial_no'       => $validated['serial_no'],
-            'priority'        => $validated['priority'],
+            'description'     => $description,
+            'equipment_type'  => $validated['equipment_type'] ?? $ticket->getRawOriginal('equipment_type'),
+            'brand_model'     => $validated['brand_model'] ?? $ticket->getRawOriginal('brand_model'),
+            'serial_no'       => $validated['serial_no'] ?? $ticket->getRawOriginal('serial_no'),
+            'priority'        => $validated['priority'] ?? $ticket->priority,
             'category_id'     => $categoryId,
-            'department'      => $validated['department'],
-            'assigned_to'     => $validated['assigned_to'],
+            'department'      => $validated['department'] ?? $ticket->getRawOriginal('department'),
+            'assigned_to'     => $validated['assigned_to'] ?? $ticket->assigned_to,
             'client_name'     => $validated['client_name'],
-            'contact_number'  => $validated['contact_number'],
-            'remarks'         => $validated['remarks'],
+            'contact_number'  => $validated['contact_number'] ?? $validated['contact_info'] ?? $ticket->getRawOriginal('contact_number'),
+            'remarks'         => $validated['remarks'] ?? $ticket->remarks,
             'status'          => $newStatus,
             'date_finished'   => $dateFinished,
             'form_data'       => !empty($updatedFormData) ? $updatedFormData : null, 
@@ -477,13 +531,14 @@ class TicketController extends Controller
     {
         ini_set('memory_limit', '512M');
         set_time_limit(300);
+        $ticket->loadMissing(['category', 'assignee']);
 
         $categoryName = $ticket->category ? $ticket->category->name : 'General';
         
         $categoryLower = strtolower($categoryName);
         $titleLower = strtolower($ticket->title ?? '');
 
-        $view = 'tickets.equipment-repair'; 
+        $view = 'tickets.print-general';
 
         if (Str::contains($categoryLower, 'information system')) {
             $view = 'tickets.print-is';
@@ -499,27 +554,41 @@ class TicketController extends Controller
         }
         elseif (Str::contains($categoryLower, 'incident') || Str::contains($titleLower, 'incident')) {
             $view = 'tickets.incident-report.job-order'; 
+        } elseif (Str::contains($categoryLower, 'repair')) {
+            $view = 'tickets.equipment-repair';
         }
 
         $formData = is_string($ticket->form_data) ? json_decode($ticket->form_data, true) : $ticket->form_data;
 
         if (is_array($formData)) {
-            if (isset($formData['original_form_type'])) {
-                if ($formData['original_form_type'] === 'KSU-ICTO-QF-03') {
-                    $view = 'tickets.print-multimedia'; 
-                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-04') {
-                    $view = 'tickets.print-network';
-                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-02') {
-                    $view = 'tickets.print-is'; 
-                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-09') {
-                    $view = 'tickets.borrower-form'; 
-                } elseif ($formData['original_form_type'] === 'KSU-ICTO-QF-06') {
-                    $view = 'tickets.incident-report.job-order'; 
-                }
-            }
-            
+            $formViews = [
+                'KSU-ICTO-QF-01' => 'tickets.equipment-repair',
+                'KSU-ICTO-QF-02' => 'tickets.print-is',
+                'KSU-ICTO-QF-03' => 'tickets.print-multimedia',
+                'KSU-ICTO-QF-04' => 'tickets.print-network',
+                'KSU-ICTO-QF-06' => 'tickets.incident-report.job-order',
+                'KSU-ICTO-QF-09' => 'tickets.borrower-form',
+            ];
+            $formTypeViews = [
+                'equipment_repair' => 'tickets.equipment-repair',
+                'equipment_request' => 'tickets.equipment-repair',
+                'information_system_request' => 'tickets.print-is',
+                'multimedia_request' => 'tickets.print-multimedia',
+                'network_request' => 'tickets.print-network',
+                'equipment_borrow' => 'tickets.borrower-form',
+                'equipment_borrower' => 'tickets.borrower-form',
+                'incident_report' => 'tickets.incident-report.job-order',
+                'generic' => 'tickets.print-general',
+            ];
+
+            $originalFormType = $formData['original_form_type'] ?? null;
             $embeddedFormType = strtolower($formData['form_type'] ?? '');
-            if (Str::contains($embeddedFormType, 'incident')) {
+            if (isset($formViews[$originalFormType])) {
+                $view = $formViews[$originalFormType];
+            } elseif (isset($formTypeViews[$embeddedFormType])) {
+                $view = $formTypeViews[$embeddedFormType];
+            }
+            elseif (Str::contains($embeddedFormType, 'incident')) {
                 $view = 'tickets.incident-report.job-order';
             }
         }

@@ -355,8 +355,11 @@
     <table class="sig-grid">
         <tr>
             <td style="width: 36%;">
-                <div class="sig-line">{{ $ticket->client_name ?? '' }}</div>
+                <div class="sig-line">{{ $formData['employee_name_signature'] ?? $ticket->client_name ?? '' }}</div>
                 Employee Name
+                @if(!empty($formData['client_signature_acknowledged']))
+                    <div style="font-size: 8pt;">Digital signature acknowledged</div>
+                @endif
             </td>
             <td style="width: 6%;"></td>
             <td style="width: 36%;">
@@ -376,7 +379,7 @@
     <table class="sig-grid">
         <tr>
             <td style="width: 36%;">
-                <div class="sig-line">&nbsp;</div>
+                <div class="sig-line">{{ $formData['supervisor_name'] ?? '' }}</div>
                 Supervisor Name
             </td>
             <td style="width: 6%;"></td>

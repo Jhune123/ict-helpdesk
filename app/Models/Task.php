@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
 
 class Task extends Model
 {
@@ -11,10 +12,12 @@ class Task extends Model
 
     // Mass assignable fields
     protected $fillable = [
+        'title',
         'date',
         'description',
         'requested_by',
         'department_id',
+        'category_id',
         'location',
         'start_time',
         'end_time',
@@ -29,6 +32,11 @@ class Task extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**

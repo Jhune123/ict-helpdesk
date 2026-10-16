@@ -57,18 +57,20 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 10%;">Date</th>
-                <th style="width: 20%;">Description</th>
-                <th style="width: 15%;">Requested By</th>
+                <th style="width: 15%;">Title</th>
+                <th style="width: 8%;">Date</th>
+                <th style="width: 16%;">Description</th>
+                <th style="width: 13%;">Requested By</th>
                 <th style="width: 15%;">Location / Dept</th>
-                <th style="width: 15%;">Time Range</th>
-                <th style="width: 12%;">IT Personnel</th>
-                <th style="width: 13%;">Remarks</th>
+                <th style="width: 14%;">Time Range</th>
+                <th style="width: 10%;">IT Personnel</th>
+                <th style="width: 9%;">Remarks</th>
             </tr>
         </thead>
         <tbody>
             @foreach($tasks as $task)
             <tr>
+                <td>{{ $task->title ?? '-' }}</td>
                 <td>{{ \Carbon\Carbon::parse($task->date)->format('M d, Y') }}</td>
                 <td>{{ $task->description }}</td>
                 <td>{{ $task->requested_by }}</td>

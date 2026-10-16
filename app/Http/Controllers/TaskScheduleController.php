@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Department;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
@@ -47,8 +48,9 @@ class TaskScheduleController extends Controller
         }
 
         $departments = Department::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
 
-        return view('tasks.create', compact('departments'));
+        return view('tasks.create', compact('departments', 'categories'));
     }
 
     /**
@@ -67,10 +69,12 @@ class TaskScheduleController extends Controller
         ]);
 
         $validated = $request->validate([
+            'title'         => 'required|string|max:255',
             'date'          => 'required|date',
             'description'   => 'required|string|max:255',
             'requested_by'  => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
+            'category_id'   => 'required|exists:categories,id',
             'location'      => 'required|string|max:255',
             'start_time'    => 'required|date_format:H:i:s',
             'end_time'      => 'required|date_format:H:i:s|after:start_time',
@@ -95,7 +99,7 @@ class TaskScheduleController extends Controller
      */
     public function show(Task $task)
     {
-        $task->load('department');
+        $task->load(['department', 'category']);
 
         return view('tasks.show', compact('task'));
     }
@@ -110,8 +114,9 @@ class TaskScheduleController extends Controller
         }
 
         $departments = Department::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
 
-        return view('tasks.edit', compact('task', 'departments'));
+        return view('tasks.edit', compact('task', 'departments', 'categories'));
     }
 
     /**
@@ -129,10 +134,12 @@ class TaskScheduleController extends Controller
         ]);
 
         $validated = $request->validate([
+            'title'         => 'required|string|max:255',
             'date'          => 'required|date',
             'description'   => 'required|string|max:255',
             'requested_by'  => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
+            'category_id'   => 'required|exists:categories,id',
             'location'      => 'required|string|max:255',
             'start_time'    => 'required|date_format:H:i:s',
             'end_time'      => 'required|date_format:H:i:s|after:start_time',

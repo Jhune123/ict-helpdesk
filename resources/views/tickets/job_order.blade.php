@@ -332,7 +332,7 @@
 
         <div class="section-title">III. REMARKS / SPECIAL INSTRUCTIONS</div>
         <div style="margin-left: 15px; min-height: 40px; border-bottom: 1px solid #000; padding-top: 5px; font-size: 13px;">
-            {!! nl2br(e($ticket->description)) !!}
+            {!! nl2br(e(data_get($ticket, 'form_data.multimedia_request_details', $ticket->description))) !!}
         </div>
 
         <table style="width: 100%; margin-top: 30px; text-align: center; border-collapse: collapse; font-size: 13px;">
