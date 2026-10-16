@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use RuntimeException;
 use Carbon\Carbon;
 
 class MeetingController extends Controller
@@ -49,12 +52,22 @@ class MeetingController extends Controller
                             ? Carbon::parse($meeting->date . ' ' . $meeting->end_time)->toIso8601String()
                             : null,
                 'url'   => route('meetings.show', $meeting->id),
+                'extendedProps' => [
+                    'remarks' => $meeting->remarks,
+                ],
                 // Green for future/today, Red for past meetings
                 'color' => Carbon::parse($meeting->date)->gte(Carbon::today()) ? '#16A34A' : '#DC2626',
             ];
         })->filter()->values()->toArray();
 
-        return view('meetings.calendar', compact('events'));
+        $meetingDates = $meetings->pluck('date')
+            ->filter()
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->values()
+            ->all();
+
+        return view('meetings.calendar', compact('events', 'meetingDates'));
     }
 
     /**
@@ -149,8 +162,66 @@ class MeetingController extends Controller
      */
     public function destroy(Meeting $meeting)
     {
+        if ($meeting->mom_path) {
+            Storage::disk('local')->delete($meeting->mom_path);
+        }
+
         $meeting->delete();
         return redirect()->route('meetings.index')
             ->with('success', 'Meeting deleted successfully ❌');
+    }
+
+    /**
+     * Upload or replace the single MOM document for a meeting.
+     */
+    public function uploadMom(Request $request, Meeting $meeting)
+    {
+        $validated = $request->validate([
+            'mom' => 'required|file|mimes:pdf,doc,docx|max:10240',
+        ]);
+
+        $file = $validated['mom'];
+        $extension = strtolower($file->getClientOriginalExtension());
+        $path = $file->storeAs(
+            "meeting-mom/{$meeting->id}",
+            Str::uuid() . ".{$extension}",
+            'local'
+        );
+
+        if (!$path) {
+            throw new RuntimeException('Unable to store the uploaded meeting MOM.');
+        }
+
+        $oldPath = $meeting->mom_path;
+        $meeting->update([
+            'mom_path' => $path,
+            'mom_original_name' => basename($file->getClientOriginalName()),
+        ]);
+
+        if ($oldPath && $oldPath !== $path) {
+            Storage::disk('local')->delete($oldPath);
+        }
+
+        return redirect()->route('meetings.index')
+            ->with('success', 'Meeting MOM uploaded successfully.');
+    }
+
+    /**
+     * Stream the MOM inline in the browser or as a download.
+     */
+    public function momFile(Meeting $meeting, string $disposition)
+    {
+        abort_unless(in_array($disposition, ['inline', 'attachment'], true), 404);
+        abort_unless($meeting->mom_path && Storage::disk('local')->exists($meeting->mom_path), 404);
+
+        $fileName = basename($meeting->mom_original_name ?: 'meeting-mom');
+        $contentType = Storage::disk('local')->mimeType($meeting->mom_path) ?: 'application/octet-stream';
+
+        return Storage::disk('local')->response(
+            $meeting->mom_path,
+            $fileName,
+            ['Content-Type' => $contentType],
+            $disposition
+        );
     }
 }

@@ -194,6 +194,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/meetings/{meeting}/edit', [MeetingController::class, 'edit'])->name('meetings.edit');
         Route::put('/meetings/{meeting}', [MeetingController::class, 'update'])->name('meetings.update');
         Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy'])->name('meetings.destroy');
+        Route::post('/meetings/{meeting}/mom', [MeetingController::class, 'uploadMom'])->name('meetings.mom.upload');
+        Route::get('/meetings/{meeting}/mom/view', [MeetingController::class, 'momFile'])->defaults('disposition', 'inline')->name('meetings.mom.view');
+        Route::get('/meetings/{meeting}/mom/download', [MeetingController::class, 'momFile'])->defaults('disposition', 'attachment')->name('meetings.mom.download');
     });
 
     Route::get('/tasks', [TaskScheduleController::class, 'index'])->name('tasks.index');

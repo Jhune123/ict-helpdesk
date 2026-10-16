@@ -19,6 +19,8 @@ class Meeting extends Model
         'facilitator',
         'participants',
         'remarks',
+        'mom_path',
+        'mom_original_name',
     ];
 
     /**

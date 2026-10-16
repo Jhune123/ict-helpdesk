@@ -13,6 +13,27 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         .fc-event { cursor: pointer; }
+        .fc-daygrid-day.meeting-scheduled .fc-daygrid-day-frame {
+            background-color: #ecfdf5;
+        }
+        .fc-daygrid-day.meeting-scheduled .fc-daygrid-day-number {
+            color: #fff;
+            background-color: #16a34a;
+            border-radius: 9999px;
+            margin: 3px;
+            padding: 2px 7px;
+        }
+        .meeting-event-content,
+        .meeting-event-title,
+        .meeting-event-remarks {
+            display: block;
+            min-width: 0;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .meeting-event-title { font-weight: 600; }
+        .meeting-event-remarks { font-size: 0.85em; opacity: 0.95; }
     </style>
 @endsection
 
@@ -34,6 +55,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+        const meetingDates = @json($meetingDates);
         
         // Ensure FullCalendar is loaded before initializing
         if (typeof FullCalendar !== 'undefined') {
@@ -45,6 +67,40 @@
                     right: 'dayGridMonth,timeGridWeek,listMonth'
                 },
                 events: @json($events),
+                dayCellDidMount: function(info) {
+                    const year = info.date.getFullYear();
+                    const month = String(info.date.getMonth() + 1).padStart(2, '0');
+                    const day = String(info.date.getDate()).padStart(2, '0');
+                    const dateKey = `${year}-${month}-${day}`;
+                    if (meetingDates.includes(dateKey)) {
+                        info.el.classList.add('meeting-scheduled');
+                    }
+                },
+                eventContent: function(arg) {
+                    const content = document.createElement('div');
+                    content.className = 'meeting-event-content';
+
+                    if (arg.timeText) {
+                        const time = document.createElement('span');
+                        time.textContent = arg.timeText + ' ';
+                        content.appendChild(time);
+                    }
+
+                    const title = document.createElement('span');
+                    title.className = 'meeting-event-title';
+                    title.textContent = arg.event.title;
+                    content.appendChild(title);
+
+                    const remarks = arg.event.extendedProps.remarks;
+                    if (remarks) {
+                        const remarksElement = document.createElement('span');
+                        remarksElement.className = 'meeting-event-remarks';
+                        remarksElement.textContent = 'Remarks: ' + remarks;
+                        content.appendChild(remarksElement);
+                    }
+
+                    return { domNodes: [content] };
+                },
                 eventClick: function(info) {
                     if (info.event.url) {
                         window.location.href = info.event.url;

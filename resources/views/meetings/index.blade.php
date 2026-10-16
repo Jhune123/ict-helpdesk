@@ -11,14 +11,19 @@
     .upcoming-meeting { background-color: #DCFCE7 !important; }
     .past-meeting { background-color: #FEE2E2 !important; }
     table.dataTable { table-layout: fixed; width: 100% !important; }
-    table.dataTable th, table.dataTable td { white-space: normal; word-wrap: break-word; vertical-align: top; }
-    .wrap-text { white-space: normal; word-break: break-word; max-width: 280px; }
+    table.dataTable th, table.dataTable td { white-space: normal !important; overflow-wrap: anywhere; word-break: normal; vertical-align: top; }
+    .wrap-text { white-space: normal !important; overflow-wrap: anywhere; word-break: normal; max-width: 280px; }
     .table-responsive { overflow-x: auto; }
 </style>
 @endsection
 
 @section('content')
 <div class="max-w-full mx-auto px-4 py-6">
+    @error('mom')
+        <div class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            {{ $message }}
+        </div>
+    @enderror
 
     {{-- PAGE HEADER --}}
     <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
@@ -39,7 +44,7 @@
 
     {{-- TABLE --}}
     <div class="table-responsive bg-white shadow-md rounded-lg p-2">
-        <table id="meetingsTable" class="display nowrap stripe hover w-full">
+        <table id="meetingsTable" class="display stripe hover w-full">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -80,6 +85,27 @@
                             <a href="{{ route('meetings.show', $meeting) }}" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">View</a>
                             @role('admin|it_staff')
                             <a href="{{ route('meetings.edit', $meeting) }}" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Edit</a>
+                            <details class="inline-block relative">
+                                <summary class="inline-block cursor-pointer list-none bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600">MOM</summary>
+                                <div class="absolute right-0 z-20 mt-2 w-64 rounded border bg-white p-3 text-left shadow-lg">
+                                    @if($meeting->mom_path)
+                                        <p class="mb-2 break-all text-xs text-gray-700">{{ $meeting->mom_original_name }}</p>
+                                        <div class="mb-3 flex gap-2">
+                                            <a href="{{ route('meetings.mom.view', $meeting) }}" target="_blank" rel="noopener" class="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700">View</a>
+                                            <a href="{{ route('meetings.mom.download', $meeting) }}" class="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">Download</a>
+                                        </div>
+                                    @else
+                                        <p class="mb-2 text-xs text-gray-600">No MOM uploaded yet.</p>
+                                    @endif
+                                    <form action="{{ route('meetings.mom.upload', $meeting) }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <label class="mb-1 block text-xs font-semibold text-gray-700" for="mom-{{ $meeting->id }}">{{ $meeting->mom_path ? 'Replace MOM file' : 'Upload MOM file' }}</label>
+                                        <input id="mom-{{ $meeting->id }}" type="file" name="mom" accept=".pdf,.doc,.docx" required class="mb-2 w-full text-xs">
+                                        <p class="mb-2 text-xs text-gray-500">PDF, DOC, or DOCX; max 10 MB.</p>
+                                        <button type="submit" class="rounded bg-amber-600 px-2 py-1 text-xs text-white hover:bg-amber-700">Upload</button>
+                                    </form>
+                                </div>
+                            </details>
                             <form action="{{ route('meetings.destroy', $meeting) }}" method="POST" class="inline">
                                 @csrf @method('DELETE')
                                 <button onclick="return confirm('Delete this meeting?')" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button>
