@@ -45,7 +45,6 @@
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {{-- Basic Info --}}
                 <div class="flex flex-col">
                     <label class="form-label">Entity Name</label>
                     <input type="text" name="entity_name" value="{{ old('entity_name') }}" class="form-input">
@@ -129,6 +128,11 @@
                     <label class="form-label">Date Counted</label>
                     <input type="date" name="date_counted" value="{{ old('date_counted') }}" class="form-input">
                 </div>
+            </div>
+
+            <div class="mt-4">
+                <label class="form-label" for="po_no">PO. NO.:</label>
+                <textarea name="po_no" id="po_no" class="form-textarea">{{ old('po_no') }}</textarea>
             </div>
 
             <div class="flex justify-end mt-10 gap-3">

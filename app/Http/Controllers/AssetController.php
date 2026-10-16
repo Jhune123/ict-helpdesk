@@ -83,7 +83,7 @@ class AssetController extends Controller
     {
         $assets = Asset::all();
         $pdf = Pdf::loadView('assets.pdf', compact('assets'))->setPaper('A4', 'landscape');
-        return $pdf->download('ICTO_Assets_'.now()->format('Ymd_His').'.pdf');
+        return $pdf->stream('ICTO_Assets_'.now()->format('Ymd_His').'.pdf');
     }
 
     /**
@@ -92,21 +92,35 @@ class AssetController extends Controller
     protected function validateAsset(Request $request)
     {
         return $request->validate([
+            'asset_code'            => 'nullable|string|max:255',
             'entity_name'           => 'nullable|string|max:255',
             'fund_cluster'          => 'nullable|string|max:255',
             'par_no'                => 'nullable|string|max:255',
+            'po_no'                 => 'nullable|string',
+            'name'                  => 'nullable|string|max:255',
+            'brand'                 => 'nullable|string|max:255',
+            'model'                 => 'nullable|string|max:255',
+            'serial_number'         => 'nullable|string|max:255',
+            'category'              => 'nullable|string|max:255',
+            'location'              => 'nullable|string|max:255',
             'quantity'              => 'nullable|integer|min:0',
             'unit'                  => 'nullable|string|max:50',
             'description'           => 'nullable|string',
             'property_no'           => 'nullable|string|max:255',
             'date_acquired'         => 'nullable|date',
+            'purchase_date'         => 'nullable|date',
             'amount'                => 'nullable|numeric',
+            'cost'                  => 'nullable|numeric',
+            'supplier'              => 'nullable|string|max:255',
+            'assigned_to'           => 'nullable|string|max:255',
+            'status'                => 'nullable|string|max:255',
             'purpose'               => 'nullable|string',
             'approved_for_issuance' => 'nullable|string|max:255',
             'received_from'         => 'nullable|string|max:255',
             'received_by'           => 'nullable|string|max:255',
             'date_counted'          => 'nullable|date',
             'unit_status'           => 'required|string|in:Active,Under Repair,Condemned,For Replacement,Not Found in the Station',
+            'notes'                 => 'nullable|string',
         ]);
     }
 }

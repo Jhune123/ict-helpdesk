@@ -11,21 +11,35 @@ class Asset extends Model
     use HasFactory;
 
     protected $fillable = [
+        'asset_code',
         'entity_name',
         'fund_cluster',
         'par_no',
+        'po_no',
+        'name',
+        'brand',
+        'model',
+        'serial_number',
+        'category',
+        'location',
         'quantity',
         'unit',
         'description',
         'unit_status',
+        'status',
         'property_no',
         'date_acquired',
+        'purchase_date',
         'amount',
+        'cost',
+        'supplier',
+        'assigned_to',
         'purpose',
         'approved_for_issuance',
         'received_from',
         'received_by',
         'date_counted',
+        'notes',
     ];
 
     /**
@@ -33,8 +47,10 @@ class Asset extends Model
      */
     protected $casts = [
         'date_acquired' => 'date',
+        'purchase_date' => 'date',
         'date_counted'  => 'date',
         'amount'        => 'decimal:2',
+        'cost'          => 'decimal:2',
         'quantity'      => 'integer',
     ];
 
