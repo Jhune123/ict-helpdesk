@@ -61,10 +61,6 @@ table.dataTable thead th {
             </a>
             @endrole
 
-            <a href="{{ route('assets.export.pdf') }}" target="_blank" 
-               class="btn-solid" style="background-color: #334155;">
-               PDF Export
-            </a>
         </div>
     </div>
 
@@ -137,6 +133,12 @@ table.dataTable thead th {
 @section('scripts')
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
 <script>
 $(document).ready(function() {
@@ -147,6 +149,48 @@ $(document).ready(function() {
         "autoWidth": false,
         "order": [[15, 'desc']],
         "dom": 'Bfrtip',
+        "buttons": [
+            {
+                "extend": 'pdfHtml5',
+                "text": 'PDF',
+                "title": 'ICTO Assets & Equipment',
+                "filename": 'ICTO_Assets',
+                "orientation": 'landscape',
+                "pageSize": 'A3',
+                "download": 'open',
+                "exportOptions": {
+                    "columns": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                    "modifier": { "page": 'all' }
+                }
+            },
+            {
+                "extend": 'excelHtml5',
+                "text": 'Excel',
+                "filename": 'ICTO_Assets',
+                "exportOptions": {
+                    "columns": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                    "modifier": { "page": 'all' }
+                }
+            },
+            {
+                "extend": 'csvHtml5',
+                "text": 'CSV',
+                "filename": 'ICTO_Assets',
+                "exportOptions": {
+                    "columns": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                    "modifier": { "page": 'all' }
+                }
+            },
+            {
+                "extend": 'print',
+                "text": 'Print',
+                "title": 'ICTO Assets & Equipment',
+                "exportOptions": {
+                    "columns": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                    "modifier": { "page": 'all' }
+                }
+            }
+        ],
         "columnDefs": [
             { "width": "300px", "targets": 5 }
         ]
