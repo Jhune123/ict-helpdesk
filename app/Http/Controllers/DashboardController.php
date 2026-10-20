@@ -65,9 +65,14 @@ class DashboardController extends Controller
         /* ===============================
          * TOTAL COUNTS
          * =============================== */
-        $totalTickets   = Ticket::count();
-        $openTickets    = Ticket::where('status', 'Open')->count();
-        $closedTickets  = Ticket::where('status', 'Closed')->count();
+        $openTickets    = Ticket::open()->count();
+        $inProgressTickets = Ticket::withStatus('In Progress')->count();
+        $closedTickets  = Ticket::resolved()->count();
+        $condemnedTickets = Ticket::withStatus('Condemned')->count();
+        $totalTickets   = $openTickets + $inProgressTickets + $condemnedTickets + $closedTickets;
+        $closedTicketPercentage = $totalTickets > 0
+            ? round(($closedTickets / $totalTickets) * 100, 1)
+            : 0;
         $totalAssets    = Asset::count();
 
         /* ===============================
@@ -134,7 +139,10 @@ class DashboardController extends Controller
         return view('dashboard.analytics', compact(
             'totalTickets',
             'openTickets',
+            'inProgressTickets',
             'closedTickets',
+            'condemnedTickets',
+            'closedTicketPercentage',
             'totalAssets',
             'monthlyLabels',
             'monthlyData',

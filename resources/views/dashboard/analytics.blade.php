@@ -10,7 +10,7 @@
     </div>
 
     <!-- KPI CARDS -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <!-- Total Tickets -->
         <div class="p-6 bg-white shadow-md rounded-xl border-l-4 border-blue-500">
@@ -24,10 +24,23 @@
             <p class="text-3xl font-bold text-gray-800">{{ $openTickets }}</p>
         </div>
 
+        <!-- In Progress Tickets -->
+        <div class="p-6 bg-white shadow-md rounded-xl border-l-4 border-orange-500">
+            <h3 class="text-gray-500 uppercase text-sm">In Progress Tickets</h3>
+            <p class="text-3xl font-bold text-gray-800">{{ $inProgressTickets }}</p>
+        </div>
+
         <!-- Closed Tickets -->
         <div class="p-6 bg-white shadow-md rounded-xl border-l-4 border-green-500">
             <h3 class="text-gray-500 uppercase text-sm">Closed Tickets</h3>
             <p class="text-3xl font-bold text-gray-800">{{ $closedTickets }}</p>
+            <p class="mt-2 text-sm text-gray-500">{{ number_format($closedTicketPercentage, 1) }}% of total tickets closed or finished</p>
+        </div>
+
+        <!-- Condemned Tickets -->
+        <div class="p-6 bg-white shadow-md rounded-xl border-l-4 border-red-500">
+            <h3 class="text-gray-500 uppercase text-sm">Condemned Tickets</h3>
+            <p class="text-3xl font-bold text-gray-800">{{ $condemnedTickets }}</p>
         </div>
 
         <!-- Total Assets -->

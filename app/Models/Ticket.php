@@ -53,6 +53,21 @@ class Ticket extends Model
         'form_data'      => 'array', 
     ];
 
+    public function scopeWithStatus($query, string $status)
+    {
+        return $query->whereRaw('LOWER(status) = ?', [strtolower($status)]);
+    }
+
+    public function scopeOpen($query)
+    {
+        return $query->withStatus('Open');
+    }
+
+    public function scopeResolved($query)
+    {
+        return $query->whereRaw('LOWER(status) IN (?, ?)', ['closed', 'finished']);
+    }
+
     /**
      * The "booted" method of the model.
      * Automatically handles internal application events safely.

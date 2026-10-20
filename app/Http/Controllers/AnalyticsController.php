@@ -17,10 +17,14 @@ class AnalyticsController extends Controller
         // -----------------------
         // TICKET STATS
         // -----------------------
-        $totalTickets = Ticket::count();
-        $openTickets = Ticket::where('status', 'Open')->count();
-        $inProgressTickets = Ticket::where('status', 'In Progress')->count();
-        $closedTickets = Ticket::where('status', 'Closed')->count();
+        $openTickets = Ticket::open()->count();
+        $inProgressTickets = Ticket::withStatus('In Progress')->count();
+        $closedTickets = Ticket::resolved()->count();
+        $condemnedTickets = Ticket::withStatus('Condemned')->count();
+        $totalTickets = $openTickets + $inProgressTickets + $condemnedTickets + $closedTickets;
+        $closedTicketPercentage = $totalTickets > 0
+            ? round(($closedTickets / $totalTickets) * 100, 1)
+            : 0;
 
         // -----------------------
         // ASSET STATS
@@ -32,11 +36,9 @@ class AnalyticsController extends Controller
         // -----------------------
         // MONTHLY TICKETS TREND
         // -----------------------
-        $monthlyData = Ticket::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->pluck('total', 'month')
-            ->toArray();
+        $monthlyData = collect(range(1, 12))
+            ->mapWithKeys(fn ($month) => [$month => Ticket::whereMonth('created_at', $month)->count()])
+            ->all();
 
         // Ensure all 12 months exist
         $monthlyLabels = [];
@@ -85,6 +87,8 @@ class AnalyticsController extends Controller
             'openTickets' => $openTickets,
             'inProgressTickets' => $inProgressTickets,
             'closedTickets' => $closedTickets,
+            'condemnedTickets' => $condemnedTickets,
+            'closedTicketPercentage' => $closedTicketPercentage,
 
             'totalAssets' => $totalAssets,
             'activeAssets' => $activeAssets,
