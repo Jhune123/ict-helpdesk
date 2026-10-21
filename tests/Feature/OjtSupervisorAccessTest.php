@@ -116,6 +116,76 @@ test('admins and IT staff can edit attendance records from the dashboard', funct
     }
 });
 
+test('admins and IT staff can edit OJT intern details', function () {
+    $department = Department::create(['name' => 'ICT']);
+    $newDepartment = Department::create(['name' => 'Finance']);
+    $admin = createOjtRoleUser('admin');
+    $intern = createOjtRoleUser('ojt', $department->id);
+
+    $this->actingAs($admin)
+        ->get(route('ojt.edit-intern', $intern))
+        ->assertOk()
+        ->assertSee('Edit OJT Intern')
+        ->assertSee($intern->email);
+
+    $this->put(route('ojt.update-intern', $intern), [
+        'name' => 'Updated Intern',
+        'email' => 'updated-intern@example.com',
+        'student_id' => 'STU-123',
+        'department_id' => $newDepartment->id,
+        'required_hours' => 500,
+    ])->assertRedirect(route('ojt.dashboard'));
+
+    $this->assertDatabaseHas('users', [
+        'id' => $intern->id,
+        'name' => 'Updated Intern',
+        'email' => 'updated-intern@example.com',
+        'student_id' => 'STU-123',
+        'department_id' => $newDepartment->id,
+        'required_hours' => 500,
+        'is_ojt' => true,
+    ]);
+    expect($intern->fresh()->hasRole('ojt'))->toBeTrue();
+});
+
+test('removing an OJT intern preserves their account and attendance history', function () {
+    $department = Department::create(['name' => 'ICT']);
+    $admin = createOjtRoleUser('admin');
+    $intern = createOjtRoleUser('ojt', $department->id);
+    $attendance = OjtAttendance::create([
+        'user_id' => $intern->id,
+        'department_id' => $department->id,
+        'date' => now('Asia/Manila')->toDateString(),
+        'status' => 'AM Checked In',
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('ojt.remove-intern', $intern))
+        ->assertRedirect(route('ojt.dashboard'));
+
+    $this->assertDatabaseHas('users', [
+        'id' => $intern->id,
+        'is_ojt' => false,
+        'ojt_removed' => true,
+    ]);
+    $this->assertDatabaseHas('ojt_attendances', ['id' => $attendance->id, 'user_id' => $intern->id]);
+    expect($intern->fresh()->hasRole('ojt'))->toBeFalse();
+
+    $this->get(route('ojt.dashboard'))->assertDontSee($intern->name);
+});
+
+test('clients cannot edit or remove OJT interns', function () {
+    $department = Department::create(['name' => 'ICT']);
+    $client = createOjtRoleUser('client');
+    $intern = createOjtRoleUser('ojt', $department->id);
+
+    $this->actingAs($client)
+        ->get(route('ojt.edit-intern', $intern))
+        ->assertForbidden();
+
+    $this->delete(route('ojt.remove-intern', $intern))->assertForbidden();
+});
+
 test('OJT interns see their exact rendered hours and required target on their dashboard', function () {
     $department = Department::create(['name' => 'ICT']);
     $intern = createOjtRoleUser('ojt', $department->id);

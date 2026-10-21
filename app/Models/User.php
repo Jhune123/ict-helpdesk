@@ -10,7 +10,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +26,7 @@ class User extends Authenticatable
         'student_id',      // OJT Student Identification Number
         'department_id',   // Assigned KSU Department ID
         'required_hours',  // Target OJT Hours (e.g., 486)
+        'ojt_removed',
     ];
 
     /**
@@ -45,13 +46,14 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-        'is_ojt'            => 'boolean',
-        'required_hours'    => 'integer',
+        'password' => 'hashed',
+        'is_ojt' => 'boolean',
+        'required_hours' => 'integer',
+        'ojt_removed' => 'boolean',
     ];
 
     /* -------------------------------------------------------------------------- */
-    /*                                RELATIONSHIPS                               */
+    /*                                RELATIONSHIPS */
     /* -------------------------------------------------------------------------- */
 
     /**
@@ -87,7 +89,7 @@ class User extends Authenticatable
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                               HELPER METHODS                               */
+    /*                               HELPER METHODS */
     /* -------------------------------------------------------------------------- */
 
     /**

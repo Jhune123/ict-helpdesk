@@ -58,6 +58,12 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="bg-red-50 border border-red-200 text-red-800 text-sm px-4 py-3 rounded-xl shadow-sm no-print">
+                {{ session('error') }}
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="bg-red-50 border border-red-200 text-red-800 text-sm px-4 py-3 rounded-xl shadow-sm space-y-1 no-print">
                 <div class="font-bold">⚠️ Please fix the following errors:</div>
@@ -269,6 +275,21 @@
                             {{-- Actions Column --}}
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end gap-2">
+                                    @if(auth()->user()->hasAnyRole(['admin', 'it_staff']))
+                                        <a href="{{ route('ojt.edit-intern', $student->id) }}"
+                                           class="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-xl text-xs flex items-center gap-1 transition shadow-sm border border-indigo-200">
+                                            ✏️ Edit Intern
+                                        </a>
+                                        <form action="{{ route('ojt.remove-intern', $student->id) }}" method="POST"
+                                              onsubmit="return confirm('Remove this intern from the OJT roster? Their account, attendance history, and tickets will be retained.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 font-bold rounded-xl text-xs flex items-center gap-1 transition shadow-sm border border-red-200">
+                                                🗑️ Remove Intern
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     {{-- View Proof Photo Button --}}
                                     @if(!empty($student->proof_photo))
                                         <button onclick="viewImage('{{ Storage::url($student->proof_photo) }}', @js($student->name))"

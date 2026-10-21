@@ -242,6 +242,9 @@ Route::middleware('auth')->group(function () {
         Route::middleware(RoleMiddleware::class.':admin|it_staff')->group(function () {
             Route::put('/attendance/{attendance}', [OjtAttendanceController::class, 'updateLog'])->name('ojt.update-log');
             Route::patch('/intern/{user}/required-hours', [OjtAttendanceController::class, 'updateRequiredHours'])->name('ojt.update-required-hours');
+            Route::get('/intern/{user}/edit', [OjtAttendanceController::class, 'editIntern'])->name('ojt.edit-intern');
+            Route::put('/intern/{user}', [OjtAttendanceController::class, 'updateIntern'])->name('ojt.update-intern');
+            Route::delete('/intern/{user}', [OjtAttendanceController::class, 'removeIntern'])->name('ojt.remove-intern');
         });
     });
 

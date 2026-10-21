@@ -32,7 +32,10 @@
 
                 <!-- Email -->
                 <div class="mt-4">
-                    <x-input-label for="email" :value="__('Email')" />
+                    <div class="flex items-center justify-center gap-1">
+                        <x-input-label for="email" :value="__('Email')" />
+                        <span class="text-xs text-gray-500">(Please enter a valid E-mail)</span>
+                    </div>
                     <x-text-input id="email" class="block mt-1 w-full" 
                         type="email" name="email" :value="old('email')" required />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
