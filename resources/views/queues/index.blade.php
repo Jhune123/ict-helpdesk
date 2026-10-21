@@ -8,7 +8,9 @@
     </div>
 
     <div class="flex justify-center gap-4 mb-8">
-        <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-indigo-700">📝 Print Report</button>
+        @if($canOperateQueue)
+            <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-indigo-700">📝 Print Report</button>
+        @endif
         <a href="{{ route('queues.live-tv') }}" target="_blank" class="bg-orange-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-orange-700">🚀 Launch Monitor TV</a>
     </div>
 
@@ -20,7 +22,9 @@
                     <th class="p-4">Client</th>
                     <th class="p-4">Status</th>
                     <th class="p-4">Personnel</th>
-                    <th class="p-4 no-print">Serve / Call To Counter</th>
+                    @if($canOperateQueue)
+                        <th class="p-4 no-print">Serve / Call To Counter</th>
+                    @endif
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -34,6 +38,7 @@
                         </span>
                     </td>
                     <td class="p-4 italic text-gray-700">{{ $ticket->assignee_name }}</td>
+                    @if($canOperateQueue)
                     <td class="p-4 no-print">
                         @if($ticket->status === 'Open')
                             <div class="flex gap-1 justify-center">
@@ -54,6 +59,7 @@
                             <span class="text-xs text-gray-400 font-bold">TRANSACTION FINISHED</span>
                         @endif
                     </td>
+                    @endif
                 </tr>
                 @endforeach
             </tbody>

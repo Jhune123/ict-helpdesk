@@ -20,16 +20,21 @@ class QueueController extends Controller
      * Dashboard: The Operator View
      * This fixes the "Call to undefined method... operator()" error
      */
-   public function operator()
-{
-    // This pulls from the 'tickets' table we just saw in your terminal
-    $queues = \App\Models\Ticket::whereIn('status', ['Open', 'In Progress', 'Closed'])
-        ->orderByRaw("FIELD(status, 'In Progress', 'Open', 'Closed') ASC")
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+    public function operator()
+    {
+        $queues = Ticket::whereIn('status', ['Open', 'In Progress', 'Closed'])
+            ->orderByRaw("CASE status WHEN 'In Progress' THEN 1 WHEN 'Open' THEN 2 WHEN 'Closed' THEN 3 ELSE 4 END")
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-    return view('queues.index', compact('queues')); 
-}
+        $user = auth()->user();
+        $canOperateQueue = $user->roles()
+            ->whereIn('name', ['admin', 'it_staff'])
+            ->exists()
+            || in_array($user->role, ['admin', 'it_staff'], true);
+
+        return view('queues.index', compact('queues', 'canOperateQueue'));
+    }
 
     /**
      * Live TV Monitor
@@ -57,7 +62,7 @@ class QueueController extends Controller
     public function serve(Request $request, $id)
     {
         $ticket = Ticket::findOrFail($id);
-        
+
         // Update status and tag the personnel in remarks for the Live TV Monitor
         $ticket->update([
             'status' => 'In Progress',
@@ -74,7 +79,7 @@ class QueueController extends Controller
     public function complete($id)
     {
         $ticket = Ticket::findOrFail($id);
-        
+
         $ticket->update([
             'status' => 'Closed',
             'date_finished' => Carbon::now('Asia/Manila'),

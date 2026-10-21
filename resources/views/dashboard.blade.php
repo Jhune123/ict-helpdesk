@@ -96,6 +96,17 @@
         </a>
     </div>
 
+    @if($isClient)
+        <a href="{{ route('dashboard.chat.index') }}"
+           class="fixed bottom-24 right-6 z-40 inline-flex items-center gap-3 rounded-full bg-green-800 px-7 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-green-900 focus:outline-none focus:ring-4 focus:ring-green-300"
+           aria-label="Message IT about your ticket">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8m-8 4h5m-9 5 1.5-4.5A8 8 0 1 1 8 18.5L4 19z" />
+            </svg>
+            <span>Message Us</span>
+        </a>
+    @endif
+
     {{-- Top Right Notifications Icon --}}
     @auth
     <div class="absolute top-6 right-6 z-10">

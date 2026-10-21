@@ -24,7 +24,10 @@
     </select>
 </div>
 
-@hasanyrole('admin|it_staff')
+@if(auth()->check() && (
+    auth()->user()->hasAnyRole(['admin', 'it_staff'])
+    || in_array(auth()->user()->role, ['admin', 'it_staff'], true)
+))
 <div class="mt-6 border-t border-gray-200 pt-6">
     <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
         <span class="mr-2">🛡️</span> IT Internal Processing
@@ -69,7 +72,7 @@
 </div>
 @else
     <input type="hidden" name="status" value="Open">
-@endhasanyrole
+@endif
 
 <div class="pt-6">
     <button type="submit" class="w-full bg-{{ $btnColor }}-600 hover:bg-{{ $btnColor }}-700 text-white font-bold py-3 px-6 rounded-md shadow transition duration-150 ease-in-out">

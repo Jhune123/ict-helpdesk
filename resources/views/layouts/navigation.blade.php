@@ -97,10 +97,20 @@
                         <div class="max-h-64 overflow-y-auto">
                             @if(auth()->check() && auth()->user()->notifications->count() > 0)
                                 @foreach(auth()->user()->notifications->take(5) as $notification)
-                                    <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 text-xs text-gray-700">
-                                        <p class="font-medium text-gray-900">{{ $notification->data['message'] ?? $notification->data['title'] ?? 'New notification' }}</p>
-                                        <p class="text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                    </div>
+                                    @if(!empty($notification->data['ticket_id']))
+                                        <a href="{{ $notification->data['action_url'] ?? route('tickets.show', $notification->data['ticket_id']) }}" class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 text-xs text-gray-700">
+                                            <p class="font-medium text-gray-900">{{ $notification->data['message'] ?? $notification->data['title'] ?? 'New notification' }}</p>
+                                            <p class="text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                            @if(!empty($notification->data['action_label']))
+                                                <p class="mt-1 font-semibold text-blue-700">{{ $notification->data['action_label'] }}</p>
+                                            @endif
+                                        </a>
+                                    @else
+                                        <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 text-xs text-gray-700">
+                                            <p class="font-medium text-gray-900">{{ $notification->data['message'] ?? $notification->data['title'] ?? 'New notification' }}</p>
+                                            <p class="text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    @endif
                                 @endforeach
                             @else
                                 <div class="px-4 py-6 text-center text-xs text-gray-500">

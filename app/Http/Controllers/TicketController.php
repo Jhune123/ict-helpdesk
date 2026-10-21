@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketStatusChanged; 
+use App\Notifications\TicketClosedForSurveyNotification;
 use App\Helpers\ActivityLogger;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TicketsExport;
@@ -308,7 +309,7 @@ class TicketController extends Controller
         }
 
         if ($assignedTo && ($it = User::find($assignedTo))) {
-            try { $it->notify(new TicketAssignedNotification($ticket)); } catch (\Exception $e) {}
+            $it->notify(new TicketAssignedNotification($ticket));
         }
 
         return redirect()->route('tickets.show', $ticket->id)
@@ -379,6 +380,8 @@ class TicketController extends Controller
         }
 
         $oldStatus = $ticket->status;
+        $oldAssigneeId = $ticket->assigned_to;
+        $newAssigneeId = $validated['assigned_to'] ?? $ticket->assigned_to;
 
         $statusMap = [
             'open'        => 'Open',
@@ -473,7 +476,7 @@ class TicketController extends Controller
             'priority'        => $validated['priority'] ?? $ticket->priority,
             'category_id'     => $categoryId,
             'department'      => $validated['department'] ?? $ticket->getRawOriginal('department'),
-            'assigned_to'     => $validated['assigned_to'] ?? $ticket->assigned_to,
+            'assigned_to'     => $newAssigneeId,
             'client_name'     => $validated['client_name'],
             'contact_number'  => $validated['contact_number'] ?? $validated['contact_info'] ?? $ticket->getRawOriginal('contact_number'),
             'remarks'         => $validated['remarks'] ?? $ticket->remarks,
@@ -484,11 +487,31 @@ class TicketController extends Controller
 
         ActivityLogger::log('updated', $ticket, "Updated Ticket: #{$ticket->ticket_number}");
 
+        if ($newAssigneeId && (int) $newAssigneeId !== (int) $oldAssigneeId) {
+            $assignee = User::find($newAssigneeId);
+
+            if ($assignee) {
+                $assignee->notify(new TicketAssignedNotification($ticket));
+            }
+        }
+
         if ($oldStatus !== $newStatus) {
             try { $ticket->notify(new TicketStatusChanged($newStatus)); } catch (\Exception $e) {}
         }
 
         $newStatusLower = strtolower($newStatus);
+        if (strtolower($oldStatus) !== 'closed' && $newStatusLower === 'closed') {
+            $client = $ticket->creator;
+
+            if (
+                $client
+                && ($client->hasRole('user') || $client->role === 'user')
+                && !$ticket->feedback
+            ) {
+                $client->notify(new TicketClosedForSurveyNotification($ticket));
+            }
+        }
+
         if (strtolower($oldStatus) === 'condemned' && $newStatusLower !== 'condemned') {
             CondemnedEquipment::where('ticket_number', $ticket->ticket_number)->delete();
         }

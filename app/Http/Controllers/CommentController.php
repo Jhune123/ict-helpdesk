@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TicketNotificationMail;
 use App\Models\Comment;
 use App\Models\Ticket;
+use App\Notifications\TicketChatReplyNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use App\Mail\TicketNotificationMail;
+use Illuminate\Support\Facades\Mail;
 
 class CommentController extends Controller
 {
@@ -25,17 +26,31 @@ class CommentController extends Controller
         // ✅ Create the comment
         $comment = Comment::create([
             'ticket_id' => $ticket->id,
-            'user_id'   => Auth::id(),
-            'message'   => $validated['message'],
+            'user_id' => Auth::id(),
+            'message' => $validated['message'],
         ]);
+
+        $sender = Auth::user();
+        $isItPersonnel = $sender->hasAnyRole(['admin', 'it_staff'])
+            || in_array($sender->role, ['admin', 'it_staff'], true);
+        $client = $ticket->creator;
+
+        if (
+            $isItPersonnel
+            && $client
+            && ($client->hasRole('user') || $client->role === 'user')
+            && $client->id !== $sender->id
+        ) {
+            $client->notify(new TicketChatReplyNotification($ticket, $sender, $comment->message));
+        }
 
         // ✅ Email notification setup
         try {
-            $creatorEmail  = $ticket->user->email ?? null;
+            $creatorEmail = $ticket->user->email ?? null;
             $assignedEmail = $ticket->assigned_to_user->email ?? null;
 
-            $subject = 'New Comment on Ticket #' . $ticket->id;
-            $messageBody = "A new comment was added to the ticket titled '{$ticket->title}'.\n\nComment:\n{$validated['message']}\n\nYou can view the ticket here:\n" . route('tickets.show', $ticket->id);
+            $subject = 'New Comment on Ticket #'.$ticket->id;
+            $messageBody = "A new comment was added to the ticket titled '{$ticket->title}'.\n\nComment:\n{$validated['message']}\n\nYou can view the ticket here:\n".route('tickets.show', $ticket->id);
 
             // Send to ticket creator
             if ($creatorEmail) {
@@ -47,7 +62,7 @@ class CommentController extends Controller
                 Mail::to($assignedEmail)->send(new TicketNotificationMail($ticket, $subject, $messageBody));
             }
         } catch (\Exception $e) {
-            Log::error('Email notification failed: ' . $e->getMessage());
+            Log::error('Email notification failed: '.$e->getMessage());
         }
 
         return redirect()
@@ -63,6 +78,7 @@ class CommentController extends Controller
         // Allow deletion if owner of comment OR admin
         if (Auth::id() === $comment->user_id || Auth::user()->hasRole('admin')) {
             $comment->delete();
+
             return back()->with('success', '🗑 Comment deleted successfully!');
         }
 

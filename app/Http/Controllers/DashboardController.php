@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ticket;
 use App\Models\Asset;
-use App\Models\User;
 use App\Models\Department;
+use App\Models\Ticket;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -30,13 +30,15 @@ class DashboardController extends Controller
         } else {
             // Admin & IT Staff can filter by selected department
             $selectedDept = $request->input('department_id');
-            if (!empty($selectedDept)) {
+            if (! empty($selectedDept)) {
                 $studentsQuery->where('department_id', $selectedDept);
             }
         }
 
         $students = $studentsQuery->orderBy('name', 'asc')->get();
 
+        $isClient = ($currentUser->hasRole('user') || $currentUser->role === 'user')
+            && ! $currentUser->hasAnyRole(['admin', 'it_staff', 'ojt', 'supervisor', 'ojt_supervisor']);
         // 3. Stats calculation
         $departments = class_exists(Department::class) ? Department::all() : collect();
         $departmentsCount = $departments->count();
@@ -53,7 +55,8 @@ class DashboardController extends Controller
             'departments',
             'selectedDept',
             'departmentsCount',
-            'totalLogsToday'
+            'totalLogsToday',
+            'isClient'
         ));
     }
 
@@ -65,15 +68,15 @@ class DashboardController extends Controller
         /* ===============================
          * TOTAL COUNTS
          * =============================== */
-        $openTickets    = Ticket::open()->count();
+        $openTickets = Ticket::open()->count();
         $inProgressTickets = Ticket::withStatus('In Progress')->count();
-        $closedTickets  = Ticket::resolved()->count();
+        $closedTickets = Ticket::resolved()->count();
         $condemnedTickets = Ticket::withStatus('Condemned')->count();
-        $totalTickets   = $openTickets + $inProgressTickets + $condemnedTickets + $closedTickets;
+        $totalTickets = $openTickets + $inProgressTickets + $condemnedTickets + $closedTickets;
         $closedTicketPercentage = $totalTickets > 0
             ? round(($closedTickets / $totalTickets) * 100, 1)
             : 0;
-        $totalAssets    = Asset::count();
+        $totalAssets = Asset::count();
 
         /* ===============================
          * MONTHLY TICKET TREND (12 MONTHS)
@@ -116,6 +119,7 @@ class DashboardController extends Controller
             ->get()
             ->mapWithKeys(function ($item) {
                 $user = User::find($item->assigned_to);
+
                 return [$user->name ?? 'Unknown' => $item->total];
             })
             ->toArray();
@@ -127,9 +131,9 @@ class DashboardController extends Controller
             ->take(10)
             ->get()
             ->map(function ($ticket) {
-                return (object)[
+                return (object) [
                     'title' => "Ticket #{$ticket->ticket_number} - {$ticket->status}",
-                    'created_at' => $ticket->created_at
+                    'created_at' => $ticket->created_at,
                 ];
             });
 
