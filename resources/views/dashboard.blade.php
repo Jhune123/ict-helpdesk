@@ -16,15 +16,20 @@
     </div>
 
     {{-- Header / Welcome Section --}}
-    <div class="text-center mt-36 sm:mt-40 mb-10 px-4">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-white mt-4 drop-shadow-md tracking-tight">
+    @php
+        $currentDateTime = \Carbon\Carbon::now();
+    @endphp
+    <div class="text-center mt-36 sm:mt-40 mb-10 mx-4 px-6 py-5 sm:px-10">
+        <h1 class="mx-auto max-w-4xl text-3xl sm:text-4xl font-extrabold text-white mt-1 drop-shadow-md tracking-tight">
             KSU ICTO-HELPDESK Management System
         </h1>
-        <p class="text-white mt-2 text-base sm:text-lg drop-shadow-sm font-medium">
+        <p class="text-lg sm:text-xl text-white mt-2 drop-shadow-sm font-medium">
             Manage your IT requests efficiently
         </p>
-        <p class="text-green-100 mt-1 font-semibold text-sm sm:text-base">
-            {{ \Carbon\Carbon::now()->format('l, F d, Y') }}
+        <p class="text-lg sm:text-xl text-amber-300 mt-2 font-bold">
+            {{ $currentDateTime->format('l, F d, Y') }}
+            <span class="mx-1 text-white/70" aria-hidden="true">|</span>
+            <time>{{ $currentDateTime->format('h:i A') }}</time>
         </p>
     </div>
 
