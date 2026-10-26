@@ -81,6 +81,11 @@
                     <input type="date" name="last_run_date" value="{{ $maintenance->last_run_date->format('Y-m-d') }}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                 </div>
 
+                <div class="mb-8 w-full md:w-1/2">
+                    <label for="confirmed_by" class="block text-sm font-bold text-slate-700 mb-1">Confirmed by:</label>
+                    <input id="confirmed_by" type="text" name="confirmed_by" value="{{ old('confirmed_by', $maintenance->confirmed_by) }}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" maxlength="255" placeholder="Enter in-charge person's name">
+                </div>
+
                 {{-- Checklist Header --}}
                 <h3 class="text-sm font-black text-slate-800 uppercase mb-4 border-b pb-2 tracking-widest flex items-center">
                     <span class="bg-blue-600 w-2 h-5 rounded mr-2 block"></span>

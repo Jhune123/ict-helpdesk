@@ -95,12 +95,12 @@
                     <tr>
                         <td style="padding: 6px 0; vertical-align: top;"><strong>Name of ICT in charge:</strong></td>
                         <td style="padding: 6px 5px; vertical-align: top;">
-                            <select name="assigned_to[]" multiple class="doc-select" style="height: 45px;" required>
+                            <select name="assigned_to[]" multiple size="5" class="doc-select" required>
                                 @foreach($staff as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    <option value="{{ $user->id }}" {{ in_array($user->id, (array) old('assigned_to', [])) ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="no-print" style="font-size: 8.5px; color: #64748b; margin-top: 2px;">* Hold Ctrl/Cmd to select multiple assignees</div>
+                            <div class="no-print" style="font-size: 9px; color: #475569; margin-top: 4px;">Select one or more ICT personnel. Hold Ctrl (Windows) or Cmd (Mac) to choose multiple.</div>
                         </td>
                         <td style="padding: 6px 0; text-align: right; vertical-align: top;"><strong>Devices/Brand & Model:</strong></td>
                         <td style="padding: 6px 0 6px 5px; vertical-align: top;">
@@ -203,6 +203,9 @@
                         <strong>Performed by:</strong>
                         <div style="margin-top: 35px; text-align: center;">
                             <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto 3px auto;"></div>
+                            <div id="performed-by-names" aria-live="polite" style="min-height: 14px; font-weight: bold; text-transform: uppercase;">
+                                Select ICT personnel above
+                            </div>
                             <span style="font-size: 9.5px;">Signature over printed name, ICTO Staff/in-charge</span>
                         </div>
                     </td>
@@ -228,6 +231,7 @@
                         <strong>Confirmed by:</strong>
                         <div style="margin-top: 35px; width: 45%;">
                             <div style="border-top: 1px solid #000; width: 100%; margin-bottom: 3px;"></div>
+                            <input type="text" name="confirmed_by" value="{{ old('confirmed_by') }}" maxlength="255" class="doc-input no-print" placeholder="Enter in-charge person's name" aria-label="Confirmed by name" style="text-align: center; text-transform: uppercase;">
                             <span style="font-size: 9.5px; display: block; text-align: center;">Signature over printed name, ICTO Supervisor</span>
                         </div>
                     </td>
@@ -243,5 +247,16 @@
         const allSet = Array.from(boxes).every(b => b.checked);
         boxes.forEach(b => b.checked = !allSet);
     }
+
+    const personnelSelect = document.querySelector('select[name="assigned_to[]"]');
+    const performedByNames = document.getElementById('performed-by-names');
+
+    function updatePerformedByNames() {
+        const names = Array.from(personnelSelect.selectedOptions, option => option.textContent.trim());
+        performedByNames.textContent = names.length ? names.join(', ') : 'Select ICT personnel above';
+    }
+
+    personnelSelect.addEventListener('change', updatePerformedByNames);
+    updatePerformedByNames();
 </script>
 @endsection

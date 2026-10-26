@@ -177,6 +177,12 @@ class Ticket extends Model
         if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
             return $contact;
         }
+
+        $client = $this->creator;
+        if ($client && ($client->hasRole('user') || $client->role === 'user')) {
+            return $client->email;
+        }
+
         return null;
     }
 

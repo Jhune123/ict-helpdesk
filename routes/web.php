@@ -150,6 +150,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('maintenance')->group(function () {
         Route::get('/', [MaintenanceScheduleController::class, 'index'])->name('maintenance.index');
         Route::get('/export/pdf', [MaintenanceScheduleController::class, 'exportPdf'])->name('maintenance.pdf');
+        Route::get('/completions/{completion}', [MaintenanceScheduleController::class, 'showCompletion'])->name('maintenance.completions.show');
 
         Route::middleware(RoleMiddleware::class.':admin|it_staff')->group(function () {
             Route::get('/create', [MaintenanceScheduleController::class, 'create'])->name('maintenance.create');

@@ -12,7 +12,9 @@ use App\Models\NetworkRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+use App\Mail\TicketNotificationMail;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketStatusChanged; 
 use App\Notifications\TicketClosedForSurveyNotification;
@@ -310,6 +312,7 @@ class TicketController extends Controller
 
         if ($assignedTo && ($it = User::find($assignedTo))) {
             $it->notify(new TicketAssignedNotification($ticket));
+            $this->emailClientAboutAssignment($ticket);
         }
 
         return redirect()->route('tickets.show', $ticket->id)
@@ -492,11 +495,23 @@ class TicketController extends Controller
 
             if ($assignee) {
                 $assignee->notify(new TicketAssignedNotification($ticket));
+
+                if (strtolower($newStatus) !== 'closed') {
+                    $this->emailClientAboutAssignment($ticket);
+                }
             }
         }
 
         if ($oldStatus !== $newStatus) {
-            try { $ticket->notify(new TicketStatusChanged($newStatus)); } catch (\Exception $e) {}
+            try {
+                $ticket->notify(new TicketStatusChanged($newStatus));
+            } catch (\Throwable $e) {
+                Log::error('Ticket status notification failed.', [
+                    'ticket_id' => $ticket->id,
+                    'status' => $newStatus,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
         }
 
         $newStatusLower = strtolower($newStatus);
@@ -694,5 +709,44 @@ class TicketController extends Controller
     public function exportCsv(Request $request)
     {
         return Excel::download(new TicketsExport($request), 'tickets.csv');
+    }
+
+    private function emailClientAboutAssignment(Ticket $ticket): void
+    {
+        $email = $ticket->getRawOriginal('contact_number');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $client = $ticket->creator;
+            $email = $client
+                && ($client->hasRole('user') || $client->role === 'user')
+                ? $client->email
+                : null;
+        }
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Log::warning('Ticket assignment email skipped because no client email address is available.', [
+                'ticket_id' => $ticket->id,
+            ]);
+            return;
+        }
+
+        $ticket->loadMissing('assignee');
+        $assigneeName = $ticket->assignee?->name ?? 'ICT Helpdesk staff';
+        $message = "Your ticket {$ticket->ticket_number} has been assigned to {$assigneeName}.\n"
+            ."Current status: {$ticket->status}.\n\n"
+            ."To request a status update or share additional information, open this ticket and send a message to the assigned IT staff member using the Messages section.";
+
+        try {
+            Mail::to($email)->send(new TicketNotificationMail(
+                $ticket,
+                'Ticket Assigned: '.$ticket->ticket_number,
+                $message
+            ));
+        } catch (\Throwable $e) {
+            Log::error('Ticket assignment email failed.', [
+                'ticket_id' => $ticket->id,
+                'recipient' => $email,
+                'exception' => $e->getMessage(),
+            ]);
+        }
     }
 }

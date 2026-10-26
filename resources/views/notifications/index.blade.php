@@ -26,7 +26,7 @@
                                         <button type="submit" class="text-yellow-600 hover:underline text-sm">Mark as Unread</button>
                                     </form>
                                 @endif
-                                @if(!empty($notification->data['ticket_id']))
+                                @if(!empty($notification->data['action_url']) || !empty($notification->data['ticket_id']))
                                     <a href="{{ $notification->data['action_url'] ?? route('tickets.show', $notification->data['ticket_id']) }}" class="text-gray-700 hover:underline text-sm">{{ $notification->data['action_label'] ?? 'View' }}</a>
                                 @endif
                             </div>

@@ -20,6 +20,7 @@ class MaintenanceSchedule extends Model
         'device_model',     // Model
         'property_number',  // Property No.
         'serial_number',    // Serial No.
+        'confirmed_by',
         'last_run_date',    // Date Performed
         'next_run_date',    // Next Schedule (Calculated)
         'description',      // Internal Checklist / Notes

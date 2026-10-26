@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\MaintenanceSchedule;
+use App\Models\MaintenanceCompletion;
 use App\Models\User;
+use App\Notifications\MaintenanceRescheduledNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -15,13 +19,15 @@ class MaintenanceScheduleController extends Controller
         $schedules = MaintenanceSchedule::with('assignees')
             ->orderBy('next_run_date', 'asc')
             ->paginate(15);
+        $completions = MaintenanceCompletion::latest('completed_at')
+            ->paginate(15, ['*'], 'completed_page');
 
-        return view('maintenance.index', compact('schedules'));
+        return view('maintenance.index', compact('schedules', 'completions'));
     }
 
     public function create()
     {
-        $staff = User::whereIn('role', ['admin', 'it_staff'])->get();
+        $staff = $this->getItPersonnel();
         // Load the checklist categories for the form
         $categories = $this->getChecklistCategories();
         
@@ -30,12 +36,16 @@ class MaintenanceScheduleController extends Controller
 
     public function store(Request $request)
     {
+        $staffIds = $this->getItPersonnel()->modelKeys();
+
         $request->validate([
-            'office_college' => 'required',
-            'frequency' => 'required',
-            'title' => 'required',
+            'office_college' => 'required|string',
+            'frequency' => 'required|string',
+            'title' => 'required|string',
+            'confirmed_by' => 'nullable|string|max:255',
             'last_run_date' => 'required|date',
-            'assigned_to' => 'required|array'
+            'assigned_to' => 'required|array|min:1',
+            'assigned_to.*' => ['required', 'integer', Rule::in($staffIds)],
         ]);
 
         $descriptionData = [
@@ -59,10 +69,17 @@ class MaintenanceScheduleController extends Controller
         return view('maintenance.show', compact('maintenance'));
     }
 
+    public function showCompletion($completionId)
+    {
+        $completion = MaintenanceCompletion::findOrFail($completionId);
+
+        return view('maintenance.completion', compact('completion'));
+    }
+
     public function edit($id)
     {
         $maintenance = MaintenanceSchedule::findOrFail($id);
-        $staff = User::whereIn('role', ['admin', 'it_staff'])->get();
+        $staff = $this->getItPersonnel();
         
         // Load the checklist categories for the form
         $categories = $this->getChecklistCategories();
@@ -73,6 +90,17 @@ class MaintenanceScheduleController extends Controller
     public function update(Request $request, $id)
     {
         $maintenance = MaintenanceSchedule::findOrFail($id);
+        $staffIds = $this->getItPersonnel()->modelKeys();
+
+        $request->validate([
+            'office_college' => 'required|string',
+            'frequency' => 'required|string',
+            'title' => 'required|string',
+            'confirmed_by' => 'nullable|string|max:255',
+            'last_run_date' => 'required|date',
+            'assigned_to' => 'required|array|min:1',
+            'assigned_to.*' => ['required', 'integer', Rule::in($staffIds)],
+        ]);
 
         $descriptionData = [
             'tasks' => $request->input('checklist', []),
@@ -94,14 +122,47 @@ class MaintenanceScheduleController extends Controller
      */
     public function completeTask($id)
     {
-        $schedule = MaintenanceSchedule::findOrFail($id);
+        $schedule = MaintenanceSchedule::with('assignees')->findOrFail($id);
         $newLastRun = Carbon::now();
         $newNextRun = $this->calculateNextRun($newLastRun, $schedule->frequency);
 
-        $schedule->update([
-            'last_run_date' => $newLastRun,
-            'next_run_date' => $newNextRun
-        ]);
+        DB::transaction(function () use ($schedule, $newLastRun, $newNextRun) {
+            $snapshot = $schedule->only([
+                'office_college',
+                'frequency',
+                'title',
+                'device_model',
+                'property_number',
+                'serial_number',
+                'confirmed_by',
+                'description',
+            ]);
+            $snapshot['schedule_id'] = $schedule->id;
+            $snapshot['last_run_date'] = $newLastRun->toDateString();
+            $snapshot['next_run_date'] = $newNextRun->toDateString();
+            $snapshot['assignees'] = $schedule->assignees
+                ->map(fn (User $assignee) => [
+                    'id' => $assignee->id,
+                    'name' => $assignee->name,
+                ])
+                ->values()
+                ->all();
+
+            MaintenanceCompletion::create([
+                'maintenance_schedule_id' => $schedule->id,
+                'completed_at' => $newLastRun,
+                'snapshot' => $snapshot,
+            ]);
+
+            $schedule->update([
+                'last_run_date' => $newLastRun,
+                'next_run_date' => $newNextRun,
+            ]);
+        });
+
+        foreach ($schedule->assignees as $assignee) {
+            $assignee->notify(new MaintenanceRescheduledNotification($schedule));
+        }
 
         return back()->with('success', 'Task completed and rescheduled.');
     }
@@ -174,5 +235,18 @@ class MaintenanceScheduleController extends Controller
                 'tasks' => ['Disk Defrag', 'Startup Optimization', 'Temp File Deletion', 'Stress Testing']
             ]
         ];
+    }
+
+    private function getItPersonnel()
+    {
+        return User::query()
+            ->where(function ($query) {
+                $query->whereIn('role', ['admin', 'it_staff'])
+                    ->orWhereHas('roles', function ($roleQuery) {
+                        $roleQuery->whereIn('name', ['admin', 'it_staff']);
+                    });
+            })
+            ->orderBy('name')
+            ->get();
     }
 }

@@ -234,6 +234,9 @@
                     <strong>Confirmed by:</strong>
                     <div style="margin-top: 35px; width: 45%;">
                         <div style="border-top: 1px solid #000; width: 100%; margin-bottom: 3px;"></div>
+                        @if($maintenance->confirmed_by)
+                            <div style="font-weight: bold; text-transform: uppercase; text-align: center;">{{ $maintenance->confirmed_by }}</div>
+                        @endif
                         <span style="font-size: 9.5px; display: block; text-align: center;">Signature over printed name, ICTO Supervisor</span>
                     </div>
                 </td>

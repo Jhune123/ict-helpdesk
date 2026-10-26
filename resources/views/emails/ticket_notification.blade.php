@@ -14,7 +14,7 @@
         </h2>
 
         <p style="font-size: 16px; color: #374151; margin-top: 20px;">
-            Hello {{ $ticket->user->name ?? 'User' }},
+            Hello {{ $ticket->client_name ?: ($ticket->user->name ?? 'User') }},
         </p>
 
         <p style="font-size: 15px; color: #4b5563; line-height: 1.6; white-space: pre-line;">

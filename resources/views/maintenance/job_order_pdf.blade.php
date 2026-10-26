@@ -185,7 +185,7 @@
                 <strong>Performed by:</strong>
                 <div class="sig-container">
                     <div class="sig-line"></div>
-                    <span style="font-weight: bold;">{{ $maintenance->assignees->first()->name ?? '' }}</span><br>
+                    <span style="font-weight: bold;">{{ $maintenance->assignees->pluck('name')->implode(', ') }}</span><br>
                     <span class="sig-subtitle">Signature over printed name, ICTO Staff/in-charge</span>
                 </div>
             </td>
@@ -209,6 +209,9 @@
                 <strong>Confirmed by:</strong>
                 <div class="sig-container" style="margin-top: 25px;">
                     <div class="sig-line" style="width: 42%;"></div>
+                    @if($maintenance->confirmed_by)
+                        <span style="font-weight: bold; text-transform: uppercase;">{{ $maintenance->confirmed_by }}</span><br>
+                    @endif
                     <span class="sig-subtitle">Signature over printed name, ICTO Supervisor</span>
                 </div>
             </td>
