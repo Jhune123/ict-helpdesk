@@ -50,13 +50,16 @@ class DashboardController extends Controller
             })
             ->count();
 
+        $canManageStaffLeave = $currentUser->hasRole('admin') || $currentUser->role === 'admin';
+
         return view('dashboard', compact(
             'students',
             'departments',
             'selectedDept',
             'departmentsCount',
             'totalLogsToday',
-            'isClient'
+            'isClient',
+            'canManageStaffLeave'
         ));
     }
 

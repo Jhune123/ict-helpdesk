@@ -13,9 +13,6 @@
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Alpine.js CDN Fallback (Ensures sidebar & modals work seamlessly) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     @yield('styles')
     @yield('header')
 </head>

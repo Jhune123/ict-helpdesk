@@ -88,6 +88,16 @@ class User extends Authenticatable
         return $this->hasMany(OjtAttendance::class);
     }
 
+    public function leaveApplications()
+    {
+        return $this->hasMany(LeaveApplication::class);
+    }
+
+    public function leaveBalance()
+    {
+        return $this->hasOne(LeaveBalance::class);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                               HELPER METHODS */
     /* -------------------------------------------------------------------------- */

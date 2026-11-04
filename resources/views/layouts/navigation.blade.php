@@ -53,6 +53,9 @@
                     </x-nav-link>
 
                     @role('admin|it_staff')
+                        <x-nav-link :href="route('staff.leaves.index')" :active="request()->routeIs('staff.leaves.*')" class="text-green-100 hover:text-white">
+                            🗓️ Staff Leave Management
+                        </x-nav-link>
                         <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')" class="text-green-100 hover:text-white">
                             📜 Activity Logs
                         </x-nav-link>
@@ -194,6 +197,9 @@
             </x-responsive-nav-link>
 
             @role('admin|it_staff')
+                <x-responsive-nav-link :href="route('staff.leaves.index')" :active="request()->routeIs('staff.leaves.*')" class="text-green-100 hover:text-white">
+                    🗓️ Staff Leave Management
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')" class="text-green-100 hover:text-white">
                     📜 Activity Logs
                 </x-responsive-nav-link>

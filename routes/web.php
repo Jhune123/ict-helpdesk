@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\MaintenanceScheduleController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\NotificationController;
@@ -61,6 +62,26 @@ Route::middleware('auth')->group(function () {
     /* 👥 USER MANAGEMENT */
     Route::middleware(RoleMiddleware::class.':admin|it_staff')->group(function () {
         Route::resource('users', UserController::class);
+        Route::get('/staff/leaves', [LeaveController::class, 'index'])->name('staff.leaves.index');
+        Route::post('/staff/leaves', [LeaveController::class, 'store'])->name('staff.leaves.store');
+        Route::get('/staff/leaves/{leave}', [LeaveController::class, 'show'])->name('staff.leaves.show');
+        Route::get('/staff/leaves/{leave}/print', [LeaveController::class, 'print'])
+            ->name('staff.leaves.print');
+        Route::get('/staff/leaves/{leave}/edit', [LeaveController::class, 'edit'])
+            ->middleware(RoleMiddleware::class.':admin')
+            ->name('staff.leaves.edit');
+        Route::put('/staff/leaves/{leave}', [LeaveController::class, 'update'])
+            ->middleware(RoleMiddleware::class.':admin')
+            ->name('staff.leaves.update');
+        Route::delete('/staff/leaves/{leave}', [LeaveController::class, 'destroy'])
+            ->middleware(RoleMiddleware::class.':admin')
+            ->name('staff.leaves.destroy');
+        Route::patch('/staff/leaves/{leave}/review', [LeaveController::class, 'review'])
+            ->middleware(RoleMiddleware::class.':admin')
+            ->name('staff.leaves.review');
+        Route::put('/staff/leaves/{user}/balance', [LeaveController::class, 'updateBalance'])
+            ->middleware(RoleMiddleware::class.':admin')
+            ->name('staff.leaves.balance');
     });
 
     /* PROFILE */

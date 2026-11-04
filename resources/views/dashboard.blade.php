@@ -101,6 +101,10 @@
         </a>
     </div>
 
+    @if($canManageStaffLeave)
+        @include('staff.leaves.dashboard-widget')
+    @endif
+
     @if($isClient)
         <a href="{{ route('dashboard.chat.index') }}"
            class="fixed bottom-24 right-6 z-40 inline-flex items-center gap-3 rounded-full bg-green-800 px-7 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-green-900 focus:outline-none focus:ring-4 focus:ring-green-300"
