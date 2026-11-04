@@ -3,7 +3,7 @@
 @section('content')
 <div class="mx-auto max-w-7xl space-y-6"
      x-data="{
-        open: {{ $errors->hasAny(['leave_type', 'details', 'start_date', 'end_date', 'commutation_requested', 'office_department', 'position', 'designation', 'monthly_basic_salary', 'applicant_last_name', 'applicant_first_name', 'applicant_middle_name', 'applicant_signature', 'vacation_location', 'vacation_destination', 'sick_treatment', 'sick_illness', 'special_leave_illness', 'study_purpose', 'other_leave_type', 'other_purpose']) ? 'true' : 'false' }},
+        open: {{ $errors->hasAny(['leave_type', 'details', 'start_date', 'end_date', 'filed_at', 'commutation_requested', 'office_department', 'position', 'designation', 'monthly_basic_salary', 'applicant_last_name', 'applicant_first_name', 'applicant_middle_name', 'applicant_signature', 'vacation_location', 'vacation_destination', 'sick_treatment', 'sick_illness', 'special_leave_illness', 'study_purpose', 'other_leave_type', 'other_purpose']) ? 'true' : 'false' }},
         leaveType: @js(old('leave_type', '')),
         vacationLocation: @js(old('vacation_location', '')),
         sickTreatment: @js(old('sick_treatment', '')),
@@ -223,8 +223,10 @@
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('staff.leaves.show', $application) }}" class="rounded-md border border-blue-200 px-2.5 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-50">View</a>
                                     <a href="{{ route('staff.leaves.print', $application) }}" class="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">Print</a>
-                                    @if($isAdmin)
+                                    @if($isAdmin || $application->status === 'pending')
                                         <a href="{{ route('staff.leaves.edit', $application) }}" class="rounded-md border border-amber-200 px-2.5 py-1.5 text-xs font-bold text-amber-700 hover:bg-amber-50">Edit</a>
+                                    @endif
+                                    @if($isAdmin)
                                         <form method="POST" action="{{ route('staff.leaves.destroy', $application) }}" onsubmit="return confirm('Delete this leave application? This cannot be undone.');">
                                             @csrf
                                             @method('DELETE')
@@ -335,8 +337,9 @@
                         </div>
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-semibold text-gray-700">3. Date of Filing</label>
-                        <input type="text" value="{{ now()->format('m/d/Y') }}" readonly class="w-full rounded-lg border-gray-200 bg-white text-gray-600">
+                        <label for="filed_at" class="mb-1 block text-sm font-semibold text-gray-700">3. Date of Filing</label>
+                        <input id="filed_at" name="filed_at" type="date" required value="{{ old('filed_at', now()->toDateString()) }}"
+                               class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600">
                     </div>
                     <div>
                         <label for="position" class="mb-1 block text-sm font-semibold text-gray-700">4. Position</label>

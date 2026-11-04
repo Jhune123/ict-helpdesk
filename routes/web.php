@@ -68,10 +68,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/staff/leaves/{leave}/print', [LeaveController::class, 'print'])
             ->name('staff.leaves.print');
         Route::get('/staff/leaves/{leave}/edit', [LeaveController::class, 'edit'])
-            ->middleware(RoleMiddleware::class.':admin')
             ->name('staff.leaves.edit');
         Route::put('/staff/leaves/{leave}', [LeaveController::class, 'update'])
-            ->middleware(RoleMiddleware::class.':admin')
             ->name('staff.leaves.update');
         Route::delete('/staff/leaves/{leave}', [LeaveController::class, 'destroy'])
             ->middleware(RoleMiddleware::class.':admin')

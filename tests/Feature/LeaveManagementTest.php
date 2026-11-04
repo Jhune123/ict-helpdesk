@@ -23,6 +23,7 @@ test('IT staff can submit a leave application with working days calculated autom
             'applicant_first_name' => 'Test',
             'applicant_middle_name' => 'A',
             'applicant_signature' => 'Test A Staff',
+            'filed_at' => '2026-11-02',
             'leave_type' => 'Vacation Leave',
             'vacation_within_philippines' => '1',
             'vacation_within_destination' => 'Tabuk City',
@@ -39,6 +40,7 @@ test('IT staff can submit a leave application with working days calculated autom
         'applicant_first_name' => 'Test',
         'applicant_middle_name' => 'A',
         'applicant_signature' => 'Test A Staff',
+        'filed_at' => '2026-11-02 00:00:00',
         'leave_type' => 'Vacation Leave',
         'details' => 'Within the Philippines: Tabuk City',
         'vacation_within_philippines' => 1,
@@ -70,6 +72,7 @@ test('staff cannot submit overlapping pending leave applications', function () {
             'applicant_last_name' => 'Staff',
             'applicant_first_name' => 'Test',
             'applicant_signature' => 'Test Staff',
+            'filed_at' => '2026-11-02',
             'leave_type' => 'Sick Leave',
             'sick_out_patient' => '1',
             'sick_out_patient_illness' => 'Checkup',
@@ -93,6 +96,7 @@ test('leave form captures the form-six fields and validates leave-specific detai
         ->assertSee('Civil Service Form No. 6')
         ->assertSee('Apply for Leave')
         ->assertSee('applicant_signature')
+        ->assertSee('id="filed_at" name="filed_at" type="date" required', false)
         ->assertSee('@click="open = true"', false)
         ->assertSee('x-show="open"', false)
         ->assertSee('2. Name (Last, First and Middle)')
@@ -115,6 +119,7 @@ test('leave form captures the form-six fields and validates leave-specific detai
         ->post(route('staff.leaves.store'), [
             'applicant_last_name' => 'Staff',
             'applicant_first_name' => 'Test',
+            'filed_at' => '2026-11-02',
             'leave_type' => 'Sick Leave',
             'sick_in_hospital' => '1',
             'start_date' => '2026-11-09',
@@ -134,6 +139,7 @@ test('staff can select and submit the Section 6.B hospital and outpatient detail
             'applicant_last_name' => 'Staff',
             'applicant_first_name' => 'Test',
             'applicant_signature' => 'Test Staff',
+            'filed_at' => '2026-11-02',
             'leave_type' => 'Sick Leave',
             'sick_in_hospital' => '1',
             'sick_in_hospital_illness' => 'Flu',
@@ -167,6 +173,7 @@ test('staff can submit a domestic vacation leave without specifying a destinatio
             'applicant_last_name' => 'Staff',
             'applicant_first_name' => 'Test',
             'applicant_signature' => 'Test Staff',
+            'filed_at' => '2026-11-02',
             'leave_type' => 'Vacation Leave',
             'vacation_within_philippines' => '1',
             'start_date' => '2026-11-09',
@@ -321,16 +328,23 @@ test('staff can view only their own leave applications while admin can manage ap
         ->assertOk()
         ->assertSee('Vacation Leave')
         ->assertSee('View')
+        ->assertSee('Edit')
         ->assertDontSee('Other Applicant')
-        ->assertDontSee('Delete')
-        ->assertDontSee('Edit');
+        ->assertDontSee('Delete');
 
     $this->actingAs($otherStaff)
         ->get(route('staff.leaves.show', $leave))
         ->assertForbidden();
-    $this->actingAs($staff)
+    $this->actingAs($otherStaff)
         ->get(route('staff.leaves.edit', $leave))
         ->assertForbidden();
+    $this->actingAs($otherStaff)
+        ->put(route('staff.leaves.update', $leave), [])
+        ->assertForbidden();
+    $this->actingAs($staff)
+        ->get(route('staff.leaves.edit', $leave))
+        ->assertOk()
+        ->assertSee('You can edit your application while it is pending Admin review.');
     $this->actingAs($staff)
         ->get(route('staff.leaves.print', $leave))
         ->assertOk();
@@ -352,6 +366,35 @@ test('staff can view only their own leave applications while admin can manage ap
         ->assertSee('APPLICATION FOR LEAVE')
         ->assertSee('Leave Applicant');
 
+    $this->actingAs($staff)
+        ->put(route('staff.leaves.update', $leave), [
+            'applicant_last_name' => 'Applicant',
+            'applicant_first_name' => 'Staff Edited',
+            'applicant_middle_name' => '',
+            'applicant_signature' => 'Staff Edited Applicant',
+            'office_department' => 'ICT Department',
+            'filed_at' => '2026-11-02',
+            'position' => '',
+            'designation' => '',
+            'monthly_basic_salary' => '',
+            'leave_type' => 'Vacation Leave',
+            'other_leave_type' => '',
+            'details' => 'Updated request details.',
+            'start_date' => '2026-11-09',
+            'end_date' => '2026-11-10',
+            'commutation_requested' => '0',
+        ])
+        ->assertRedirect(route('staff.leaves.index'))
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('leave_applications', [
+        'id' => $leave->id,
+        'applicant_first_name' => 'Staff Edited',
+        'filed_at' => '2026-11-02 00:00:00',
+        'details' => 'Updated request details.',
+        'working_days' => 2,
+    ]);
+
     $this->actingAs($admin)
         ->put(route('staff.leaves.update', $leave), [
             'applicant_last_name' => 'Applicant',
@@ -359,6 +402,7 @@ test('staff can view only their own leave applications while admin can manage ap
             'applicant_middle_name' => '',
             'applicant_signature' => 'Updated Applicant',
             'office_department' => 'ICT Department',
+            'filed_at' => '2026-11-03',
             'position' => 'Technician',
             'designation' => '',
             'monthly_basic_salary' => '',
@@ -376,6 +420,7 @@ test('staff can view only their own leave applications while admin can manage ap
         'id' => $leave->id,
         'applicant_first_name' => 'Updated',
         'applicant_signature' => 'Updated Applicant',
+        'filed_at' => '2026-11-03 00:00:00',
         'working_days' => 3,
     ]);
 
@@ -389,6 +434,35 @@ test('staff can view only their own leave applications while admin can manage ap
         ->delete(route('staff.leaves.destroy', $leave))
         ->assertRedirect(route('staff.leaves.index'));
     $this->assertDatabaseMissing('leave_applications', ['id' => $leave->id]);
+});
+
+test('IT staff cannot edit their application after it has been approved', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('it_staff');
+    $leave = LeaveApplication::create([
+        'user_id' => $staff->id,
+        'filed_at' => '2026-11-01',
+        'leave_type' => 'Sick Leave',
+        'details' => 'Medical leave.',
+        'start_date' => '2026-11-09',
+        'end_date' => '2026-11-09',
+        'working_days' => 1,
+        'commutation_requested' => false,
+        'status' => 'approved',
+    ]);
+
+    $this->actingAs($staff)
+        ->get(route('staff.leaves.index'))
+        ->assertOk()
+        ->assertDontSee(route('staff.leaves.edit', $leave));
+
+    $this->actingAs($staff)
+        ->get(route('staff.leaves.edit', $leave))
+        ->assertForbidden();
+
+    $this->actingAs($staff)
+        ->put(route('staff.leaves.update', $leave), [])
+        ->assertForbidden();
 });
 
 test('staff can print only their own leave application in A4 portrait format', function () {

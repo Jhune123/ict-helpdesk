@@ -64,6 +64,7 @@ class LeaveController extends Controller
             'applicant_middle_name' => ['nullable', 'string', 'max:255'],
             'applicant_signature' => ['required', 'string', 'max:255'],
             'office_department' => ['nullable', 'string', 'max:255'],
+            'filed_at' => ['required', 'date'],
             'position' => ['nullable', 'string', 'max:255'],
             'designation' => ['nullable', 'string', 'max:255'],
             'monthly_basic_salary' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
@@ -226,7 +227,7 @@ class LeaveController extends Controller
         }
 
         $validated['user_id'] = $user->id;
-        $validated['filed_at'] = today();
+        $validated['filed_at'] = Carbon::parse($validated['filed_at'])->toDateString();
         $validated['working_days'] = $workingDays;
         $validated['status'] = 'pending';
 
@@ -279,14 +280,14 @@ class LeaveController extends Controller
 
     public function edit(LeaveApplication $leave): View
     {
-        abort_unless($this->isAdmin(Auth::user()), 403);
+        $this->authorizeEdit($leave);
 
         return view('staff.leaves.edit', compact('leave'));
     }
 
     public function update(Request $request, LeaveApplication $leave): RedirectResponse
     {
-        abort_unless($this->isAdmin(Auth::user()), 403);
+        $this->authorizeEdit($leave);
 
         $validated = $request->validate([
             'applicant_last_name' => ['required', 'string', 'max:255'],
@@ -294,6 +295,7 @@ class LeaveController extends Controller
             'applicant_middle_name' => ['nullable', 'string', 'max:255'],
             'applicant_signature' => ['required', 'string', 'max:255'],
             'office_department' => ['nullable', 'string', 'max:255'],
+            'filed_at' => ['required', 'date'],
             'position' => ['nullable', 'string', 'max:255'],
             'designation' => ['nullable', 'string', 'max:255'],
             'monthly_basic_salary' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
@@ -361,6 +363,15 @@ class LeaveController extends Controller
     {
         $user = Auth::user();
         abort_unless($this->isAdmin($user) || $leave->user_id === $user->id, 403);
+    }
+
+    private function authorizeEdit(LeaveApplication $leave): void
+    {
+        $user = Auth::user();
+        $isAdmin = $this->isAdmin($user);
+        $isOwner = $leave->user_id === $user->id;
+
+        abort_unless($isAdmin || ($isOwner && $leave->status === 'pending'), 403);
     }
 
     private function sendApprovalNotice(LeaveApplication $leave): void

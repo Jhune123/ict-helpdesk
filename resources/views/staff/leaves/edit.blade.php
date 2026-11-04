@@ -5,6 +5,9 @@
     <div>
         <p class="text-sm font-semibold text-green-700">Staff Services / Leave Management</p>
         <h1 class="mt-1 text-2xl font-bold text-gray-900">Edit Leave Application</h1>
+        @if(!auth()->user()->hasRole('admin') && auth()->user()->role !== 'admin')
+            <p class="mt-1 text-sm text-gray-600">You can edit your application while it is pending Admin review.</p>
+        @endif
     </div>
 
     @if($errors->any())
@@ -30,6 +33,9 @@
             </label>
             <label class="text-sm font-medium text-gray-700">Office / Department
                 <input name="office_department" type="text" maxlength="255" value="{{ old('office_department', $leave->office_department) }}" class="mt-1 w-full rounded-lg border-gray-300">
+            </label>
+            <label class="text-sm font-medium text-gray-700">Date of Filing
+                <input name="filed_at" type="date" required value="{{ old('filed_at', $leave->filed_at->toDateString()) }}" class="mt-1 w-full rounded-lg border-gray-300">
             </label>
             <label class="text-sm font-medium text-gray-700">Position
                 <input name="position" type="text" maxlength="255" value="{{ old('position', $leave->position) }}" class="mt-1 w-full rounded-lg border-gray-300">
