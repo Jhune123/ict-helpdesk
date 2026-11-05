@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\Department;
+use App\Models\LeaveApplication;
 use App\Models\Ticket;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -51,6 +53,27 @@ class DashboardController extends Controller
             ->count();
 
         $canManageStaffLeave = $currentUser->hasRole('admin') || $currentUser->role === 'admin';
+        $now = Carbon::now();
+        $monthStart = $now->copy()->startOfMonth();
+        $monthEnd = $now->copy()->endOfMonth();
+        $yearStart = $now->copy()->startOfYear();
+        $yearEnd = $now->copy()->endOfYear();
+        $staffLeaveTotals = collect();
+
+        if ($canManageStaffLeave) {
+            $itStaff = User::role('it_staff')->orderBy('name')->get();
+            $staffLeaveTotals = $this->approvedLeaveTotals(
+                $itStaff->pluck('id'),
+                $monthStart,
+                $monthEnd,
+                $yearStart,
+                $yearEnd
+            );
+            $staffLeaveTotals = $itStaff->map(fn (User $staff) => [
+                'user' => $staff,
+                ...$staffLeaveTotals->get($staff->id, ['monthly' => 0, 'yearly' => 0]),
+            ]);
+        }
 
         return view('dashboard', compact(
             'students',
@@ -59,8 +82,41 @@ class DashboardController extends Controller
             'departmentsCount',
             'totalLogsToday',
             'isClient',
-            'canManageStaffLeave'
+            'canManageStaffLeave',
+            'staffLeaveTotals',
+            'now'
         ));
+    }
+
+    private function approvedLeaveTotals(
+        Collection $userIds,
+        Carbon $monthStart,
+        Carbon $monthEnd,
+        Carbon $yearStart,
+        Carbon $yearEnd
+    ): Collection {
+        $totals = $userIds->mapWithKeys(fn ($userId) => [
+            $userId => ['monthly' => 0, 'yearly' => 0],
+        ]);
+
+        if ($userIds->isEmpty()) {
+            return $totals;
+        }
+
+        LeaveApplication::query()
+            ->whereIn('user_id', $userIds)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $yearEnd->toDateString())
+            ->whereDate('end_date', '>=', $yearStart->toDateString())
+            ->get()
+            ->each(function (LeaveApplication $leave) use ($totals, $monthStart, $monthEnd, $yearStart, $yearEnd) {
+                $userTotals = $totals->get($leave->user_id);
+                $userTotals['monthly'] += $leave->workingDaysWithin($monthStart, $monthEnd);
+                $userTotals['yearly'] += $leave->workingDaysWithin($yearStart, $yearEnd);
+                $totals->put($leave->user_id, $userTotals);
+            });
+
+        return $totals;
     }
 
     /**

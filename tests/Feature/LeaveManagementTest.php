@@ -51,6 +51,37 @@ test('IT staff can submit a leave application with working days calculated autom
     ]);
 });
 
+test('IT staff can submit Others CTO leave', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('it_staff');
+
+    $this->actingAs($staff)
+        ->get(route('staff.leaves.index'))
+        ->assertOk()
+        ->assertSee('value="Others (CTO)"', false)
+        ->assertSee('Compensatory Time Off')
+        ->assertDontSee('Unlimited');
+
+    $this->post(route('staff.leaves.store'), [
+        'applicant_last_name' => 'Staff',
+        'applicant_first_name' => 'Test',
+        'applicant_signature' => 'Test Staff',
+        'filed_at' => '2026-11-02',
+        'leave_type' => 'Others (CTO)',
+        'start_date' => '2026-11-09',
+        'end_date' => '2026-11-09',
+        'commutation_requested' => '0',
+    ])->assertRedirect(route('staff.leaves.index'))
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('leave_applications', [
+        'user_id' => $staff->id,
+        'leave_type' => 'Others (CTO)',
+        'working_days' => 1,
+        'status' => 'pending',
+    ]);
+});
+
 test('staff cannot submit overlapping pending leave applications', function () {
     $staff = User::factory()->create();
     $staff->assignRole('it_staff');
@@ -218,6 +249,7 @@ test('admin can approve leave and approved days reduce the staff balance', funct
         ['Sick Leave', '2026-11-12', '2026-11-12', 1, null],
         ['Special Privilege Leave', '2026-11-13', '2026-11-16', 2, null],
         ['Others', '2026-11-17', '2026-11-17', 1, 'Wellness Break'],
+        ['Others (CTO)', '2026-11-18', '2026-11-18', 1, null],
     ] as [$type, $startDate, $endDate, $days, $otherType]) {
         LeaveApplication::create([
             'user_id' => $staff->id,
@@ -232,6 +264,17 @@ test('admin can approve leave and approved days reduce the staff balance', funct
             'status' => 'approved',
         ]);
     }
+    LeaveApplication::create([
+        'user_id' => $staff->id,
+        'filed_at' => '2026-11-01',
+        'leave_type' => 'Others (CTO)',
+        'details' => 'Pending CTO request.',
+        'start_date' => '2026-11-24',
+        'end_date' => '2026-11-24',
+        'working_days' => 1,
+        'commutation_requested' => false,
+        'status' => 'pending',
+    ]);
 
     $this->actingAs($admin)
         ->get(route('staff.leaves.index'))
@@ -240,7 +283,10 @@ test('admin can approve leave and approved days reduce the staff balance', funct
         ->assertSee('Approve')
         ->assertSee('Mandatory/Forced credits')
         ->assertSee('Special Privilege credits')
-        ->assertSee('Wellness Break credits');
+        ->assertSee('Wellness Break credits')
+        ->assertSee('Others (CTO)')
+        ->assertSee('CTO approved: 1.00 day')
+        ->assertDontSee('Unlimited');
 
     $this->actingAs($admin)
         ->patch(route('staff.leaves.review', $leave), ['status' => 'approved'])
@@ -267,6 +313,10 @@ test('admin can approve leave and approved days reduce the staff balance', funct
         ->assertSee('Sick Leave')
         ->assertSee('Special Privilege Leave')
         ->assertSee('Others (Wellness Break)')
+        ->assertSee('Others (CTO)')
+        ->assertSee('1.00')
+        ->assertSee('Approved CTO working days')
+        ->assertDontSee('Unlimited')
         ->assertSee('9.00')
         ->assertSee('7.00')
         ->assertSee('3.00');
@@ -296,8 +346,89 @@ test('admin dashboard shows live leave totals and the weekly availability timeli
         ->assertSee('Staff Availability &amp; Leave Monitor', false)
         ->assertSee('Open')
         ->assertSee(route('staff.leaves.index'))
-        ->assertDontSee('On Leave Today')
-        ->assertDontSee('ICT Test Staff');
+        ->assertSee('IT Staff Approved Leave Totals')
+        ->assertSee('ICT Test Staff')
+        ->assertSee('Monthly Total (days)')
+        ->assertSee('Yearly Total (days)')
+        ->assertSee('>3</td>', false)
+        ->assertDontSee('On Leave Today');
+});
+
+test('leave management page shows monthly and yearly approved leave totals for staff and admin', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create(['name' => 'Monthly Yearly Staff']);
+    $staff->assignRole('it_staff');
+
+    foreach ([
+        ['2026-11-02', '2026-11-03', 2, 'approved'],
+        ['2026-01-05', '2026-01-07', 3, 'approved'],
+        ['2026-11-09', '2026-11-10', 2, 'pending'],
+    ] as [$startDate, $endDate, $days, $status]) {
+        LeaveApplication::create([
+            'user_id' => $staff->id,
+            'filed_at' => '2026-11-01',
+            'leave_type' => 'Vacation Leave',
+            'details' => 'Leave total test.',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'working_days' => $days,
+            'commutation_requested' => false,
+            'status' => $status,
+        ]);
+    }
+
+    $this->travelTo(\Carbon\Carbon::parse('2026-11-04 10:00:00'));
+
+    $this->actingAs($staff)
+        ->get(route('staff.leaves.index'))
+        ->assertOk()
+        ->assertSee('Your Approved Leave Totals')
+        ->assertSee('Monthly Total of Leave')
+        ->assertSee('Yearly Total of Leave')
+        ->assertSee('>2 <span', false)
+        ->assertSee('>5 <span', false);
+
+    $this->actingAs($admin)
+        ->get(route('staff.leaves.index'))
+        ->assertOk()
+        ->assertSee('Individual IT Staff Leave Totals')
+        ->assertSee('Monthly Yearly Staff')
+        ->assertSee('Monthly Total of Leave (days)')
+        ->assertSee('Yearly Total of Leave (days)')
+        ->assertSee('>2</td>', false)
+        ->assertSee('>5</td>', false);
+});
+
+test('IT staff dashboard does not show leave totals', function () {
+    $staff = User::factory()->create(['name' => 'ICT Totals Staff']);
+    $staff->assignRole('it_staff');
+
+    foreach ([
+        ['2026-11-02', '2026-11-03', 2, 'approved'],
+        ['2026-01-05', '2026-01-07', 3, 'approved'],
+        ['2026-11-09', '2026-11-10', 2, 'pending'],
+    ] as [$startDate, $endDate, $days, $status]) {
+        LeaveApplication::create([
+            'user_id' => $staff->id,
+            'filed_at' => '2026-11-01',
+            'leave_type' => 'Vacation Leave',
+            'details' => 'Leave total test.',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'working_days' => $days,
+            'commutation_requested' => false,
+            'status' => $status,
+        ]);
+    }
+
+    $this->travelTo(\Carbon\Carbon::parse('2026-11-04 10:00:00'));
+    $this->actingAs($staff)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('Approved leave this month')
+        ->assertDontSee('Approved leave this year')
+        ->assertDontSee('IT Staff Approved Leave Totals');
 });
 
 test('staff can view only their own leave applications while admin can manage applications', function () {

@@ -78,7 +78,7 @@
                 <h2 id="leave-balance-heading" class="text-lg font-bold text-gray-900">Your Leave Balance</h2>
                 <p class="text-sm text-gray-500">Approved leave is deducted from the credits recorded by Admin.</p>
             </div>
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 @foreach([
                     'Mandatory/Forced Leave' => $availableCredits['mandatory'],
                     'Sick Leave' => $availableCredits['sick'],
@@ -96,6 +96,27 @@
                         @endif
                     </div>
                 @endforeach
+                <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-gray-500">Others (CTO)</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900">{{ number_format($usage['cto'] ?? 0, 2) }} <span class="text-sm font-medium text-gray-500">{{ Str::plural('day', $usage['cto'] ?? 0) }}</span></p>
+                    <p class="mt-1 text-xs text-gray-500">Approved CTO working days</p>
+                </div>
+            </div>
+        </section>
+        <section class="mt-6" aria-labelledby="leave-total-heading">
+            <div class="mb-3">
+                <h2 id="leave-total-heading" class="text-lg font-bold text-gray-900">Your Approved Leave Totals</h2>
+                <p class="text-sm text-gray-500">Approved working days for {{ $now->format('F Y') }} and the {{ $now->format('Y') }} calendar year.</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-gray-500">Monthly Total of Leave</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900">{{ $currentStaffLeaveTotals['monthly'] }} <span class="text-sm font-medium text-gray-500">days</span></p>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-gray-500">Yearly Total of Leave</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900">{{ $currentStaffLeaveTotals['yearly'] }} <span class="text-sm font-medium text-gray-500">days</span></p>
+                </div>
             </div>
         </section>
     @endunless
@@ -104,7 +125,7 @@
         <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 px-5 py-4">
                 <h2 class="font-bold text-gray-900">Staff Leave Credits</h2>
-                <p class="mt-1 text-sm text-gray-500">Set earned credits for Mandatory/Forced, Sick, Special Privilege, and Wellness Break leave. Approved leave is deducted from the matching category.</p>
+                <p class="mt-1 text-sm text-gray-500">Set earned credits for Mandatory/Forced, Sick, Special Privilege, and Wellness Break leave. Others (CTO) has unlimited credits; approved usage is tracked.</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -115,6 +136,7 @@
                             <th class="px-5 py-3">Sick credits</th>
                             <th class="px-5 py-3">Special Privilege credits</th>
                             <th class="px-5 py-3">Wellness Break credits</th>
+                            <th class="px-5 py-3">Others (CTO)</th>
                             <th class="px-5 py-3"><span class="sr-only">Save</span></th>
                         </tr>
                     </thead>
@@ -129,8 +151,8 @@
                                     <div class="font-semibold text-gray-900">{{ $staffMember->name }}</div>
                                     <div class="text-xs text-gray-500">{{ $staffMember->department->name ?? 'ICT Department' }}</div>
                                 </td>
-                                <td colspan="5" class="px-5 py-3">
-                                    <form method="POST" action="{{ route('staff.leaves.balance', $staffMember) }}" class="flex min-w-[960px] items-center gap-3">
+                                <td colspan="6" class="px-5 py-3">
+                                    <form method="POST" action="{{ route('staff.leaves.balance', $staffMember) }}" class="flex min-w-[1080px] items-center gap-3">
                                         @csrf
                                         @method('PUT')
                                         <label class="sr-only" for="mandatory-{{ $staffMember->id }}">Mandatory/Forced credits</label>
@@ -153,11 +175,43 @@
                                                value="{{ $staffBalance?->wellness_break_days }}"
                                                class="w-28 rounded-lg border-gray-300 text-sm focus:border-green-600 focus:ring-green-600" placeholder="Not set">
                                         <span class="w-20 text-xs text-gray-500">Available {{ $staffBalance?->wellness_break_days === null ? '—' : number_format(max(0, (float) $staffBalance->wellness_break_days - ($staffUsage['wellness_break'] ?? 0)), 2) }}</span>
+                                        <span class="w-40 shrink-0 text-sm font-semibold text-green-700">CTO approved: {{ number_format($staffUsage['cto'] ?? 0, 2) }} {{ Str::plural('day', $staffUsage['cto'] ?? 0) }}</span>
                                         <button type="submit" class="rounded-lg bg-green-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-green-800">Save credits</button>
                                     </form>
                                 </td>
                             </tr>
                         @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" aria-labelledby="staff-leave-totals-heading">
+            <div class="border-b border-gray-200 px-5 py-4">
+                <h2 id="staff-leave-totals-heading" class="font-bold text-gray-900">Individual IT Staff Leave Totals</h2>
+                <p class="mt-1 text-sm text-gray-500">Approved working days for {{ $now->format('F Y') }} and the {{ $now->format('Y') }} calendar year.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th class="px-5 py-3">IT Staff</th>
+                            <th class="px-5 py-3">Monthly Total of Leave (days)</th>
+                            <th class="px-5 py-3">Yearly Total of Leave (days)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($itStaff as $staffMember)
+                            @php
+                                $leaveTotals = $staffLeaveTotals->get($staffMember->id, ['monthly' => 0, 'yearly' => 0]);
+                            @endphp
+                            <tr>
+                                <td class="whitespace-nowrap px-5 py-3 font-semibold text-gray-900">{{ $staffMember->name }}</td>
+                                <td class="px-5 py-3 text-gray-700">{{ $leaveTotals['monthly'] }}</td>
+                                <td class="px-5 py-3 text-gray-700">{{ $leaveTotals['yearly'] }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3" class="px-5 py-4 text-center text-gray-500">No IT Staff accounts found.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -382,6 +436,7 @@
                                 'Monetization of Leave Credits' => 'Conversion of unused leave credits',
                                 'Terminal Leave' => 'Terminal leave',
                                 'Others' => 'Specify other leave type',
+                                'Others (CTO)' => 'Compensatory Time Off',
                             ];
                         @endphp
                         <div class="grid gap-2 sm:grid-cols-2">

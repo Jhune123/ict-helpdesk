@@ -27,6 +27,7 @@ class LeaveApplication extends Model
         'Monetization of Leave Credits',
         'Terminal Leave',
         'Others',
+        'Others (CTO)',
     ];
 
     protected $fillable = [

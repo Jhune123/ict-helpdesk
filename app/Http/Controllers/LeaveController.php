@@ -32,16 +32,39 @@ class LeaveController extends Controller
         $staff = collect();
         $balances = collect();
         $usedCredits = collect();
+        $itStaff = collect();
+        $staffLeaveTotals = collect();
+        $currentStaffLeaveTotals = ['monthly' => 0, 'yearly' => 0];
         $currentBalance = null;
         $currentUsage = [];
+        $now = Carbon::now();
+        $monthStart = $now->copy()->startOfMonth();
+        $monthEnd = $now->copy()->endOfMonth();
+        $yearStart = $now->copy()->startOfYear();
+        $yearEnd = $now->copy()->endOfYear();
 
         if ($isAdmin) {
             $staff = User::role(['admin', 'it_staff'])->with('department')->orderBy('name')->get();
             $balances = LeaveBalance::whereIn('user_id', $staff->pluck('id'))->get()->keyBy('user_id');
             $usedCredits = $this->approvedCreditUsage($staff->pluck('id'));
+            $itStaff = $staff->filter(fn (User $staffMember) => $staffMember->hasRole('it_staff'));
+            $staffLeaveTotals = $this->approvedLeaveTotals(
+                $itStaff->pluck('id'),
+                $monthStart,
+                $monthEnd,
+                $yearStart,
+                $yearEnd
+            );
         } else {
             $currentBalance = LeaveBalance::where('user_id', $user->id)->first();
             $currentUsage = $this->approvedCreditUsage(collect([$user->id]))->get($user->id, []);
+            $currentStaffLeaveTotals = $this->approvedLeaveTotals(
+                collect([$user->id]),
+                $monthStart,
+                $monthEnd,
+                $yearStart,
+                $yearEnd
+            )->get($user->id, $currentStaffLeaveTotals);
         }
 
         return view('staff.leaves.index', compact(
@@ -49,10 +72,45 @@ class LeaveController extends Controller
             'balances',
             'currentBalance',
             'currentUsage',
+            'currentStaffLeaveTotals',
             'isAdmin',
+            'itStaff',
             'staff',
-            'usedCredits'
+            'usedCredits',
+            'staffLeaveTotals',
+            'now'
         ));
+    }
+
+    private function approvedLeaveTotals(
+        Collection $userIds,
+        Carbon $monthStart,
+        Carbon $monthEnd,
+        Carbon $yearStart,
+        Carbon $yearEnd
+    ): Collection {
+        $totals = $userIds->mapWithKeys(fn ($userId) => [
+            $userId => ['monthly' => 0, 'yearly' => 0],
+        ]);
+
+        if ($userIds->isEmpty()) {
+            return $totals;
+        }
+
+        LeaveApplication::query()
+            ->whereIn('user_id', $userIds)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $yearEnd->toDateString())
+            ->whereDate('end_date', '>=', $yearStart->toDateString())
+            ->get()
+            ->each(function (LeaveApplication $leave) use ($totals, $monthStart, $monthEnd, $yearStart, $yearEnd) {
+                $userTotals = $totals->get($leave->user_id);
+                $userTotals['monthly'] += $leave->workingDaysWithin($monthStart, $monthEnd);
+                $userTotals['yearly'] += $leave->workingDaysWithin($yearStart, $yearEnd);
+                $totals->put($leave->user_id, $userTotals);
+            });
+
+        return $totals;
     }
 
     public function store(Request $request): RedirectResponse
@@ -442,7 +500,7 @@ class LeaveController extends Controller
             ->get()
             ->groupBy('user_id')
             ->map(function ($applications) {
-                $usage = ['mandatory' => 0, 'sick' => 0, 'special_privilege' => 0, 'wellness_break' => 0];
+                $usage = ['mandatory' => 0, 'sick' => 0, 'special_privilege' => 0, 'wellness_break' => 0, 'cto' => 0];
 
                 foreach ($applications as $application) {
                     if ($application->leave_type === 'Mandatory/Forced Leave') {
@@ -453,6 +511,8 @@ class LeaveController extends Controller
                         $usage['special_privilege'] += (int) $application->days_used;
                     } elseif ($application->leave_type === 'Others') {
                         $usage['wellness_break'] += (int) $application->days_used;
+                    } elseif ($application->leave_type === 'Others (CTO)') {
+                        $usage['cto'] += (int) $application->days_used;
                     }
                 }
 
