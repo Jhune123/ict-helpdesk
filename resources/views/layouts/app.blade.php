@@ -72,6 +72,11 @@
                                 <a href="{{ route('ojt.dashboard') }}" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-green-100 hover:bg-green-800 rounded-lg transition">
                                     🕒 OJT Attendance
                                 </a>
+                                @role('admin|it_staff')
+                                    <a href="{{ route('staff.leaves.index') }}" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-green-100 hover:bg-green-800 rounded-lg transition">
+                                        🗓️ Staff Leave Management
+                                    </a>
+                                @endrole
                                 <a href="{{ route('tickets.index') }}" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-green-100 hover:bg-green-800 rounded-lg transition">
                                     🎫 Helpdesk Tickets
                                 </a>

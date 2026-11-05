@@ -345,6 +345,7 @@ test('admin dashboard shows live leave totals and the weekly availability timeli
         ->assertOk()
         ->assertSee('Staff Availability &amp; Leave Monitor', false)
         ->assertSee('Open')
+        ->assertSee('🗓️ Staff Leave Management')
         ->assertSee(route('staff.leaves.index'))
         ->assertDontSee('IT Staff Approved Leave Totals')
         ->assertDontSee('Monthly Total (days)')
@@ -423,6 +424,7 @@ test('IT staff dashboard does not show leave totals', function () {
     $this->actingAs($staff)
         ->get(route('dashboard'))
         ->assertOk()
+        ->assertSee('🗓️ Staff Leave Management')
         ->assertDontSee('Approved leave this month')
         ->assertDontSee('Approved leave this year')
         ->assertDontSee('IT Staff Approved Leave Totals');
