@@ -322,6 +322,64 @@ test('admin can approve leave and approved days reduce the staff balance', funct
         ->assertSee('3.00');
 });
 
+test('IT staff can approve only their own pending leave application', function () {
+    Mail::fake();
+    $staff = User::factory()->create();
+    $staff->assignRole('it_staff');
+    $otherStaff = User::factory()->create();
+    $otherStaff->assignRole('it_staff');
+
+    $ownLeave = LeaveApplication::create([
+        'user_id' => $staff->id,
+        'filed_at' => '2026-11-01',
+        'leave_type' => 'Vacation Leave',
+        'details' => 'Own pending request.',
+        'start_date' => '2026-11-09',
+        'end_date' => '2026-11-09',
+        'working_days' => 1,
+        'commutation_requested' => false,
+        'status' => 'pending',
+    ]);
+    $otherLeave = LeaveApplication::create([
+        'user_id' => $otherStaff->id,
+        'filed_at' => '2026-11-01',
+        'leave_type' => 'Vacation Leave',
+        'details' => 'Another staff request.',
+        'start_date' => '2026-11-10',
+        'end_date' => '2026-11-10',
+        'working_days' => 1,
+        'commutation_requested' => false,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($staff)
+        ->get(route('staff.leaves.index'))
+        ->assertOk()
+        ->assertSee('Approve')
+        ->assertDontSee('Decline');
+
+    $this->actingAs($staff)
+        ->patch(route('staff.leaves.review', $ownLeave), ['status' => 'approved'])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('leave_applications', [
+        'id' => $ownLeave->id,
+        'status' => 'approved',
+        'reviewed_by' => $staff->id,
+    ]);
+
+    $this->actingAs($staff)
+        ->patch(route('staff.leaves.review', $otherLeave), ['status' => 'approved'])
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('leave_applications', [
+        'id' => $otherLeave->id,
+        'status' => 'pending',
+        'reviewed_by' => null,
+    ]);
+});
+
 test('admin dashboard shows live leave totals and the weekly availability timeline', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');

@@ -75,7 +75,7 @@ Route::middleware('auth')->group(function () {
             ->middleware(RoleMiddleware::class.':admin')
             ->name('staff.leaves.destroy');
         Route::patch('/staff/leaves/{leave}/review', [LeaveController::class, 'review'])
-            ->middleware(RoleMiddleware::class.':admin')
+            ->middleware(RoleMiddleware::class.':admin|it_staff')
             ->name('staff.leaves.review');
         Route::put('/staff/leaves/{user}/balance', [LeaveController::class, 'updateBalance'])
             ->middleware(RoleMiddleware::class.':admin')

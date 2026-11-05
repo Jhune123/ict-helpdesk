@@ -288,7 +288,7 @@
                                         </form>
                                     @endif
                                 </div>
-                                @if($isAdmin && $application->status === 'pending')
+                                @if($application->status === 'pending' && ($isAdmin || $application->user_id === auth()->id()))
                                     <div class="mt-2 flex flex-wrap gap-2">
                                         <form method="POST" action="{{ route('staff.leaves.review', $application) }}">
                                             @csrf
@@ -296,14 +296,16 @@
                                             <input type="hidden" name="status" value="approved">
                                             <button type="submit" class="rounded-md bg-green-700 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-green-800">Approve</button>
                                         </form>
-                                        <form method="POST" action="{{ route('staff.leaves.review', $application) }}" class="flex gap-1">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="disapproved">
-                                            <input type="text" name="review_notes" maxlength="2000" aria-label="Reason for disapproval" placeholder="Reason"
-                                                   class="w-24 rounded-md border-gray-300 px-2 py-1 text-xs">
-                                            <button type="submit" class="rounded-md border border-red-200 px-2 py-1 text-xs font-bold text-red-700 hover:bg-red-50">Decline</button>
-                                        </form>
+                                        @if($isAdmin)
+                                            <form method="POST" action="{{ route('staff.leaves.review', $application) }}" class="flex gap-1">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="disapproved">
+                                                <input type="text" name="review_notes" maxlength="2000" aria-label="Reason for disapproval" placeholder="Reason"
+                                                       class="w-24 rounded-md border-gray-300 px-2 py-1 text-xs">
+                                                <button type="submit" class="rounded-md border border-red-200 px-2 py-1 text-xs font-bold text-red-700 hover:bg-red-50">Decline</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 @endif
                             </td>

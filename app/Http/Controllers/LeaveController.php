@@ -296,8 +296,16 @@ class LeaveController extends Controller
 
     public function review(Request $request, LeaveApplication $leave): RedirectResponse
     {
+        $user = Auth::user();
+        $isAdmin = $this->isAdmin($user);
+        $isOwnITStaffApplication = ($user->hasRole('it_staff') || $user->role === 'it_staff')
+            && $leave->user_id === $user->id;
+
+        abort_unless($isAdmin || $isOwnITStaffApplication, 403);
+
+        $allowedStatuses = $isAdmin ? ['approved', 'disapproved'] : ['approved'];
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['approved', 'disapproved'])],
+            'status' => ['required', Rule::in($allowedStatuses)],
             'review_notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
