@@ -67,7 +67,7 @@
         <div class="form-row"><div class="form-label">User’s Full Name:</div><div class="form-line">{{ $ticket->client_name ?? '' }}</div></div>
         <div class="form-row"><div class="form-label">User’s Office Name & Position:</div><div class="form-line">{{ $ticket->department ?? '' }}</div></div>
         <div class="form-row"><div class="form-label">User’s Contact Number:</div><div class="form-line">{{ $ticket->contact_number ?? '' }}</div></div>
-        <div class="form-row"><div class="form-label">Email Address:</div><div class="form-line">{{ $ticket->form_data['email'] ?? '' }}</div></div>
+        <div class="form-row"><div class="form-label">Email Address: (Please insert active email address)</div><div class="form-line">{{ $ticket->form_data['email'] ?? '' }}</div></div>
 
         <div class="section-title">2. INCIDENT DETAILS:</div>
         <div class="form-row"><div class="form-label">Date of Incident:</div><div class="form-line">{{ $ticket->form_data['incident_date'] ?? '' }}</div></div>

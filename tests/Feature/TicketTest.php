@@ -63,6 +63,80 @@ class TicketTest extends TestCase
         ]);
     }
 
+    public function test_ticket_email_address_accepts_na()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('tickets.store'), [
+            'form_type' => 'network_request',
+            'title' => 'Network request without email',
+            'description' => 'Test details',
+            'meta' => ['email_address' => 'N/A'],
+        ])->assertRedirect();
+
+        $ticket = Ticket::where('title', 'Network request without email')->firstOrFail();
+        $this->assertSame('N/A', $ticket->form_data['email_address']);
+    }
+
+    public function test_ticket_email_address_rejects_invalid_values_other_than_na()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('tickets.store'), [
+            'form_type' => 'network_request',
+            'title' => 'Network request with invalid email',
+            'description' => 'Test details',
+            'meta' => ['email_address' => 'not-an-email'],
+        ])->assertSessionHasErrors('meta.email_address');
+
+        $this->assertDatabaseMissing('tickets', [
+            'title' => 'Network request with invalid email',
+        ]);
+    }
+
+    public function test_ticket_equipment_type_from_form_metadata_is_saved_to_ticket()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('tickets.store'), [
+            'form_type' => 'equipment_borrower',
+            'title' => 'Equipment type save test',
+            'description' => 'Test details',
+            'meta' => ['equipment_type' => 'Laptop'],
+        ])->assertRedirect();
+
+        $ticket = Ticket::where('title', 'Equipment type save test')->firstOrFail();
+        $this->assertSame('Laptop', $ticket->equipment_type);
+    }
+
+    public function test_ticket_brand_model_and_serial_number_from_form_metadata_are_saved_to_ticket()
+    {
+        $user = User::factory()->create();
+
+        $cases = [
+            [
+                'title' => 'Metadata equipment fields test',
+                'form_type' => 'generic',
+                'meta' => ['brand_model' => 'Sample Brand / Model', 'serial_no' => 'SN-12345'],
+            ],
+            [
+                'title' => 'Form data equipment fields test',
+                'form_type' => 'equipment_repair',
+                'form_data' => ['brand_model' => 'Repair Brand / Model', 'serial_no' => 'SN-54321'],
+            ],
+        ];
+
+        foreach ($cases as $case) {
+            $this->actingAs($user)->post(route('tickets.store'), array_merge($case, [
+                'description' => 'Test details',
+            ]))->assertRedirect();
+
+            $ticket = Ticket::where('title', $case['title'])->firstOrFail();
+            $this->assertSame($case['meta']['brand_model'] ?? $case['form_data']['brand_model'], $ticket->brand_model);
+            $this->assertSame($case['meta']['serial_no'] ?? $case['form_data']['serial_no'], $ticket->serial_no);
+        }
+    }
+
     public function test_long_multiline_description_is_saved_and_fully_shown_in_ticket_management()
     {
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
@@ -321,10 +395,11 @@ class TicketTest extends TestCase
             'form_type' => 'generic',
             'title' => 'General Support Request',
             'client_name' => 'General Requestor',
-            'contact_info' => '09123456789 / general@example.test',
+            'contact_number' => '09123456789',
             'department' => 'General Office',
             'description' => 'General request details',
             'meta' => [
+                'email_address' => 'general@example.test',
                 'equipment_type' => 'Laptop',
                 'brand_model' => 'Model G',
                 'serial_no' => 'GENERAL-SERIAL',
@@ -333,14 +408,16 @@ class TicketTest extends TestCase
         ])->assertRedirect();
 
         $ticket = Ticket::where('title', 'General Support Request')->firstOrFail();
-        $this->assertSame('09123456789 / general@example.test', $ticket->contact_number);
+        $this->assertSame('09123456789', $ticket->contact_number);
+        $this->assertSame('general@example.test', $ticket->form_data['email_address']);
 
         $jobOrder = view('tickets.print-general', ['ticket' => $ticket])->render();
         foreach ([
             'General Support Request',
             'General Requestor',
             'General Office',
-            '09123456789 / general@example.test',
+            '09123456789',
+            'general@example.test',
             'Laptop',
             'Model G',
             'GENERAL-SERIAL',

@@ -182,7 +182,7 @@
                     <td><div class="form-line">{{ $ticket->contact_number ?? '' }}</div></td>
                 </tr>
                 <tr>
-                    <td class="form-label">Email Address:</td>
+                    <td class="form-label">Email Address: (Please insert active email address)</td>
                     <td><div class="form-line">{{ data_get($ticket, 'form_data.email_address', $ticket->user->email ?? '') }}</div></td>
                 </tr>
             </table>

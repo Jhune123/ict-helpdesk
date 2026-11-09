@@ -150,7 +150,7 @@
                         <tr><td>Contact Number</td><td>{{ $ticket->contact_number ?? '' }}</td></tr>
                         <tr>
                             {{-- This cell stretches naturally to match the right side height --}}
-                            <td style="height: 100%;">Email Address</td>
+                            <td style="height: 100%;">Email Address (Please insert active email address)</td>
                             <td style="height: 100%;">{{ $ticket->meta['email_address'] ?? '' }}</td>
                         </tr>
                     </table>

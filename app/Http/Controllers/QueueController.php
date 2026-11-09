@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class QueueController extends Controller
 {
@@ -33,7 +36,9 @@ class QueueController extends Controller
             ->exists()
             || in_array($user->role, ['admin', 'it_staff'], true);
 
-        return view('queues.index', compact('queues', 'canOperateQueue'));
+        $itPersonnel = $this->itPersonnel();
+
+        return view('queues.index', compact('queues', 'canOperateQueue', 'itPersonnel'));
     }
 
     /**
@@ -41,19 +46,19 @@ class QueueController extends Controller
      */
     public function liveTV()
     {
-        // Identify which ticket is 'In Progress' for each specific staff member
-        $servingJhune  = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Jhune%')->first();
-        $servingReymar = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Reymar%')->first();
-        $servingBryan  = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Bryan%')->first();
-        $servingWalid  = Ticket::where('status', 'In Progress')->where('remarks', 'LIKE', '%Walid%')->first();
+        $itPersonnel = $this->itPersonnel();
+        $servingTickets = Ticket::query()
+            ->where('status', 'In Progress')
+            ->whereIn('remarks', $itPersonnel->map(fn ($person) => 'Serving at Counter: ' . $person->name))
+            ->get()
+            ->keyBy('remarks');
 
-        // Footer: Show the next 5 oldest 'Open' tickets
-        $nextQueues = Ticket::where('status', 'Open')
+        // Show every ticket still listed as unfinished in the queue dashboard.
+        $nextQueues = Ticket::whereIn('status', ['Open', 'In Progress'])
             ->orderBy('created_at', 'asc')
-            ->take(5)
             ->get();
 
-        return view('queues.live-tv', compact('servingJhune', 'servingReymar', 'servingBryan', 'servingWalid', 'nextQueues'));
+        return view('queues.live-tv', compact('itPersonnel', 'servingTickets', 'nextQueues'));
     }
 
     /**
@@ -61,16 +66,31 @@ class QueueController extends Controller
      */
     public function serve(Request $request, $id)
     {
+        $validated = $request->validate([
+            'counter' => ['required', 'string', Rule::in($this->itPersonnel()->pluck('name')->all())],
+        ]);
+
         $ticket = Ticket::findOrFail($id);
 
         // Update status and tag the personnel in remarks for the Live TV Monitor
         $ticket->update([
             'status' => 'In Progress',
-            'remarks' => 'Serving at Counter: ' . $request->counter,
+            'remarks' => 'Serving at Counter: ' . $validated['counter'],
             'updated_at' => Carbon::now('Asia/Manila'),
         ]);
 
-        return redirect()->back()->with('success', "Ticket {$ticket->ticket_number} called to {$request->counter}");
+        return redirect()->back()->with('success', "Ticket {$ticket->ticket_number} called to {$validated['counter']}");
+    }
+
+    private function itPersonnel(): Collection
+    {
+        return User::query()
+            ->where(function ($query) {
+                $query->whereHas('roles', fn ($roles) => $roles->where('name', 'it_staff'))
+                    ->orWhere('role', 'it_staff');
+            })
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     /**

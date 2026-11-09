@@ -124,7 +124,7 @@
             <td style="font-weight: bold;">{{ data_get($ticket, 'meta.serial_no', '') }}</td>
         </tr>
         <tr>
-            <td rowspan="2" class="align-top">Email Address</td>
+            <td rowspan="2" class="align-top">Email Address (Please insert active email address)</td>
             <td rowspan="2" class="align-top" style="font-weight: bold;">{{ data_get($ticket, 'meta.email_address', ($ticket->user->email ?? '')) }}</td>
             <td>Date Borrowed</td>
             <td style="font-weight: bold;">{{ data_get($ticket, 'meta.date_borrowed', '') }}</td>

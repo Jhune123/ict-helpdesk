@@ -111,6 +111,12 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
+        $emailOrNa = static function ($attribute, $value, $fail) {
+            if (is_string($value) && strcasecmp(trim($value), 'N/A') !== 0 && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                $fail('Please enter a valid email address or N/A.');
+            }
+        };
+
         $validated = $request->validate([
             'title'                       => 'nullable|string|max:255',
             'description'                 => 'nullable|string',
@@ -127,7 +133,21 @@ class TicketController extends Controller
             'contact_info'                => 'nullable|string|max:255',
             'remarks'                     => 'nullable|string|max:500',
             'form_data'                   => 'nullable|array',
+            'form_data.*'                 => 'nullable',
             'meta'                        => 'nullable|array', 
+            'meta.*'                      => 'nullable',
+            'meta.email_address'          => [
+                'nullable',
+                'string',
+                'max:255',
+                $emailOrNa,
+            ],
+            'form_data.email_address'     => [
+                'nullable',
+                'string',
+                'max:255',
+                $emailOrNa,
+            ],
             'status'                      => 'nullable|string', 
             'form_type'                   => 'nullable|string',
             'network_office'              => 'nullable|string|max:255',
@@ -188,6 +208,9 @@ class TicketController extends Controller
         if (!empty($validated['meta'])) {
             $formDataToSave = array_merge($formDataToSave, $validated['meta']);
         }
+        $equipmentType = $validated['equipment_type'] ?? ($formDataToSave['equipment_type'] ?? 'N/A');
+        $brandModel = $validated['brand_model'] ?? ($formDataToSave['brand_model'] ?? 'N/A');
+        $serialNumber = $validated['serial_no'] ?? ($formDataToSave['serial_no'] ?? 'N/A');
 
         $ticketDescription = $validated['description'] ?? 'N/A';
         if ($formTypeLower === 'multimedia_request') {
@@ -243,9 +266,9 @@ class TicketController extends Controller
             'ticket_number'   => $ticketNumber,
             'title'           => $validated['title'] ?? 'QMS Support Ticket',
             'description'     => $ticketDescription,
-            'equipment_type'  => $validated['equipment_type'] ?? 'N/A',
-            'brand_model'     => $validated['brand_model'] ?? 'N/A',
-            'serial_no'       => $validated['serial_no'] ?? 'N/A',
+            'equipment_type'  => $equipmentType,
+            'brand_model'     => $brandModel,
+            'serial_no'       => $serialNumber,
             'priority'        => $validated['priority'] ?? 'Normal',
             'category_id'     => $categoryId,
             'department'      => $department,
@@ -357,6 +380,12 @@ class TicketController extends Controller
             abort(403, 'Unauthorized.');
         }
 
+        $emailOrNa = static function ($attribute, $value, $fail) {
+            if (is_string($value) && strcasecmp(trim($value), 'N/A') !== 0 && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                $fail('Please enter a valid email address or N/A.');
+            }
+        };
+
         $validated = $request->validate([
             'title'           => 'required|string|max:255',
             'description'     => 'required|string',
@@ -374,7 +403,21 @@ class TicketController extends Controller
             'remarks'         => 'nullable|string|max:500',
             'status'          => 'required|string',
             'form_data'       => 'nullable|array', 
+            'form_data.*'     => 'nullable',
             'meta'            => 'nullable|array', 
+            'meta.*'          => 'nullable',
+            'meta.email_address' => [
+                'nullable',
+                'string',
+                'max:255',
+                $emailOrNa,
+            ],
+            'form_data.email_address' => [
+                'nullable',
+                'string',
+                'max:255',
+                $emailOrNa,
+            ],
         ]);
 
         $categoryId = $validated['category_id'] ?? $ticket->category_id;
@@ -439,6 +482,16 @@ class TicketController extends Controller
         if (!empty($validated['meta'])) {
             $updatedFormData = array_merge((array) $updatedFormData, $validated['meta']);
         }
+        $brandModel = array_key_exists('brand_model', $validated)
+            ? $validated['brand_model']
+            : (array_key_exists('brand_model', $updatedFormData)
+                ? $updatedFormData['brand_model']
+                : $ticket->getRawOriginal('brand_model'));
+        $serialNumber = array_key_exists('serial_no', $validated)
+            ? $validated['serial_no']
+            : (array_key_exists('serial_no', $updatedFormData)
+                ? $updatedFormData['serial_no']
+                : $ticket->getRawOriginal('serial_no'));
         foreach (['request_type', 'device_type'] as $checkboxField) {
             if (array_key_exists($checkboxField, $validated['form_data'] ?? [])) {
                 $values = $validated['form_data'][$checkboxField];
@@ -473,9 +526,9 @@ class TicketController extends Controller
         $ticket->update([
             'title'           => $validated['title'],
             'description'     => $description,
-            'equipment_type'  => $validated['equipment_type'] ?? $ticket->getRawOriginal('equipment_type'),
-            'brand_model'     => $validated['brand_model'] ?? $ticket->getRawOriginal('brand_model'),
-            'serial_no'       => $validated['serial_no'] ?? $ticket->getRawOriginal('serial_no'),
+            'equipment_type'  => $validated['equipment_type'] ?? data_get($updatedFormData, 'equipment_type', $ticket->getRawOriginal('equipment_type')),
+            'brand_model'     => $brandModel,
+            'serial_no'       => $serialNumber,
             'priority'        => $validated['priority'] ?? $ticket->priority,
             'category_id'     => $categoryId,
             'department'      => $validated['department'] ?? $ticket->getRawOriginal('department'),

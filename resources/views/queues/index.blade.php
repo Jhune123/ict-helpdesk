@@ -42,11 +42,11 @@
                     <td class="p-4 no-print">
                         @if($ticket->status === 'Open')
                             <div class="flex gap-1 justify-center">
-                                @foreach(['Jhune', 'Reymar', 'Bryan', 'Walid'] as $staff)
+                                @foreach($itPersonnel as $staff)
                                 <form action="{{ route('queues.serve', $ticket->id) }}" method="POST">
                                     @csrf @method('PATCH')
-                                    <input type="hidden" name="counter" value="{{ $staff }}">
-                                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase">{{ $staff }}</button>
+                                    <input type="hidden" name="counter" value="{{ $staff->name }}">
+                                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase">{{ $staff->name }}</button>
                                 </form>
                                 @endforeach
                             </div>

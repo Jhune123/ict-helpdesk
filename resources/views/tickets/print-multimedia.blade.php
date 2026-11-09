@@ -171,7 +171,7 @@
         <div class="field-row">User’s Full Name: <span class="underline-value" style="width: 70%;">{{ $ticket->client_name ?? '' }}</span></div>
         <div class="field-row">User’s Office Name & Address: <span class="underline-value" style="width: 60%;">{{ data_get($ticket, 'form_data.office_address', $ticket->department ?? '') }}</span></div>
         <div class="field-row">User’s Contact Number: <span class="underline-value" style="width: 65%;">{{ $ticket->contact_number ?? '' }}</span></div>
-        <div class="field-row">Email Address: <span class="underline-value" style="width: 72%;">{{ data_get($ticket, 'form_data.email_address', data_get($ticket, 'form_data.email', $ticket->user->email ?? '')) }}</span></div>
+        <div class="field-row">Email Address: (Please insert active email address) <span class="underline-value" style="width: 72%;">{{ data_get($ticket, 'form_data.email_address', data_get($ticket, 'form_data.email', $ticket->user->email ?? '')) }}</span></div>
     </div>
 
     @php

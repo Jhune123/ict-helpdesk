@@ -124,7 +124,7 @@
                     <td class="line-cell">{{ $ticket->contact_number ?? 'N/A' }}</td>
                 </tr>
                 <tr>
-                    <td class="label-cell">Email Address:</td>
+                    <td class="label-cell">Email Address: (Please insert active email address)</td>
                     <td class="line-cell">{{ $ticket->user->email ?? '' }}</td>
                 </tr>
             </table>
@@ -434,7 +434,7 @@
                     <td class="line-cell">{{ $ticket->contact_number ?? 'N/A' }}</td>
                 </tr>
                 <tr>
-                    <td class="label-cell">Email Address:</td>
+                    <td class="label-cell">Email Address: (Please insert active email address)</td>
                     <td class="line-cell">{{ $ticket->user->email ?? '' }}</td>
                 </tr>
             </table>
@@ -567,7 +567,7 @@
                     <td class="line-cell">{{ $ticket->contact_number ?? '' }}</td>
                 </tr>
                 <tr>
-                    <td class="label-cell">Email Address:</td>
+                    <td class="label-cell">Email Address: (Please insert active email address)</td>
                     <td class="line-cell">{{ $ticket->user->email ?? '' }}</td>
                 </tr>
             </table>

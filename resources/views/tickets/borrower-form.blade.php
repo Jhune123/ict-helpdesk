@@ -59,7 +59,7 @@
                     <tr><td style="border: none; border-bottom: 1px solid black; width: 35%; padding: 7px 8px;">Full Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ data_get($formData, 'full_name', $ticket->client_name ?? '') }}</td></tr>
                     <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Office Name</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ data_get($formData, 'office_name', $ticket->department ?? 'N/A') }}</td></tr>
                     <tr><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">Contact Number</td><td style="border: none; border-bottom: 1px solid black; padding: 7px 8px;">{{ $ticket->contact_number ?? 'N/A' }}</td></tr>
-                    <tr><td style="border: none; height: 35px; padding: 7px 8px;">Email Address</td><td style="border: none; padding: 7px 8px;">{{ data_get($formData, 'email_address', 'N/A') }}</td></tr>
+                    <tr><td style="border: none; height: 35px; padding: 7px 8px;">Email Address (Please insert active email address)</td><td style="border: none; padding: 7px 8px;">{{ data_get($formData, 'email_address', 'N/A') }}</td></tr>
                 </table>
             </td>
             <td style="padding: 0;">

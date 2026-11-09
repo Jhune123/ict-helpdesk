@@ -112,7 +112,7 @@
     </table>
     <table class="form-table">
         <tr>
-            <td class="label-cell">Email Address:</td>
+            <td class="label-cell">Email Address: (Please insert active email address)</td>
             <td class="line-cell">{{ data_get($ticket, 'form_data.email_address', data_get($ticket, 'form_data.email', $ticket->user->email ?? '')) }}</td>
         </tr>
     </table>

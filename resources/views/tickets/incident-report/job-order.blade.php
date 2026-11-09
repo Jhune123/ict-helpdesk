@@ -276,7 +276,7 @@
     </table>
     <table class="form-grid">
         <tr>
-            <td class="lbl" style="width: 16%;">Email Address:</td>
+            <td class="lbl" style="width: 16%;">Email Address: (Please insert active email address)</td>
             <td class="val-line" style="width: 84%;">{{ $formData['email_address'] ?? $formData['email'] ?? $ticket->user->email ?? '' }}</td>
         </tr>
     </table>

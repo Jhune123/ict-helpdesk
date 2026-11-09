@@ -50,8 +50,8 @@
                         <input type="text" name="contact_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700">Email Address</label>
-                        <input type="email" name="email" value="{{ auth()->user()->email }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 bg-gray-50" readonly required>
+                        <label class="block text-sm font-semibold text-gray-700">Email Address (Please insert active email address)</label>
+                        <input type="text" inputmode="email" name="meta[email_address]" value="{{ auth()->user()->email }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 bg-gray-50" required>
                     </div>
                 </div>
             </fieldset>

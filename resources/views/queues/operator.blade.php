@@ -87,30 +87,13 @@
                     <td class="p-4 no-print">
                         @if($queue->status === 'waiting')
                             <div class="grid grid-cols-2 gap-2 w-full max-w-xs mx-auto">
-                                {{-- Counter Buttons --}}
-                                <form action="{{ route('queues.serve',$queue->id) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="counter" value="Jhune">
-                                    <button class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold uppercase">Jhune</button>
-                                </form>
-
-                                <form action="{{ route('queues.serve',$queue->id) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="counter" value="Reymar">
-                                    <button class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-xs font-bold uppercase">Reymar</button>
-                                </form>
-
-                                <form action="{{ route('queues.serve',$queue->id) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="counter" value="Bryan">
-                                    <button class="w-full py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-xs font-bold uppercase">Bryan</button>
-                                </form>
-
-                                <form action="{{ route('queues.serve',$queue->id) }}" method="POST">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="counter" value="Walid">
-                                    <button class="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white rounded text-xs font-bold uppercase">Walid</button>
-                                </form>
+                                @foreach($itPersonnel as $staff)
+                                    <form action="{{ route('queues.serve', $queue->id) }}" method="POST">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="counter" value="{{ $staff->name }}">
+                                        <button class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-bold uppercase">{{ $staff->name }}</button>
+                                    </form>
+                                @endforeach
                             </div>
                         @elseif($queue->status === 'serving')
                             <form action="{{ route('queues.complete',$queue->id) }}" method="POST">

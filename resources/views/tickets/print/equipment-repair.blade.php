@@ -74,7 +74,7 @@
                 <span class="border-b border-black px-4">{{ $ticket->user->contact ?? '_________________________' }}</span>
             </div>
             <div>
-                <span class="font-semibold">Email Address:</span> 
+                <span class="font-semibold">Email Address: (Please insert active email address)</span>
                 <span class="border-b border-black px-4">{{ $ticket->user->email ?? '_________________________' }}</span>
             </div>
         </div>

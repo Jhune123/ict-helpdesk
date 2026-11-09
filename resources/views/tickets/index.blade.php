@@ -97,6 +97,7 @@
                     <th class="px-3 py-3 text-left">Ticket #</th>
                     <th class="px-3 py-3 text-left">Title</th>
                     <th class="px-3 py-3 text-left">Description</th>
+                    <th class="px-3 py-3 text-left">Equipment Type</th>
                     <th class="px-3 py-3 text-left">Brand / Model</th>
                     <th class="px-3 py-3 text-left">Serial No.</th>
                     <th class="px-3 py-3 text-left">Category</th>
@@ -124,6 +125,7 @@
                     <td class="px-3 py-2">{{ $ticket->title }}</td>
                     
                     <td class="max-w-md whitespace-pre-wrap break-words px-3 py-2 align-top">{{ $ticket->description ?: 'N/A' }}</td>
+                    <td class="px-3 py-2">{{ $ticket->equipment_type ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->brand_model ?? '-' }}</td>
                     <td class="px-3 py-2 font-mono text-xs">{{ $ticket->serial_no ?? '-' }}</td>
                     <td class="px-3 py-2">{{ $ticket->category->name ?? '-' }}</td>

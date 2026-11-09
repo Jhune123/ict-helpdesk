@@ -50,10 +50,10 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Email Address</label>
-                            <input type="email" name="reporter_email" value="{{ old('reporter_email', Auth::user()->email ?? '') }}" required
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Email Address (Please insert active email address)</label>
+                            <input type="text" inputmode="email" name="meta[email_address]" value="{{ old('meta.email_address', Auth::user()->email ?? '') }}" required
                                 class="w-full rounded-xl border-slate-200 bg-slate-50 text-slate-800 focus:border-rose-500 focus:ring-rose-500 font-medium text-sm p-3 shadow-inner border">
-                            @error('reporter_email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            @error('meta.email_address') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <div>

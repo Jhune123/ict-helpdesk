@@ -102,7 +102,7 @@
                     <td style="width: 33%; padding: 5px;"><span class="doc-data">{{ $incident->contact_number ?? 'N/A' }}</span></td>
                 </tr>
                 <tr>
-                    <td style="padding: 5px 0;">Email Address:</td>
+                    <td style="padding: 5px 0;">Email Address: (Please insert active email address)</td>
                     <td colspan="3" style="padding: 5px;"><span class="doc-data">{{ $incident->user->email ?? $incident->reporter_email }}</span></td>
                 </tr>
             </table>
