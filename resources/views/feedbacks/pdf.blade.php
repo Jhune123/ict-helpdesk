@@ -4,13 +4,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Client Satisfaction Survey Report</title>
     <style>
+        @page { size: A4 portrait; margin: 10mm; }
+
         /* 🌟 DejaVu Sans: Stops checkmarks and symbols from turning into '?' marks */
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #333; line-height: 1.4; }
+        .report-sheet { width: 100%; }
+        .preview-actions { display: none; }
         
         /* Official Header Table Styles */
         .header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         .header-table th, .header-table td { border: 1px solid #000; padding: 6px; vertical-align: middle; }
-        .header-table .logos { text-align: center; width: 25%; }
+        .header-table .logos { text-align: center; width: 25%; white-space: nowrap; }
+        .header-table .logos img { width: 50px; height: auto; max-height: 62px; object-fit: contain; vertical-align: middle; }
         .header-table .titles { text-align: center; width: 45%; }
         .header-table .doc-meta { width: 15%; font-size: 10px; }
         .header-table .doc-val { width: 15%; font-size: 10px; text-align: center; }
@@ -33,15 +38,66 @@
         /* Green colored check symbol formatting */
         .choice-box { font-weight: bold; color: #155724; font-size: 14px; margin-right: 5px; }
         .footer-date { text-align: right; font-size: 9px; color: #777; margin-top: 20px; }
+
+        @media screen {
+            body { margin: 0; padding: 24px; background: #e5e7eb; }
+            .preview-actions {
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                max-width: 210mm;
+                margin: 0 auto 16px;
+            }
+            .preview-actions a, .preview-actions button {
+                border: 0;
+                border-radius: 6px;
+                padding: 10px 16px;
+                color: #fff;
+                font: bold 14px Arial, sans-serif;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            .preview-print { background: #047857; }
+            .preview-download { background: #2563eb; }
+            .report-sheet {
+                box-sizing: border-box;
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0 auto;
+                padding: 10mm;
+                background: #fff;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+            }
+        }
+
+        @media print {
+            .preview-actions { display: none !important; }
+            .report-sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+        }
     </style>
 </head>
 <body>
 
+    @if($printPreview)
+        <div class="preview-actions">
+            <button type="button" class="preview-print" onclick="window.print()">Print</button>
+            <a class="preview-download" href="{{ route('feedbacks.download-pdf', $feedback->id) }}">Download PDF</a>
+        </div>
+    @endif
+
+    <main class="report-sheet">
     <table class="header-table">
         <tr>
             <td rowspan="4" class="logos">
-                <img src="{{ public_path('image/KSU-logo.png') }}" style="width: 50px; height: auto; margin-right: 5px;">
-                <img src="{{ public_path('image/Bagong-Pilipinas.png') }}" style="width: 50px; height: auto;">
+                <img
+                    src="{{ $printPreview ? asset('image/KSU-logo.png') : public_path('image/KSU-logo.png') }}"
+                    alt="Kalinga State University logo"
+                    style="margin-right: 5px;"
+                >
+                <img
+                    src="{{ $printPreview ? asset('image/Bagong-Pilipinas.png') : public_path('image/Bagong-Pilipinas.png') }}"
+                    alt="Bagong Pilipinas logo"
+                >
             </td>
             <td rowspan="4" class="titles">
                 <div class="uni-name">Kalinga State University</div>
@@ -155,6 +211,7 @@
     <div class="footer-date">
         Generated automatically by KSU ICTO Helpdesk System on {{ now()->format('Y-m-d H:i:s') }}
     </div>
+    </main>
 
 </body>
 </html>

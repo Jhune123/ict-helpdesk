@@ -17,7 +17,7 @@
                 <h3 class="text-lg font-bold text-blue-900">Ticket Reference: #{{ $feedback->ticket->ticket_number ?? 'N/A' }}</h3>
                 <p class="text-sm text-blue-700 mt-1">Submitted on: {{ $feedback->created_at->format('F d, Y - h:i A') }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 {{-- 👇 SECURED: Only Admin and IT Staff can see the Edit Action Button --}}
                 @hasanyrole('admin|it_staff')
                     <a href="{{ route('feedbacks.edit', $feedback->id) }}" class="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded shadow hover:bg-amber-600 transition flex items-center gap-2">
@@ -27,6 +27,13 @@
                         ✏️ Edit Feedback
                     </a>
                 @endhasanyrole
+
+                <a href="{{ route('feedbacks.print', $feedback->id) }}" target="_blank" rel="noopener" class="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded shadow hover:bg-emerald-700 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"></path>
+                    </svg>
+                    Print Preview
+                </a>
 
                 <a href="{{ route('feedbacks.download-pdf', $feedback->id) }}" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow hover:bg-blue-700 transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

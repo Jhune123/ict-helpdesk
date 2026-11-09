@@ -136,6 +136,7 @@ Route::middleware('auth')->group(function () {
     /* 📝 FEEDBACK SYSTEM */
     Route::get('/feedbacks/create/{ticket}', [FeedbackController::class, 'create'])->name('feedbacks.create');
     Route::post('/feedbacks/store/{ticket}', [FeedbackController::class, 'store'])->name('feedbacks.store');
+    Route::get('/feedbacks/{feedback}/print', [FeedbackController::class, 'printPreview'])->name('feedbacks.print');
     Route::get('/feedbacks/{feedback}/download-pdf', [FeedbackController::class, 'downloadPdf'])->name('feedbacks.download-pdf');
 
     Route::get('/feedbacks', [FeedbackController::class, 'index'])->name('feedbacks.index');

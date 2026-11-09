@@ -136,6 +136,19 @@ class FeedbackController extends Controller
     }
 
     /**
+     * Show the official feedback report in a print-ready A4 layout.
+     */
+    public function printPreview(Feedback $feedback)
+    {
+        $feedback->load('ticket');
+
+        return view('feedbacks.pdf', [
+            'feedback' => $feedback,
+            'printPreview' => true,
+        ] + $this->feedbackChoiceMappings());
+    }
+
+    /**
      * ✏️ Show the form for editing the specified feedback
      * Handled by GET: /feedbacks/{feedback}/edit
      */
@@ -225,32 +238,44 @@ class FeedbackController extends Controller
     {
         $feedback->load('ticket');
 
-        // Human-readable mappings for the Citizen's Charter responses
-        $cc1_choices = [
-            1 => "I know what a CC is and I saw this office's CC.",
-            2 => "I know what a CC is but I did NOT see this office's CC.",
-            3 => "I learned of the CC only when I saw this office's CC.",
-            4 => "I do not know what a CC is and I did not see one in this office."
-        ];
+        $pdf = Pdf::loadView('feedbacks.pdf', [
+            'feedback' => $feedback,
+            'printPreview' => false,
+        ] + $this->feedbackChoiceMappings())->setPaper('A4', 'portrait');
 
-        $cc2_choices = [
-            1 => "Easy to see", 2 => "Somewhat easy to see", 3 => "Difficult to see", 
-            4 => "Not visible at all", 5 => "N/A"
-        ];
-
-        $cc3_choices = [
-            1 => "Helped very much", 2 => "Somewhat helped", 3 => "Did not help", 4 => "N/A"
-        ];
-
-        $sqd_choices = [
-            5 => "Strongly Agree", 4 => "Agree", 3 => "Neither", 
-            2 => "Disagree", 1 => "Strongly Disagree", 0 => "N/A"
-        ];
-
-        // Share data with the dedicated print view
-        $pdf = Pdf::loadView('feedbacks.pdf', compact('feedback', 'cc1_choices', 'cc2_choices', 'cc3_choices', 'sqd_choices'));
-        
-        // Returns the downloadable file stream
         return $pdf->download('KSU-CSM-Feedback-'.$feedback->ticket->ticket_number.'.pdf');
+    }
+
+    private function feedbackChoiceMappings(): array
+    {
+        return [
+            'cc1_choices' => [
+                1 => "I know what a CC is and I saw this office's CC.",
+                2 => "I know what a CC is but I did NOT see this office's CC.",
+                3 => "I learned of the CC only when I saw this office's CC.",
+                4 => "I do not know what a CC is and I did not see one in this office.",
+            ],
+            'cc2_choices' => [
+                1 => 'Easy to see',
+                2 => 'Somewhat easy to see',
+                3 => 'Difficult to see',
+                4 => 'Not visible at all',
+                5 => 'N/A',
+            ],
+            'cc3_choices' => [
+                1 => 'Helped very much',
+                2 => 'Somewhat helped',
+                3 => 'Did not help',
+                4 => 'N/A',
+            ],
+            'sqd_choices' => [
+                5 => 'Strongly Agree',
+                4 => 'Agree',
+                3 => 'Neither',
+                2 => 'Disagree',
+                1 => 'Strongly Disagree',
+                0 => 'N/A',
+            ],
+        ];
     }
 }
