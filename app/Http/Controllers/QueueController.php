@@ -52,13 +52,18 @@ class QueueController extends Controller
             ->whereIn('remarks', $itPersonnel->map(fn ($person) => 'Serving at Counter: ' . $person->name))
             ->get()
             ->keyBy('remarks');
+        $servingAnnouncements = $servingTickets->map(fn ($ticket, $remarks) => [
+            'id' => $ticket->id,
+            'ticketNumber' => $ticket->ticket_number,
+            'counter' => str_replace('Serving at Counter: ', '', $remarks),
+        ])->values();
 
         // Show every ticket still listed as unfinished in the queue dashboard.
         $nextQueues = Ticket::whereIn('status', ['Open', 'In Progress'])
             ->orderBy('created_at', 'asc')
             ->get();
 
-        return view('queues.live-tv', compact('itPersonnel', 'servingTickets', 'nextQueues'));
+        return view('queues.live-tv', compact('itPersonnel', 'servingTickets', 'servingAnnouncements', 'nextQueues'));
     }
 
     /**

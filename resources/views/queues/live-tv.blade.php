@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="5"> 
     <title>ICTO Live Queuing Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -18,15 +17,17 @@
 </head>
 <body class="bg-slate-900 text-white h-screen overflow-hidden flex flex-col">
 
-    {{-- Audio Element --}}
-    <audio id="callSound" src="{{ asset('sounds/punch-gaming-sound-effect-hd_RzlG1GE.mp3') }}" preload="auto"></audio>
-
     {{-- HEADER --}}
     <div class="bg-slate-800 p-6 shadow-2xl flex justify-between items-center border-b-4 border-orange-500">
         <h1 class="text-5xl font-black tracking-tighter text-orange-500">ICTO LIVE MONITOR</h1>
-        <div class="text-right">
-            <p class="text-3xl font-mono">{{ date('h:i:s A') }}</p>
-            <p class="text-sm uppercase text-slate-400">{{ date('l, F d, Y') }}</p>
+        <div class="flex items-center gap-6">
+            <button id="enableAnnouncements" type="button" class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-lg font-bold">
+                Enable announcements
+            </button>
+            <div class="text-right">
+                <p class="text-3xl font-mono">{{ date('h:i:s A') }}</p>
+                <p class="text-sm uppercase text-slate-400">{{ date('l, F d, Y') }}</p>
+            </div>
         </div>
     </div>
 
@@ -64,22 +65,102 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get current IDs of tickets being served
-            const currentServing = @json($servingTickets->pluck('id')->sort()->values()->implode('|'));
+            const servingTickets = @json($servingAnnouncements);
+            const currentAssignments = servingTickets.map(ticket => `${ticket.id}:${ticket.counter}`).sort();
+            const ticketStateKey = 'icto_live_monitor_serving_ids';
+            const announcementsEnabledKey = 'icto_live_monitor_announcements_enabled';
+            const enableButton = document.getElementById('enableAnnouncements');
+            const previousIds = localStorage.getItem(ticketStateKey);
 
-            const previousServing = localStorage.getItem('last_call_ids');
-
-            // Play sound if a new ticket ID appears in the list
-            if (previousServing && previousServing !== currentServing) {
-                // Only play if the currentServing has at least one actual ticket (not just empty pipes)
-                if (currentServing.replace(/\|/g, '').length > 0) {
-                    const audio = document.getElementById('callSound');
-                    audio.play().catch(e => console.log("Interaction required for audio."));
+            function announceNewTickets() {
+                if (!previousIds) {
+                    localStorage.setItem(ticketStateKey, currentAssignments.join('|'));
+                    return;
                 }
+
+                const previouslyServing = previousIds.split('|');
+                const newlyServing = servingTickets.filter(ticket =>
+                    !previouslyServing.includes(`${ticket.id}:${ticket.counter}`)
+                );
+                localStorage.setItem(ticketStateKey, currentAssignments.join('|'));
+
+                if (localStorage.getItem(announcementsEnabledKey) !== 'true' || newlyServing.length === 0) {
+                    return;
+                }
+
+                newlyServing.forEach((ticket, index) => {
+                    window.setTimeout(() => {
+                        playBell();
+                        window.setTimeout(() => {
+                            if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+                                enableButton.textContent = 'Voice announcements unavailable';
+                                return;
+                            }
+
+                            const announcement = new SpeechSynthesisUtterance(
+                                `Now serving ticket ${ticket.ticketNumber}. ${ticket.counter}, please proceed to the counter.`
+                            );
+                            window.speechSynthesis.speak(announcement);
+                        }, 700);
+                    }, index * 3000);
+                });
             }
 
-            // Store current state
-            localStorage.setItem('last_call_ids', currentServing);
+            function playBell() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) {
+                    return;
+                }
+
+                const context = new AudioContext();
+                const now = context.currentTime;
+
+                [880, 1174].forEach((frequency, index) => {
+                    const oscillator = context.createOscillator();
+                    const volume = context.createGain();
+                    const start = now + index * 0.16;
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = frequency;
+                    volume.gain.setValueAtTime(0.0001, start);
+                    volume.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+                    volume.gain.exponentialRampToValueAtTime(0.0001, start + 0.6);
+                    oscillator.connect(volume);
+                    volume.connect(context.destination);
+                    oscillator.start(start);
+                    oscillator.stop(start + 0.65);
+                });
+
+                window.setTimeout(() => context.close(), 1000);
+            }
+
+            enableButton.addEventListener('click', function() {
+                localStorage.setItem(announcementsEnabledKey, 'true');
+                enableButton.disabled = true;
+                enableButton.textContent = 'Announcements enabled';
+                enableButton.classList.replace('bg-orange-600', 'bg-green-700');
+                enableButton.classList.replace('hover:bg-orange-700', 'hover:bg-green-800');
+
+                if ('speechSynthesis' in window && 'SpeechSynthesisUtterance' in window) {
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(new SpeechSynthesisUtterance('ICTO live monitor announcements enabled.'));
+                } else {
+                    enableButton.textContent = 'Voice announcements unavailable';
+                }
+                announceNewTickets();
+            });
+
+            if (localStorage.getItem(announcementsEnabledKey) === 'true') {
+                enableButton.disabled = true;
+                enableButton.textContent = 'Announcements enabled';
+                enableButton.classList.replace('bg-orange-600', 'bg-green-700');
+                enableButton.classList.replace('hover:bg-orange-700', 'hover:bg-green-800');
+                announceNewTickets();
+            } else if (!previousIds) {
+                localStorage.setItem(ticketStateKey, currentAssignments.join('|'));
+            }
+
+            window.setTimeout(() => window.location.reload(), 5000);
         });
     </script>
 

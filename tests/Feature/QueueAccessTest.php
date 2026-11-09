@@ -121,6 +121,7 @@ class QueueAccessTest extends TestCase
         $this->get(route('queues.live-tv'))
             ->assertOk()
             ->assertSeeText('ICTO LIVE MONITOR')
+            ->assertSeeText('Enable announcements')
             ->assertSeeText($additionalStaff->name)
             ->assertSeeText('Legacy Monitor Staff')
             ->assertSeeText($ticket->ticket_number)
