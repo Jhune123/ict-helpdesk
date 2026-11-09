@@ -4,50 +4,50 @@
     <meta charset="UTF-8">
     <title>Network Request Form - {{ $ticket->ticket_number ?? '' }}</title>
     <style>
-        @page { margin: 40px 50px; }
-        body { font-family: Arial, sans-serif; font-size: 12px; color: #000; line-height: 1.4; }
+        @page { size: A4 portrait; margin: 8mm; }
+        body { font-family: Arial, sans-serif; font-size: 9pt; color: #000; line-height: 1.15; margin: 0; }
         
         /* ---------------- Header Table ---------------- */
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #000; }
-        .header-table th, .header-table td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle; }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #000; }
+        .header-table th, .header-table td { border: 1px solid #000; padding: 3px; text-align: center; vertical-align: middle; }
         
         .logo-cell { width: 26%; white-space: nowrap; }
         .logo-img { max-width: 65px; height: auto; display: inline-block; vertical-align: middle; margin: 0 4px; }
         
         .title-cell { width: 44%; font-weight: bold; }
-        .inst-name { font-size: 16px; font-weight: bold; }
-        .qms-text { font-size: 11px; text-transform: uppercase; margin-top: 3px; font-weight: bold; }
-        .doc-title { font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        .inst-name { font-size: 12pt; font-weight: bold; }
+        .qms-text { font-size: 8pt; text-transform: uppercase; margin-top: 2px; font-weight: bold; }
+        .doc-title { font-size: 10pt; font-weight: bold; text-transform: uppercase; }
         
         .info-cell { width: 30%; text-align: left; font-size: 10px; padding-left: 10px; }
         
         /* ---------------- Document Body ---------------- */
-        .req-no { text-align: left; font-size: 14px; margin-bottom: 2px; }
+        .req-no { text-align: left; font-size: 10pt; margin-bottom: 2px; }
         .req-no-line { border-bottom: 1px solid #000; display: inline-block; width: 250px; text-align: center; font-weight: bold;}
-        .sub-header { text-align: left; font-style: italic; font-size: 11px; margin-bottom: 25px; padding-left: 100px; }
+        .sub-header { text-align: left; font-style: italic; font-size: 8pt; margin-bottom: 8px; padding-left: 75px; }
         
-        .section-title { font-weight: bold; font-size: 12px; margin-top: 15px; margin-bottom: 8px; text-transform: uppercase; }
+        .section-title { font-weight: bold; font-size: 9pt; margin-top: 7px; margin-bottom: 3px; text-transform: uppercase; }
         
         /* ---------------- Form Rows & Lines ---------------- */
-        .form-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .form-table td { padding: 4px 0; vertical-align: bottom; }
+        .form-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .form-table td { padding: 2px 0; vertical-align: bottom; }
         .label-cell { white-space: nowrap; padding-right: 5px; }
-        .line-cell { border-bottom: 1px solid #000; width: 100%; text-align: left; padding-left: 5px; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; }
+        .line-cell { border-bottom: 1px solid #000; width: 100%; text-align: left; padding-left: 3px; font-family: 'Courier New', Courier, monospace; font-size: 9pt; font-weight: bold; }
         
         /* ---------------- Checkboxes ---------------- */
-        .checkbox-container { margin-left: 20px; margin-bottom: 15px; }
+        .checkbox-container { margin-left: 12px; margin-bottom: 5px; }
         .checkbox-table { width: 100%; border-collapse: collapse; }
-        .checkbox-table td { padding: 4px 0; font-size: 12px; vertical-align: middle; }
-        .box { display: inline-block; width: 14px; height: 14px; border: 1px solid #000; text-align: center; line-height: 14px; font-size: 11px; font-weight: bold; margin-right: 6px; vertical-align: middle; }
+        .checkbox-table td { padding: 2px 0; font-size: 8.5pt; vertical-align: middle; }
+        .box { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; text-align: center; line-height: 11px; font-size: 9px; font-weight: bold; margin-right: 4px; vertical-align: middle; }
         
         /* ---------------- Signatures & Footer ---------------- */
-        .footer-note { margin-top: 25px; text-align: justify; font-size: 11px; line-height: 1.4; }
+        .footer-note { margin-top: 8px; text-align: justify; font-size: 8pt; line-height: 1.15; }
         .signature-block { text-align: center; width: 280px; margin-top: 10px; }
-        .signature-line { border-bottom: 1px solid #000; height: 25px; margin-bottom: 5px; }
+        .signature-line { border-bottom: 1px solid #000; height: 14px; margin-bottom: 3px; }
         .signature-subtitle { font-size: 12px; color: #333; }
         
-        .acknowledgement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .acknowledgement-table td { padding: 5px 0; vertical-align: bottom; }
+        .acknowledgement-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .acknowledgement-table td { padding: 2px 0; vertical-align: bottom; }
     </style>
 </head>
 <body>

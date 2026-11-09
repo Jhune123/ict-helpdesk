@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Order - {{ $ticket->ticket_number ?? 'KSU-ICTO-TIC' }}</title>
     <style>
+        @page { size: A4 portrait; margin: 8mm; }
         body {
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-size: 9pt;
             color: #000;
             background: #fff;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
         .container {
             width: 100%;
@@ -22,11 +23,11 @@
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 7px;
         }
         .header-table th, .header-table td {
             border: 1px solid #000;
-            padding: 10px;
+            padding: 4px;
             text-align: center;
         }
         .header-logo {
@@ -48,25 +49,25 @@
             margin: 5px 0;
         }
         .header-title h3 {
-            font-size: 13px;
+            font-size: 10px;
             text-transform: uppercase;
         }
         .header-meta {
             width: 30%;
             text-align: left !important;
-            font-size: 12px;
+            font-size: 8pt;
         }
 
         /* Form Sections */
         .request-no {
             font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 20px;
+            font-size: 10pt;
+            margin-bottom: 6px;
         }
         .section-title {
             font-weight: bold;
-            margin-top: 25px;
-            margin-bottom: 10px;
+            margin-top: 8px;
+            margin-bottom: 3px;
             text-transform: uppercase;
         }
         
@@ -74,10 +75,10 @@
         .form-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 4px;
         }
         .form-table td {
-            padding: 5px 0;
+            padding: 2px 0;
             vertical-align: bottom;
         }
         .form-label {
@@ -88,31 +89,31 @@
             border-bottom: 1px solid #000;
             width: 100%;
             display: inline-block;
-            min-height: 18px;
+            min-height: 12px;
         }
 
         /* Problem Description Area */
         .problem-lines {
             width: 100%;
             border-bottom: 1px solid #000;
-            height: 25px;
-            margin-bottom: 5px;
+            height: 14px;
+            margin-bottom: 3px;
         }
 
         /* Disclaimer Text */
         .disclaimer {
-            font-size: 11px;
+            font-size: 8pt;
             text-align: justify;
-            margin-top: 25px;
-            margin-bottom: 25px;
-            line-height: 1.4;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            line-height: 1.15;
         }
         
         /* Signature Layout Elements */
         .signature-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 6px;
         }
         .signature-block {
             text-align: center;
@@ -120,11 +121,11 @@
         }
         .signature-line {
             border-bottom: 1px solid #000;
-            height: 30px;
-            margin-bottom: 5px;
+            height: 16px;
+            margin-bottom: 3px;
         }
         .signature-subtitle {
-            font-size: 12px;
+            font-size: 8pt;
             color: #333;
         }
     </style>

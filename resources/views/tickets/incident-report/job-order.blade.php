@@ -27,6 +27,7 @@
 
         /* Screen Print Button (Hidden on PDF render and Print) */
         .controls { 
+            display: none;
             text-align: center;
             margin-bottom: 15px; 
         }

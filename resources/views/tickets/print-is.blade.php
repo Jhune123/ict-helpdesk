@@ -3,22 +3,23 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
+        @page { size: A4 portrait; margin: 8mm; }
         body {
             font-family: "DejaVu Sans", Arial, sans-serif;
-            line-height: 1.6;
-            margin: 40px;
-            font-size: 13px;
+            line-height: 1.15;
+            margin: 0;
+            font-size: 9pt;
             color: #000;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 7px;
             text-align: center;
         }
         .header-table td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 4px;
         }
         .header-logo { 
             width: 26%; 
@@ -44,36 +45,36 @@
             vertical-align: middle; 
             padding-left: 10px; 
         }
-        .form-section { margin-top: 20px; }
+        .form-section { margin-top: 7px; }
         .form-section h3 { 
-            margin-bottom: 5px; 
-            font-size: 14px; 
+            margin-bottom: 3px;
+            font-size: 10pt;
             font-weight: bold; 
             text-transform: uppercase;
         }
-        .field-row { margin-bottom: 8px; }
+        .field-row { margin-bottom: 3px; }
         .underline-value {
             display: inline-block;
             border-bottom: 1px solid #000;
             padding: 0 5px;
             font-weight: bold;
         }
-        .checklist-container { margin-left: 40px; margin-top: 10px; }
-        .checklist-table td { padding: 4px 0; vertical-align: middle; }
+        .checklist-container { margin-left: 20px; margin-top: 4px; }
+        .checklist-table td { padding: 2px 0; vertical-align: middle; }
         .check-box-cell {
-            width: 18px;
-            height: 18px;
+            width: 13px;
+            height: 13px;
             border: 1px solid #000;
             text-align: center;
             display: inline-block;
-            line-height: 18px;
-            font-size: 14px;
+            line-height: 13px;
+            font-size: 10px;
         }
         .check-label-cell { padding-left: 10px !important; }
         .footer-note {
-            margin-top: 25px;
+            margin-top: 8px;
             text-align: justify;
-            font-size: 12px;
+            font-size: 8pt;
         }
         
         /* Signature Layout Elements */
@@ -84,8 +85,8 @@
         }
         .signature-line {
             border-bottom: 1px solid #000;
-            height: 25px;
-            margin-bottom: 5px;
+            height: 14px;
+            margin-bottom: 3px;
         }
         .signature-subtitle {
             font-size: 12px;
@@ -94,10 +95,10 @@
         .form-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 6px;
         }
         .form-table td {
-            padding: 5px 0;
+            padding: 2px 0;
             vertical-align: bottom;
         }
         .form-label {
@@ -108,7 +109,7 @@
             border-bottom: 1px solid #000;
             width: 100%;
             display: inline-block;
-            min-height: 18px;
+            min-height: 12px;
         }
     </style>
 </head>

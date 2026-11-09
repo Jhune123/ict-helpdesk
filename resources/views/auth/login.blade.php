@@ -94,6 +94,13 @@
                         Log in
                     </button>
                 </div>
+
+                <p class="mt-4 text-center text-xs text-gray-500" style="margin-top: 1rem; text-align: center; color: #6b7280; font-size: 0.75rem;">
+                    By using this service, you understood and agree to the
+                    <a href="https://ksu.edu.ph/privacy-policy/" class="underline text-indigo-600 hover:text-indigo-800" style="color: #4f46e5; text-decoration: underline;">
+                        KSU Privacy Policy
+                    </a>.
+                </p>
                 
                 @if (Route::has('register'))
                 <div class="mt-6 text-center border-t border-gray-100 pt-4" style="margin-top: 1.5rem; text-align: center; border-top: 1px solid #f3f4f6; padding-top: 1rem;">

@@ -4,38 +4,38 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>KSU-ICTO - Preventive Maintenance Form</title>
     <style>
-        @page { margin: 30px; }
-        body { font-family: sans-serif; font-size: 10px; line-height: 1.4; color: #000; }
+        @page { size: A4 portrait; margin: 8mm; }
+        body { font-family: sans-serif; font-size: 9px; line-height: 1.1; color: #000; margin: 0; }
         
         /* Header Table */
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .header-table td { border: 1px solid #000; padding: 5px; vertical-align: middle; }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 7px; }
+        .header-table td { border: 1px solid #000; padding: 3px; vertical-align: middle; }
         .logo-box { width: 120px; text-align: center; white-space: nowrap; }
         .logo { width: 50px; height: auto; display: inline-block; margin: 0 2px; vertical-align: middle; }
-        .univ-text { font-size: 13px; font-weight: bold; text-align: center; text-transform: uppercase; }
-        .qms-text { font-size: 10px; text-align: center; font-weight: bold; text-transform: uppercase; }
+        .univ-text { font-size: 11px; font-weight: bold; text-align: center; text-transform: uppercase; }
+        .qms-text { font-size: 8px; text-align: center; font-weight: bold; text-transform: uppercase; }
         .doc-details { width: 180px; font-size: 8px; }
 
         /* Information Section */
-        .info-section { width: 100%; margin-bottom: 15px; border: 1px solid #000; padding: 10px; box-sizing: border-box; }
+        .info-section { width: 100%; margin-bottom: 7px; border: 1px solid #000; padding: 5px; box-sizing: border-box; }
         .info-table { width: 100%; border-collapse: collapse; }
-        .info-table td { border: none; padding: 4px 2px; font-size: 9.5px; vertical-align: bottom; }
+        .info-table td { border: none; padding: 2px 1px; font-size: 8px; vertical-align: bottom; }
         .info-label { font-weight: bold; text-transform: uppercase; white-space: nowrap; }
-        .underline { border-bottom: 1px solid #000; padding-left: 5px; width: 100%; display: block; min-height: 14px; }
+        .underline { border-bottom: 1px solid #000; padding-left: 3px; width: 100%; display: block; min-height: 10px; }
 
         /* Checklist Table */
-        .checklist-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .checklist-table th, .checklist-table td { border: 1px solid #000; padding: 5px; font-size: 8.5px; }
+        .checklist-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .checklist-table th, .checklist-table td { border: 1px solid #000; padding: 2px 3px; font-size: 8px; }
         .checklist-table th { background: #f2f2f2; text-transform: uppercase; text-align: center; font-weight: bold; }
-        .category-row { background: #e9ecef; font-weight: bold; text-align: left; font-size: 9px; padding-left: 8px; }
+        .category-row { background: #e9ecef; font-weight: bold; text-align: left; font-size: 8.5px; padding-left: 4px; }
         
-        .check-box { width: 15px; height: 15px; border: 1px solid #000; text-align: center; font-family: DejaVu Sans, sans-serif; }
-        .checked { font-size: 12px; font-weight: bold; }
+        .check-box { width: 11px; height: 11px; border: 1px solid #000; text-align: center; font-family: DejaVu Sans, sans-serif; }
+        .checked { font-size: 9px; font-weight: bold; }
 
         /* Footer Signatures */
-        .footer-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .footer-table td { border: 1px solid #000; padding: 10px; vertical-align: top; font-size: 9px; }
-        .sig-container { text-align: center; margin-top: 35px; }
+        .footer-table { width: 100%; border-collapse: collapse; margin-top: 7px; }
+        .footer-table td { border: 1px solid #000; padding: 5px; vertical-align: top; font-size: 8px; }
+        .sig-container { text-align: center; margin-top: 18px; }
         .sig-line { border-top: 1px solid #000; width: 85%; margin: 0 auto 3px auto; }
         .sig-subtitle { font-size: 8.5px; color: #333; }
     </style>

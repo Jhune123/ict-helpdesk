@@ -2,18 +2,19 @@
 <html>
 <head>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+        @page { size: A4 portrait; margin: 8mm; }
+        body { font-family: Arial, sans-serif; font-size: 9pt; margin: 0; padding: 0; line-height: 1.15; }
         .table-container { width: 100%; border-collapse: collapse; }
-        .table-container th, .table-container td { border: 1px solid black; padding: 8px; vertical-align: top; }
+        .table-container th, .table-container td { border: 1px solid black; padding: 4px !important; vertical-align: top; }
         .header-title { text-align: center; font-weight: bold; vertical-align: middle; }
         .section-header { text-align: center; font-weight: bold; background-color: #f2f2f2; text-transform: uppercase; }
         .no-border-right { border-right: none !important; }
         .no-border-left { border-left: none !important; }
-        .terms { padding: 10px; border: 1px solid black; border-top: none; }
+        .terms { padding: 5px; border: 1px solid black; border-top: none; }
         .signature-section { width: 100%; border-collapse: collapse; margin-top: -1px; }
         .signature-section td { border: 1px solid black; height: 80px; width: 50%; vertical-align: top; }
-        ul { margin: 5px 0; padding-left: 20px; }
-        li { margin-bottom: 3px; }
+        ul { margin: 3px 0; padding-left: 16px; }
+        li { margin-bottom: 1px; }
     </style>
 </head>
 <body>

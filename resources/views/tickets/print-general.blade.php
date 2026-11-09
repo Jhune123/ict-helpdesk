@@ -3,17 +3,18 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
-        body { font-family: "DejaVu Sans", Arial, sans-serif; line-height: 1.6; margin: 40px; font-size: 13px; color: #000; }
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; text-align: center; }
-        .header-table td { border: 1px solid #000; padding: 8px; }
+        @page { size: A4 portrait; margin: 8mm; }
+        body { font-family: "DejaVu Sans", Arial, sans-serif; line-height: 1.2; margin: 0; font-size: 9pt; color: #000; }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; text-align: center; }
+        .header-table td { border: 1px solid #000; padding: 4px; }
         .header-logo { width: 20%; vertical-align: middle; }
         .header-title { width: 50%; font-weight: bold; vertical-align: middle; }
         .header-meta { width: 30%; text-align: left; font-size: 11px; vertical-align: middle; padding-left: 10px; }
-        .form-section { margin-top: 20px; }
-        .form-section h3 { margin-bottom: 5px; font-size: 14px; border-bottom: 1px solid #000; padding-bottom: 2px; }
-        .field-row { margin-bottom: 8px; }
+        .form-section { margin-top: 8px; }
+        .form-section h3 { margin: 0 0 3px; font-size: 10pt; border-bottom: 1px solid #000; padding-bottom: 2px; }
+        .field-row { margin-bottom: 3px; }
         .underline-value { display: inline-block; border-bottom: 1px solid #000; padding: 0 5px; font-weight: bold; }
-        .footer-note { margin-top: 40px; text-align: justify; font-size: 11px; font-style: italic; }
+        .footer-note { margin-top: 12px; text-align: justify; font-size: 8pt; font-style: italic; }
     </style>
 </head>
 <body>
