@@ -112,4 +112,24 @@ class QueueController extends Controller
 
         return redirect()->back()->with('success', 'Ticket resolved.');
     }
+
+    /**
+     * Return a mistakenly called ticket to the waiting queue.
+     */
+    public function cancelCall($id)
+    {
+        $ticket = Ticket::findOrFail($id);
+        abort_unless($ticket->status === 'In Progress', 409, 'Only tickets currently being served can have their call canceled.');
+
+        $ticket->update([
+            'status' => 'Open',
+            'remarks' => str_starts_with((string) $ticket->remarks, 'Serving at Counter: ')
+                ? null
+                : $ticket->remarks,
+            'date_finished' => null,
+            'updated_at' => Carbon::now('Asia/Manila'),
+        ]);
+
+        return redirect()->back()->with('success', "The call for ticket {$ticket->ticket_number} was canceled. The ticket is back in the waiting queue.");
+    }
 }

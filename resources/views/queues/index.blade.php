@@ -51,10 +51,16 @@
                                 @endforeach
                             </div>
                         @elseif($ticket->status === 'In Progress')
-                            <form action="{{ route('queues.complete', $ticket->id) }}" method="POST">
-                                @csrf @method('PATCH')
-                                <button class="bg-gray-800 hover:bg-black text-white px-4 py-1.5 rounded text-xs font-bold">CLOSE TICKET</button>
-                            </form>
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <form action="{{ route('queues.complete', $ticket->id) }}" method="POST">
+                                    @csrf @method('PATCH')
+                                    <button class="bg-gray-800 hover:bg-black text-white px-4 py-1.5 rounded text-xs font-bold">CLOSE TICKET</button>
+                                </form>
+                                <form action="{{ route('queues.cancel-call', $ticket->id) }}" method="POST">
+                                    @csrf @method('PATCH')
+                                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-xs font-bold">CANCEL CALL</button>
+                                </form>
+                            </div>
                         @else
                             <span class="text-xs text-gray-400 font-bold">TRANSACTION FINISHED</span>
                         @endif

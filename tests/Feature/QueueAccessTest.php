@@ -33,6 +33,8 @@ class QueueAccessTest extends TestCase
 
         $this->patch(route('queues.serve', $ticket), ['counter' => 'Jhune'])
             ->assertForbidden();
+        $this->patch(route('queues.cancel-call', $ticket))
+            ->assertForbidden();
 
         $this->assertDatabaseHas('tickets', [
             'id' => $ticket->id,
@@ -101,6 +103,48 @@ class QueueAccessTest extends TestCase
             'status' => 'In Progress',
             'remarks' => 'Serving at Counter: ' . $staff->name,
         ]);
+    }
+
+    public function test_it_staff_can_cancel_a_call_and_return_ticket_to_waiting_queue(): void
+    {
+        $staff = $this->createUserWithRole('it_staff');
+        $ticket = Ticket::factory()->create([
+            'ticket_number' => 'KSU-ICTO-TIC-QUEUE-CANCEL-CALL',
+            'created_by' => $staff->id,
+            'assigned_to' => null,
+            'status' => 'In Progress',
+            'remarks' => 'Serving at Counter: ' . $staff->name,
+            'date_finished' => now(),
+        ]);
+
+        $this->actingAs($staff)
+            ->patch(route('queues.cancel-call', $ticket))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tickets', [
+            'id' => $ticket->id,
+            'status' => 'Open',
+            'remarks' => null,
+            'date_finished' => null,
+        ]);
+    }
+
+    public function test_queue_dashboard_shows_cancel_call_next_to_close_ticket(): void
+    {
+        $staff = $this->createUserWithRole('it_staff');
+        Ticket::factory()->create([
+            'ticket_number' => 'KSU-ICTO-TIC-QUEUE-CANCEL-CONTROL',
+            'created_by' => $staff->id,
+            'assigned_to' => null,
+            'status' => 'In Progress',
+            'remarks' => 'Serving at Counter: ' . $staff->name,
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('queues.index'))
+            ->assertOk()
+            ->assertSeeText('CLOSE TICKET')
+            ->assertSeeText('CANCEL CALL');
     }
 
     public function test_live_monitor_displays_all_registered_it_staff_and_their_serving_ticket(): void

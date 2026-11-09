@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/add', [QueueController::class, 'add'])->name('queues.add');
             Route::patch('/serve/{queue}', [QueueController::class, 'serve'])->name('queues.serve');
             Route::patch('/complete/{queue}', [QueueController::class, 'complete'])->name('queues.complete');
+            Route::patch('/cancel-call/{queue}', [QueueController::class, 'cancelCall'])->name('queues.cancel-call');
             Route::post('/clear', [QueueController::class, 'clear'])->name('queues.clear');
         });
     });
