@@ -15,6 +15,18 @@
         <img src="{{ asset('image/icto-logo.png') }}" alt="ICTO Logo" class="w-24 h-24 sm:w-32 sm:h-32 drop-shadow-lg">
     </div>
 
+    @if($staffOnLeave->isNotEmpty())
+        <section class="absolute right-4 top-16 z-20 w-56 rounded-lg border border-amber-300 bg-amber-50/95 p-3 text-amber-950 shadow-md sm:right-6 sm:top-16 sm:w-64"
+                 aria-labelledby="staff-on-leave-heading">
+            <h2 id="staff-on-leave-heading" class="text-sm font-bold">IT Staff on leave today</h2>
+            <ul class="mt-1 max-h-24 space-y-0.5 overflow-y-auto text-sm">
+                @foreach($staffOnLeave as $leave)
+                    <li class="truncate">{{ $leave->user->name }}</li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     {{-- Header / Welcome Section --}}
     @php
         $currentDateTime = \Carbon\Carbon::now();

@@ -90,7 +90,15 @@ class LeaveController extends Controller
         Carbon $yearEnd
     ): Collection {
         $totals = $userIds->mapWithKeys(fn ($userId) => [
-            $userId => ['monthly' => 0, 'yearly' => 0],
+            $userId => [
+                'mandatory' => 0,
+                'sick' => 0,
+                'special_privilege' => 0,
+                'wellness_break' => 0,
+                'cto' => 0,
+                'monthly' => 0,
+                'yearly' => 0,
+            ],
         ]);
 
         if ($userIds->isEmpty()) {
@@ -105,8 +113,22 @@ class LeaveController extends Controller
             ->get()
             ->each(function (LeaveApplication $leave) use ($totals, $monthStart, $monthEnd, $yearStart, $yearEnd) {
                 $userTotals = $totals->get($leave->user_id);
+                $yearlyDays = $leave->workingDaysWithin($yearStart, $yearEnd);
                 $userTotals['monthly'] += $leave->workingDaysWithin($monthStart, $monthEnd);
-                $userTotals['yearly'] += $leave->workingDaysWithin($yearStart, $yearEnd);
+                $userTotals['yearly'] += $yearlyDays;
+
+                $category = match ($leave->leave_type) {
+                    'Mandatory/Forced Leave' => 'mandatory',
+                    'Sick Leave' => 'sick',
+                    'Special Privilege Leave' => 'special_privilege',
+                    'Others' => 'wellness_break',
+                    'Others (CTO)' => 'cto',
+                    default => null,
+                };
+                if ($category !== null) {
+                    $userTotals[$category] += $yearlyDays;
+                }
+
                 $totals->put($leave->user_id, $userTotals);
             });
 

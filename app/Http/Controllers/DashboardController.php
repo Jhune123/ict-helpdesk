@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\Department;
+use App\Models\LeaveApplication;
 use App\Models\Ticket;
 use App\Models\User;
 use Carbon\Carbon;
@@ -50,10 +51,20 @@ class DashboardController extends Controller
             })
             ->count();
 
+        $staffOnLeave = LeaveApplication::query()
+            ->with('user')
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', Carbon::today()->toDateString())
+            ->whereDate('end_date', '>=', Carbon::today()->toDateString())
+            ->whereHas('user', fn ($query) => $query->role('it_staff'))
+            ->orderBy('start_date')
+            ->get();
+
         $canManageStaffLeave = $currentUser->hasRole('admin') || $currentUser->role === 'admin';
 
         return view('dashboard', compact(
             'students',
+            'staffOnLeave',
             'departments',
             'selectedDept',
             'departmentsCount',

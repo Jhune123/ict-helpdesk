@@ -188,29 +188,47 @@
         <section class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" aria-labelledby="staff-leave-totals-heading">
             <div class="border-b border-gray-200 px-5 py-4">
                 <h2 id="staff-leave-totals-heading" class="font-bold text-gray-900">Individual IT Staff Leave Totals</h2>
-                <p class="mt-1 text-sm text-gray-500">Approved working days for {{ $now->format('F Y') }} and the {{ $now->format('Y') }} calendar year.</p>
+                <p class="mt-1 text-sm text-gray-500">Approved working days for {{ $now->format('F Y') }} and the {{ $now->format('Y') }} calendar year. Leave-type totals below are year-to-date.</p>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="min-w-[1120px] w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         <tr>
-                            <th class="px-5 py-3">IT Staff</th>
-                            <th class="px-5 py-3">Monthly Total of Leave (days)</th>
-                            <th class="px-5 py-3">Yearly Total of Leave (days)</th>
+                            <th class="w-40 px-3 py-3">IT Staff</th>
+                            <th class="w-32 px-2 py-3 text-center">Mandatory/Forced Total (days)</th>
+                            <th class="w-24 px-2 py-3 text-center">Sick Total (days)</th>
+                            <th class="w-32 px-2 py-3 text-center">Special Privilege Total (days)</th>
+                            <th class="w-32 px-2 py-3 text-center">Wellness Break Total (days)</th>
+                            <th class="w-28 px-2 py-3 text-center">Others (CTO) Total (days)</th>
+                            <th class="w-32 px-2 py-3 text-center">Monthly Total of Leave (days)</th>
+                            <th class="w-32 px-2 py-3 text-center">Yearly Total of Leave (days)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @forelse($itStaff as $staffMember)
                             @php
-                                $leaveTotals = $staffLeaveTotals->get($staffMember->id, ['monthly' => 0, 'yearly' => 0]);
+                                $leaveTotals = $staffLeaveTotals->get($staffMember->id, [
+                                    'mandatory' => 0,
+                                    'sick' => 0,
+                                    'special_privilege' => 0,
+                                    'wellness_break' => 0,
+                                    'cto' => 0,
+                                    'monthly' => 0,
+                                    'yearly' => 0,
+                                ]);
                             @endphp
                             <tr>
-                                <td class="whitespace-nowrap px-5 py-3 font-semibold text-gray-900">{{ $staffMember->name }}</td>
-                                <td class="px-5 py-3 text-gray-700">{{ $leaveTotals['monthly'] }}</td>
-                                <td class="px-5 py-3 text-gray-700">{{ $leaveTotals['yearly'] }}</td>
+                                <td class="whitespace-nowrap px-3 py-3 font-semibold text-gray-900">{{ $staffMember->name }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['mandatory'] }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['sick'] }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['special_privilege'] }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['wellness_break'] }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['cto'] }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['monthly'] }}</td>
+                                <td class="px-2 py-3 text-center text-gray-700">{{ $leaveTotals['yearly'] }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="px-5 py-4 text-center text-gray-500">No IT Staff accounts found.</td></tr>
+                            <tr><td colspan="8" class="px-5 py-4 text-center text-gray-500">No IT Staff accounts found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

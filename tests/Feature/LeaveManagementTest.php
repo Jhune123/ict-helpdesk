@@ -4,6 +4,7 @@ use App\Mail\LeaveApprovedMail;
 use App\Models\LeaveApplication;
 use App\Models\LeaveBalance;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
@@ -49,6 +50,49 @@ test('IT staff can submit a leave application with working days calculated autom
         'status' => 'pending',
         'commutation_requested' => 0,
     ]);
+});
+
+test('all dashboard users can see only IT staff with approved leave today', function () {
+    $this->travelTo(Carbon::parse('2026-11-10'));
+
+    $activeStaff = User::factory()->create(['name' => 'Active IT Staff']);
+    $activeStaff->assignRole('it_staff');
+    $pendingStaff = User::factory()->create(['name' => 'Pending IT Staff']);
+    $pendingStaff->assignRole('it_staff');
+    $futureStaff = User::factory()->create(['name' => 'Future IT Staff']);
+    $futureStaff->assignRole('it_staff');
+    $expiredStaff = User::factory()->create(['name' => 'Expired IT Staff']);
+    $expiredStaff->assignRole('it_staff');
+
+    foreach ([
+        [$activeStaff, 'approved', '2026-11-09', '2026-11-11'],
+        [$pendingStaff, 'pending', '2026-11-09', '2026-11-11'],
+        [$futureStaff, 'approved', '2026-11-11', '2026-11-12'],
+        [$expiredStaff, 'approved', '2026-11-08', '2026-11-09'],
+    ] as [$staff, $status, $startDate, $endDate]) {
+        LeaveApplication::create([
+            'user_id' => $staff->id,
+            'filed_at' => '2026-11-01',
+            'leave_type' => 'Vacation Leave',
+            'details' => 'Staff leave.',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'working_days' => 2,
+            'commutation_requested' => false,
+            'status' => $status,
+        ]);
+    }
+
+    $dashboardUser = User::factory()->create();
+
+    $this->actingAs($dashboardUser)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSeeText('IT Staff on leave today')
+        ->assertSeeText('Active IT Staff')
+        ->assertDontSeeText('Pending IT Staff')
+        ->assertDontSeeText('Future IT Staff')
+        ->assertDontSeeText('Expired IT Staff');
 });
 
 test('IT staff can submit Others CTO leave', function () {
@@ -454,6 +498,59 @@ test('leave management page shows monthly and yearly approved leave totals for s
         ->assertSee('Yearly Total of Leave (days)')
         ->assertSee('>2</td>', false)
         ->assertSee('>5</td>', false);
+});
+
+test('individual IT staff totals include approved working days by leave category for the current year', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create(['name' => 'Category Totals Staff']);
+    $staff->assignRole('it_staff');
+
+    foreach ([
+        ['Mandatory/Forced Leave', '2026-11-02', '2026-11-02', 'approved'],
+        ['Sick Leave', '2026-11-02', '2026-11-03', 'approved'],
+        ['Special Privilege Leave', '2026-11-02', '2026-11-04', 'approved'],
+        ['Others', '2026-11-02', '2026-11-05', 'approved'],
+        ['Others (CTO)', '2026-11-02', '2026-11-06', 'approved'],
+        ['Sick Leave', '2026-11-09', '2026-11-10', 'pending'],
+    ] as [$leaveType, $startDate, $endDate, $status]) {
+        LeaveApplication::create([
+            'user_id' => $staff->id,
+            'filed_at' => '2026-11-01',
+            'leave_type' => $leaveType,
+            'details' => 'Leave category total test.',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'working_days' => LeaveApplication::workingDaysBetween(
+                Carbon::parse($startDate),
+                Carbon::parse($endDate)
+            ),
+            'commutation_requested' => false,
+            'status' => $status,
+        ]);
+    }
+
+    $this->travelTo(Carbon::parse('2026-11-11 10:00:00'));
+
+    $this->actingAs($admin)
+        ->get(route('staff.leaves.index'))
+        ->assertOk()
+        ->assertSee('Mandatory/Forced Total (days)')
+        ->assertSee('Sick Total (days)')
+        ->assertSee('Special Privilege Total (days)')
+        ->assertSee('Wellness Break Total (days)')
+        ->assertSee('Others (CTO) Total (days)')
+        ->assertViewHas('staffLeaveTotals', function ($totals) use ($staff) {
+            return $totals->get($staff->id) === [
+                'mandatory' => 1,
+                'sick' => 2,
+                'special_privilege' => 3,
+                'wellness_break' => 4,
+                'cto' => 5,
+                'monthly' => 15,
+                'yearly' => 15,
+            ];
+        });
 });
 
 test('IT staff dashboard does not show leave totals', function () {
