@@ -128,6 +128,14 @@
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="flex items-center text-sm font-medium text-green-100 hover:text-white focus:outline-none transition-colors duration-200">
+                            @if(Auth::user()->profile_photo)
+                                <img src="{{ asset('storage/'.Auth::user()->profile_photo) }}" alt=""
+                                     class="mr-2 h-9 w-9 rounded-full border border-green-300 object-cover">
+                            @else
+                                <span class="mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-green-100 font-bold text-green-900">
+                                    {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(Auth::user()->name, 0, 1)) }}
+                                </span>
+                            @endif
                             <div>{{ Auth::user()->name }}</div>
                             <div class="ml-1">
                                 <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
@@ -137,6 +145,9 @@
                         </button>
                     </x-slot>
                     <x-slot name="content">
+                        <x-dropdown-link :href="route('profile.edit')">
+                            {{ __('Profile Settings') }}
+                        </x-dropdown-link>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <x-dropdown-link href="#" onclick="event.preventDefault(); this.closest('form').submit();">
@@ -208,12 +219,25 @@
 
         <!-- Mobile User Options -->
         <div class="pt-4 pb-1 border-t border-green-700">
-            <div class="px-4">
-                <div class="font-medium text-base text-white">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-green-200">{{ Auth::user()->email }}</div>
+            <div class="flex items-center gap-3 px-4">
+                @if(Auth::user()->profile_photo)
+                    <img src="{{ asset('storage/'.Auth::user()->profile_photo) }}" alt=""
+                         class="h-11 w-11 rounded-full border border-green-300 object-cover">
+                @else
+                    <span class="flex h-11 w-11 items-center justify-center rounded-full bg-green-100 font-bold text-green-900">
+                        {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(Auth::user()->name, 0, 1)) }}
+                    </span>
+                @endif
+                <div>
+                    <div class="font-medium text-base text-white">{{ Auth::user()->name }}</div>
+                    <div class="font-medium text-sm text-green-200">{{ Auth::user()->email }}</div>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">
+                <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')" class="text-green-100 hover:text-white">
+                    {{ __('Profile Settings') }}
+                </x-responsive-nav-link>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <x-responsive-nav-link href="#" onclick="event.preventDefault(); this.closest('form').submit();" class="text-green-100 hover:text-white">

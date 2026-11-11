@@ -13,9 +13,28 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
         @csrf
         @method('patch')
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+            @if ($user->profile_photo)
+                <img src="{{ asset('storage/'.$user->profile_photo) }}" alt="{{ $user->name }}'s profile photo"
+                     class="h-20 w-20 rounded-full border-2 border-green-100 object-cover shadow-sm">
+            @else
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-2xl font-bold text-green-800"
+                     aria-label="No profile photo uploaded">
+                    {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($user->name, 0, 1)) }}
+                </div>
+            @endif
+            <div class="flex-1">
+                <x-input-label for="profile_photo" :value="__('Profile photo')" />
+                <input id="profile_photo" name="profile_photo" type="file" accept="image/jpeg,image/png,image/webp"
+                       class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:font-semibold file:text-green-800 hover:file:bg-green-100">
+                <p class="mt-1 text-xs text-gray-500">JPG, PNG, or WebP. Maximum file size: 2 MB.</p>
+                <x-input-error class="mt-2" :messages="$errors->get('profile_photo')" />
+            </div>
+        </div>
 
         <div>
             <x-input-label for="name" :value="__('Name')" />
